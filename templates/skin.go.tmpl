@@ -1,0 +1,253 @@
+package repl
+
+import (
+	"fmt"
+	"os"
+	"strings"
+
+	"github.com/charmbracelet/lipgloss"
+)
+
+// colorMap maps well-known software names to branded accent colors.
+var colorMap = map[string]lipgloss.Color{
+	"gimp":        "#E67E22", // warm orange
+	"blender":     "#E44D26", // deep orange
+	"inkscape":    "#0082C8", // bright blue
+	"audacity":    "#003366", // navy blue
+	"libreoffice": "#1D7E2A", // green
+	"obs_studio":  "#7B2D8B", // purple
+	"kdenlive":    "#3D6B9A", // slate blue
+	"shotcut":     "#2E9E8A", // teal green
+}
+
+// defaultAccent is used when the software name is not in colorMap.
+const defaultAccent = lipgloss.Color("#888888")
+
+// Skin provides branded terminal styling for the REPL.
+type Skin struct {
+	Software    string
+	Version     string
+	AccentColor lipgloss.Color
+	NoColor     bool
+}
+
+// NewSkin constructs a Skin for the given software, picking the accent color from
+// colorMap or falling back to defaultAccent. It also respects the NO_COLOR and
+// CLI_ANYTHING_NO_COLOR environment variables.
+func NewSkin(software, version string) *Skin {
+	accent, ok := colorMap[strings.ToLower(software)]
+	if !ok {
+		accent = defaultAccent
+	}
+
+	noColor := os.Getenv("NO_COLOR") != "" || os.Getenv("CLI_ANYTHING_NO_COLOR") != ""
+
+	return &Skin{
+		Software:    software,
+		Version:     version,
+		AccentColor: accent,
+		NoColor:     noColor,
+	}
+}
+
+// accentStyle returns a lipgloss style using the skin's accent color,
+// or a plain style when color is disabled.
+func (s *Skin) accentStyle() lipgloss.Style {
+	if s.NoColor {
+		return lipgloss.NewStyle()
+	}
+	return lipgloss.NewStyle().Foreground(s.AccentColor)
+}
+
+// Banner prints a branded banner with the ◆ logo.
+func (s *Skin) Banner() {
+	if s.NoColor {
+		fmt.Printf("◆ %s-cli  v%s\n", s.Software, s.Version)
+		fmt.Println("Type 'help' for available commands, 'quit' to exit.")
+		return
+	}
+
+	logoStyle := lipgloss.NewStyle().
+		Foreground(s.AccentColor).
+		Bold(true)
+
+	dimStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("240"))
+
+	fmt.Printf("%s %s  %s\n",
+		logoStyle.Render("◆"),
+		logoStyle.Render(s.Software+"-cli"),
+		dimStyle.Render("v"+s.Version),
+	)
+	fmt.Println(dimStyle.Render("Type 'help' for available commands, 'quit' to exit."))
+}
+
+// Prompt returns a styled prompt string.
+// If project is non-empty it is shown in brackets; a trailing * indicates unsaved changes.
+//
+//	gimp [portrait.xcf*] >
+func (s *Skin) Prompt(project string, modified bool) string {
+	name := s.Software
+	var projectPart string
+	if project != "" {
+		label := project
+		if modified {
+			label += "*"
+		}
+		projectPart = " [" + label + "]"
+	}
+
+	if s.NoColor {
+		return fmt.Sprintf("%s%s > ", name, projectPart)
+	}
+
+	nameStyle := lipgloss.NewStyle().Foreground(s.AccentColor).Bold(true)
+	projStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("243"))
+	arrowStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
+
+	return fmt.Sprintf("%s%s %s ",
+		nameStyle.Render(name),
+		projStyle.Render(projectPart),
+		arrowStyle.Render(">"),
+	)
+}
+
+// Success returns a green ✓ message.
+func (s *Skin) Success(msg string) string {
+	if s.NoColor {
+		return "✓ " + msg
+	}
+	style := lipgloss.NewStyle().Foreground(lipgloss.Color("10"))
+	return style.Render("✓ " + msg)
+}
+
+// Error returns a red ✗ message.
+func (s *Skin) Error(msg string) string {
+	if s.NoColor {
+		return "✗ " + msg
+	}
+	style := lipgloss.NewStyle().Foreground(lipgloss.Color("9")).Bold(true)
+	return style.Render("✗ " + msg)
+}
+
+// Warning returns a yellow ⚠ message.
+func (s *Skin) Warning(msg string) string {
+	if s.NoColor {
+		return "⚠ " + msg
+	}
+	style := lipgloss.NewStyle().Foreground(lipgloss.Color("11"))
+	return style.Render("⚠ " + msg)
+}
+
+// Info returns an accent-colored ● message.
+func (s *Skin) Info(msg string) string {
+	if s.NoColor {
+		return "● " + msg
+	}
+	return s.accentStyle().Render("● " + msg)
+}
+
+// Hint returns a dimmed message for secondary context.
+func (s *Skin) Hint(msg string) string {
+	if s.NoColor {
+		return msg
+	}
+	style := lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
+	return style.Render(msg)
+}
+
+// Table renders headers and rows as a lipgloss-styled table string.
+func (s *Skin) Table(headers []string, rows [][]string) string {
+	if len(headers) == 0 {
+		return ""
+	}
+
+	var headerStyle, cellStyle lipgloss.Style
+	if s.NoColor {
+		headerStyle = lipgloss.NewStyle().Bold(true)
+		cellStyle = lipgloss.NewStyle()
+	} else {
+		headerStyle = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(s.AccentColor).
+			BorderBottom(true).
+			BorderStyle(lipgloss.NormalBorder())
+		cellStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("252"))
+	}
+
+	// Compute column widths.
+	colWidths := make([]int, len(headers))
+	for i, h := range headers {
+		if len(h) > colWidths[i] {
+			colWidths[i] = len(h)
+		}
+	}
+	for _, row := range rows {
+		for i, cell := range row {
+			if i < len(colWidths) && len(cell) > colWidths[i] {
+				colWidths[i] = len(cell)
+			}
+		}
+	}
+
+	var sb strings.Builder
+
+	// Header row.
+	for i, h := range headers {
+		padded := fmt.Sprintf("%-*s", colWidths[i], h)
+		sb.WriteString(headerStyle.Render(padded))
+		if i < len(headers)-1 {
+			sb.WriteString("  ")
+		}
+	}
+	sb.WriteString("\n")
+
+	// Data rows.
+	for _, row := range rows {
+		for i, cell := range row {
+			if i >= len(headers) {
+				break
+			}
+			padded := fmt.Sprintf("%-*s", colWidths[i], cell)
+			sb.WriteString(cellStyle.Render(padded))
+			if i < len(headers)-1 {
+				sb.WriteString("  ")
+			}
+		}
+		sb.WriteString("\n")
+	}
+
+	return sb.String()
+}
+
+// StatusBlock renders a titled key-value display.
+func (s *Skin) StatusBlock(title string, kvPairs [][2]string) string {
+	var titleStyle, keyStyle, valueStyle lipgloss.Style
+
+	if s.NoColor {
+		titleStyle = lipgloss.NewStyle().Bold(true)
+		keyStyle = lipgloss.NewStyle()
+		valueStyle = lipgloss.NewStyle()
+	} else {
+		titleStyle = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(s.AccentColor)
+		keyStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("243"))
+		valueStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("252"))
+	}
+
+	var sb strings.Builder
+	sb.WriteString(titleStyle.Render(title))
+	sb.WriteString("\n")
+
+	for _, kv := range kvPairs {
+		sb.WriteString(fmt.Sprintf("  %s  %s\n",
+			keyStyle.Render(kv[0]+":"),
+			valueStyle.Render(kv[1]),
+		))
+	}
+
+	return sb.String()
+}

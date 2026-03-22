@@ -1,0 +1,176 @@
+package output
+
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"os"
+	"text/tabwriter"
+
+	"github.com/charmbracelet/lipgloss"
+	"gopkg.in/yaml.v3"
+)
+
+// Exit codes for structured error handling.
+const (
+	ExitUserError        = 1
+	ExitBackendNotFound  = 10
+	ExitBackendFailure   = 11
+)
+
+// Format represents the output format mode.
+type Format string
+
+const (
+	FormatPlain Format = "plain"
+	FormatJSON  Format = "json"
+	FormatYAML  Format = "yaml"
+	FormatTable Format = "table"
+)
+
+// Result is implemented by all command result types.
+// Formatter dispatches on the concrete type when possible,
+// falling back to ToMap() for generic rendering.
+type Result interface {
+	ToMap() map[string]any
+}
+
+// ErrorResult is the structured error payload returned by all commands on failure.
+type ErrorResult struct {
+	Error   string         `json:"error"   yaml:"error"`
+	Code    string         `json:"code"    yaml:"code"`
+	Details map[string]any `json:"details,omitempty" yaml:"details,omitempty"`
+}
+
+// ToMap implements Result.
+func (e ErrorResult) ToMap() map[string]any {
+	m := map[string]any{
+		"error": e.Error,
+		"code":  e.Code,
+	}
+	if len(e.Details) > 0 {
+		m["details"] = e.Details
+	}
+	return m
+}
+
+// Formatter renders command results in the requested output format.
+type Formatter struct {
+	format  Format
+	noColor bool
+	writer  io.Writer
+}
+
+// NewFormatter constructs a Formatter.
+// format must be one of "plain", "json", "yaml", "table"; unknown values fall back to plain.
+func NewFormatter(format string, noColor bool) *Formatter {
+	f := Format(format)
+	switch f {
+	case FormatPlain, FormatJSON, FormatYAML, FormatTable:
+		// valid
+	default:
+		f = FormatPlain
+	}
+	return &Formatter{
+		format:  f,
+		noColor: noColor,
+		writer:  os.Stdout,
+	}
+}
+
+// Output renders result to the formatter's writer in the configured format.
+func (f *Formatter) Output(result Result) error {
+	switch f.format {
+	case FormatJSON:
+		return f.renderJSON(result.ToMap())
+	case FormatYAML:
+		return f.renderYAML(result.ToMap())
+	case FormatTable:
+		return f.renderTable(result.ToMap())
+	default:
+		return f.renderPlain(result.ToMap())
+	}
+}
+
+// OutputError renders a structured error using the configured format.
+func (f *Formatter) OutputError(err error, code string) error {
+	result := ErrorResult{
+		Error: err.Error(),
+		Code:  code,
+	}
+	return f.Output(result)
+}
+
+// renderPlain outputs a human-readable representation using lipgloss styling.
+func (f *Formatter) renderPlain(data map[string]any) error {
+	var (
+		keyStyle   lipgloss.Style
+		valueStyle lipgloss.Style
+		errStyle   lipgloss.Style
+	)
+
+	if f.noColor {
+		keyStyle = lipgloss.NewStyle()
+		valueStyle = lipgloss.NewStyle()
+		errStyle = lipgloss.NewStyle()
+	} else {
+		keyStyle = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("12"))
+		valueStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("15"))
+		errStyle = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("9"))
+	}
+
+	if errVal, ok := data["error"]; ok {
+		fmt.Fprintln(f.writer, errStyle.Render(fmt.Sprintf("error: %v", errVal)))
+		if code, ok := data["code"]; ok {
+			fmt.Fprintln(f.writer, keyStyle.Render("code:")+valueStyle.Render(fmt.Sprintf(" %v", code)))
+		}
+		return nil
+	}
+
+	for k, v := range data {
+		fmt.Fprintf(f.writer, "%s %s\n",
+			keyStyle.Render(k+":"),
+			valueStyle.Render(fmt.Sprintf("%v", v)),
+		)
+	}
+	return nil
+}
+
+// renderJSON outputs data as indented JSON.
+func (f *Formatter) renderJSON(data map[string]any) error {
+	enc, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return fmt.Errorf("json marshal: %w", err)
+	}
+	fmt.Fprintln(f.writer, string(enc))
+	return nil
+}
+
+// renderYAML outputs data as YAML.
+func (f *Formatter) renderYAML(data map[string]any) error {
+	enc, err := yaml.Marshal(data)
+	if err != nil {
+		return fmt.Errorf("yaml marshal: %w", err)
+	}
+	fmt.Fprint(f.writer, string(enc))
+	return nil
+}
+
+// renderTable outputs data as an aligned table using tabwriter.
+func (f *Formatter) renderTable(data map[string]any) error {
+	tw := tabwriter.NewWriter(f.writer, 0, 0, 2, ' ', 0)
+	defer tw.Flush()
+
+	var headerStyle lipgloss.Style
+	if f.noColor {
+		headerStyle = lipgloss.NewStyle()
+	} else {
+		headerStyle = lipgloss.NewStyle().Bold(true).Underline(true)
+	}
+
+	fmt.Fprintf(tw, "%s\t%s\n", headerStyle.Render("KEY"), headerStyle.Render("VALUE"))
+	for k, v := range data {
+		fmt.Fprintf(tw, "%s\t%v\n", k, v)
+	}
+	return nil
+}

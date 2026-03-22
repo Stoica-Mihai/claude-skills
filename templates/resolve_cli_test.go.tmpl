@@ -1,0 +1,43 @@
+//go:build e2e
+
+package e2e
+
+import (
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"testing"
+)
+
+// resolveCLI finds the installed CLI binary or builds from source as fallback.
+// Set CLI_ANYTHING_FORCE_INSTALLED=1 to disable fallback and require PATH installation.
+func resolveCLI(t *testing.T, name string) string {
+	t.Helper()
+	if path, err := exec.LookPath(name); err == nil {
+		t.Logf("[resolveCLI] Using installed command: %s", path)
+		return path
+	}
+	if os.Getenv("CLI_ANYTHING_FORCE_INSTALLED") == "1" {
+		t.Fatalf("%s not found in PATH and CLI_ANYTHING_FORCE_INSTALLED=1", name)
+	}
+	tmp := t.TempDir()
+	bin := filepath.Join(tmp, name)
+	buildCmd := exec.Command("go", "build", "-o", bin, ".")
+	if out, err := buildCmd.CombinedOutput(); err != nil {
+		t.Fatalf("failed to build %s: %v\n%s", name, err, out)
+	}
+	t.Logf("[resolveCLI] Falling back to built binary: %s", bin)
+	return bin
+}
+
+// runCLI executes the CLI binary with args and returns stdout, stderr, error.
+func runCLI(t *testing.T, binary string, args ...string) (string, string, error) {
+	t.Helper()
+	cmd := exec.Command(binary, args...)
+	var stdout, stderr strings.Builder
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	return stdout.String(), stderr.String(), err
+}

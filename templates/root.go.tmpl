@@ -1,0 +1,71 @@
+package cmd
+
+import (
+	"fmt"
+	"os"
+	"os/exec"
+	"time"
+
+	"github.com/spf13/cobra"
+
+	"github.com/{{.User}}/{{.Software}}-cli/internal/repl"
+)
+
+// Version is set at build time via:
+// go build -ldflags "-X github.com/{{.User}}/{{.Software}}-cli/cmd.Version={{.Version}}"
+var Version = "dev"
+
+var rootCmd = &cobra.Command{
+	Use:   "{{.Software}}-cli",
+	Short: "{{.Software}}-cli — command-line interface for {{.Software}}",
+	Long: `{{.Software}}-cli is a compiled CLI harness for {{.Software}}.
+
+It wraps {{.Software}} automation via a backend binary, exposing common
+operations as structured subcommands with JSON/YAML/plain output modes.
+
+Run without a subcommand to enter the interactive REPL.`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		noColor, _ := cmd.Flags().GetBool("no-color")
+		project, _ := cmd.Flags().GetString("project")
+		r := repl.New(repl.Config{
+			Software: "{{.Software}}",
+			Version:  Version,
+			Project:  project,
+			NoColor:  noColor,
+		})
+		return r.Run()
+	},
+}
+
+// requireBackend checks that the backend binary is available.
+// Call this at the top of individual subcommand RunE functions so that
+// --help and --version continue to work without the backend installed.
+func requireBackend() error {
+	if _, err := exec.LookPath("{{.BackendBinary}}"); err != nil {
+		return fmt.Errorf(
+			"backend binary '{{.BackendBinary}}' not found in PATH\n\n"+
+				"Install {{.Software}} and ensure '{{.BackendBinary}}' is accessible:\n"+
+				"  https://www.{{.Software}}.org/downloads/\n\n"+
+				"Then verify with: which {{.BackendBinary}}",
+		)
+	}
+	return nil
+}
+
+func init() {
+	rootCmd.Version = Version
+	rootCmd.PersistentFlags().String("output", "plain", "Output format: plain, json, yaml, table")
+	rootCmd.PersistentFlags().String("project", "", "Path to the project file to operate on")
+	rootCmd.PersistentFlags().Bool("no-color", false, "Disable color output")
+	rootCmd.PersistentFlags().Bool("verbose", false, "Enable verbose logging")
+	rootCmd.PersistentFlags().Duration("timeout", 30*time.Second, "Timeout for backend operations")
+}
+
+// Execute runs the root command and exits with an appropriate code on failure.
+func Execute() {
+	if err := rootCmd.Execute(); err != nil {
+		// Use output.ExitBackendNotFound or output.ExitBackendFailure
+		// for specific error types. Default to ExitUserError (1).
+		os.Exit(1)
+	}
+}
