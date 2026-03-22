@@ -1,5 +1,5 @@
 ---
-name: task
+name: opsx-ext:task
 description: Use when the user wants to execute a full autonomous spec-driven development cycle using OpenSpec. Takes a task description and drives it from exploration through implementation, verification, and archival — with self-correction loops at every stage. Requires OpenSpec to be initialized in the project. Use this whenever someone says "do this task", "build this feature", "implement this", or wants an end-to-end OpenSpec workflow without manually invoking each command.
 argument-hint: <description of what you want to build or change>
 ---

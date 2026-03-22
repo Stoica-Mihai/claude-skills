@@ -32,6 +32,18 @@ Extensions for [OpenSpec](https://github.com/Fission-AI/OpenSpec) — autonomous
 |---------|-------------|
 | `/opsx-ext:task` | Autonomous end-to-end workflow: explore, plan, implement, verify, archive, commit |
 
+### cli-anything-go
+
+Build powerful, stateful CLI interfaces for any GUI application as compiled Go binaries using Cobra + bubbletea.
+
+```
+/plugin install cli-anything-go@claude-skills
+```
+
+| Command | Description |
+|---------|-------------|
+| `/cli-anything-go` | Generate a CLI tool from a specification |
+
 ## License
 
 MIT
