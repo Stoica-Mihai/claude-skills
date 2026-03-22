@@ -61,7 +61,28 @@ Invoke `/opsx:apply` to implement all tasks from the change.
 
 If `/opsx:apply` reports errors during implementation, resolve them before proceeding to Phase 6.
 
-### Phase 6 — Verify and fix
+### Phase 6 — Test
+
+After implementation is complete, check whether the project has an existing test suite. Look for test directories (`tests/`, `test/`, `__tests__/`, `spec/`), test files (files matching `*test*`, `*spec*`), and test runner configuration (`jest.config.*`, `pytest.ini`, `pyproject.toml [tool.pytest]`, `.mocharc.*`, `vitest.config.*`, `Cargo.toml [dev-dependencies]`, etc.).
+
+If the project has tests:
+
+1. **Run the full test suite.** Use the project's test runner. If it fails, diagnose and fix every failure before moving on. Re-run until all tests pass.
+
+2. **Check test coverage.** Run the test suite with coverage enabled (e.g., `--coverage`, `--cov`, `cargo tarpaulin`). Review the coverage report to identify untested code paths — particularly in code that was added or modified by this change.
+
+3. **Add missing tests.** Write tests to cover uncovered code paths introduced by this change. The goal is to get coverage as close to 100% as possible. Focus on:
+   - New functions, methods, and branches added in this change
+   - Edge cases and error paths
+   - Integration points between new and existing code
+
+4. **Remove stale tests.** If this change removed or significantly altered functionality, find and remove tests that reference deleted code, test behavior that no longer exists, or are otherwise broken by the change. Dead tests are noise — clean them up.
+
+5. **Re-run the full suite with coverage.** Confirm all tests pass and coverage has improved. If coverage gaps remain in changed code, add more tests. Repeat until coverage on the changed files is as close to 100% as practical.
+
+If the project has no tests at all, skip this phase entirely — do not create a test framework from scratch unless the user specifically asked for it.
+
+### Phase 7 — Verify and fix
 
 Invoke `/opsx:verify` to validate the implementation against the artifacts.
 
@@ -69,19 +90,19 @@ If ANY findings are reported — regardless of severity (CRITICAL, WARNING, or S
 
 Zero tolerance. A SUGGESTION is still a finding.
 
-### Phase 7 — User verification
+### Phase 8 — User verification
 
 All automated checks are clean. Now ask the user to review:
 
 > "All automated verification passes with zero findings. Please review the changes yourself and let me know if anything needs fixing."
 
-If the user reports issues, fix the reported issues in the code, then go back to Phase 6 — re-run `/opsx:verify` and repeat the fix loop until zero findings. Do not re-run `/opsx:apply`. If the user confirms everything is OK, proceed.
+If the user reports issues, fix the reported issues in the code, then go back to Phase 7 — re-run `/opsx:verify` and repeat the fix loop until zero findings. Do not re-run `/opsx:apply`. If the user confirms everything is OK, proceed.
 
-### Phase 8 — Archive
+### Phase 9 — Archive
 
 Invoke `/opsx:archive` to finalize and archive the change.
 
-### Phase 9 — Update documentation
+### Phase 10 — Update documentation
 
 Review and update all project documentation affected by this change, including but not limited to:
 - README.md
@@ -90,7 +111,7 @@ Review and update all project documentation affected by this change, including b
 
 Only update docs where the change is relevant — don't touch files that aren't affected.
 
-### Phase 10 — Commit
+### Phase 11 — Commit
 
 Stage only the files that were created or modified during this workflow. Do not use `git add .` or `git add -A`. Then create a git commit.
 
