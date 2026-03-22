@@ -1,0 +1,18 @@
+{
+  "name": "claude-skills",
+  "owner": {
+    "name": "MCS"
+  },
+  "metadata": {
+    "description": "A curated collection of Claude Code skills by MCS"
+  },
+  "plugins": [
+    {
+      "name": "opsx-ext",
+      "source": "./plugins/opsx-ext",
+      "description": "Extensions for OpenSpec — autonomous task workflows with self-correction and verification loops",
+      "version": "1.0.0",
+      "keywords": ["openspec", "opsx", "workflow", "spec-driven", "autonomous"]
+    }
+  ]
+}
