@@ -77,7 +77,15 @@ Invoke `/opsx:apply` to implement all tasks from the change.
 
 If tasks touch different files or modules, they are almost certainly independent — parallelize them. If multiple tasks modify the same file, serialize those but run them in parallel with tasks touching other files.
 
-If any subagent reports errors during implementation, dispatch fix subagents in parallel for independent errors. Resolve all errors before proceeding to Phase 6.
+If any subagent reports errors during implementation, dispatch fix subagents in parallel for independent errors. Resolve all errors before proceeding.
+
+**Config file update:** After all implementation tasks are complete, check whether the change introduces config-driven behavior — new environment variables, feature flags, settings keys, or service configuration. If it does, update the relevant config files:
+- `.env.example` / `.env.template` — add new env vars with sensible defaults and comments
+- Config templates and default config files (e.g., `config.yaml`, `settings.json`, `appsettings.json`)
+- Schema files that define valid config (e.g., JSON Schema, Zod schemas, pydantic models)
+- Docker/compose files if new env vars or service config were introduced
+
+Only update files that already exist in the project — do not create new config infrastructure. If unsure whether a variable needs a default, add it with a placeholder and a comment explaining what it controls.
 
 ### Phase 6 — Test
 
@@ -104,9 +112,7 @@ If the project has no tests at all, skip this phase entirely — do not create a
 
 Invoke `/opsx:verify` to validate the implementation against the artifacts.
 
-If ANY findings are reported — regardless of severity (CRITICAL, WARNING, or SUGGESTION) — fix every single one. **Parallelization:** Group findings by file. Dispatch one subagent per file to fix all findings in that file concurrently. Then invoke `/opsx:verify` again. Repeat this loop until verification returns zero findings.
-
-Zero tolerance. A SUGGESTION is still a finding.
+If ANY findings are reported — regardless of severity — fix every single one, including SUGGESTIONs. Low-severity findings left unfixed accumulate into real problems, and fixing them now while context is fresh is cheaper than revisiting later. **Parallelization:** Group findings by file. Dispatch one subagent per file to fix all findings in that file concurrently. Then invoke `/opsx:verify` again. Repeat this loop until verification returns zero findings.
 
 ### Phase 8 — User verification
 
