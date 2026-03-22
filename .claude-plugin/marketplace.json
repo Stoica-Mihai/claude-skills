@@ -21,7 +21,8 @@
       "name": "cli-anything-go",
       "source": "./",
       "description": "Build powerful, stateful CLI interfaces for any GUI application as compiled Go binaries using Cobra + bubbletea.",
-      "version": "1.0.0"
+      "version": "1.0.0",
+      "skills": []
     }
   ]
 }
