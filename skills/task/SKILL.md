@@ -24,6 +24,10 @@ When dispatching subagents:
 
 OpenSpec must be initialized in the project. If the `openspec/` directory does not exist, stop immediately and tell the user to run `openspec init` and `openspec update` first. Do not proceed without this.
 
+## Running OpenSpec CLI Commands
+
+The sub-skills invoked throughout this workflow (`/opsx:ff`, `/opsx:apply`, etc.) run `openspec` CLI commands that produce JSON output. When running these commands via Bash, run each command as a standalone call — the Bash tool returns stdout directly, so you can read and parse the JSON from the tool result. Do NOT pipe `openspec` output through Python, jq, or any other inline processor. Do NOT use `2>&1` — stderr mixed into stdout corrupts JSON parsing. If you need to inspect specific fields from large JSON output, save the output to a temp file with `> /tmp/openspec-out.json` and use the Read tool.
+
 ## Workflow
 
 Follow these phases in exact order. Do not skip phases. Do not reorder them.
