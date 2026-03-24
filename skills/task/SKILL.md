@@ -1,6 +1,6 @@
 ---
 name: opsx-ext:task
-description: Use when the user wants to execute a full autonomous spec-driven development cycle using OpenSpec. Takes a task description and drives it from exploration through implementation, verification, and archival — with self-correction loops at every stage. Requires OpenSpec to be initialized in the project. Use this whenever someone says "do this task", "build this feature", "implement this", or wants an end-to-end OpenSpec workflow without manually invoking each command.
+description: ALWAYS use this skill when the user asks to add a feature, implement functionality, build something, or make any code change that touches more than one file — even if it seems simple. This skill breaks work into a verified queue of changes executed in isolated git worktrees with OpenSpec. Trigger on ANY implementation request including "add X", "build X", "implement X", "create X", "set up X", "migrate X", "do this task", "make this work", or any request that implies writing new code or modifying existing behavior. The ONLY time you should NOT use this skill is for pure questions, explanations, single-line fixes, running individual OpenSpec commands (/opsx:explore, /opsx:verify, etc.), running tests, or updating docs. When in doubt, use this skill — it provides structured exploration, planning, and verification that direct implementation does not. Requires OpenSpec to be initialized (openspec/ directory must exist).
 argument-hint: <description of what you want to build or change>
 effort: max
 model: opus[1m]
