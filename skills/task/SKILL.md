@@ -53,13 +53,15 @@ Example:
 
 Changes should be ordered so foundational work comes first. Each change must be independently implementable in its own worktree off the current HEAD — if change B depends on change A being merged first, combine them into one change.
 
-Iterate with the user until the queue is finalized. After presenting the queue, explicitly ask:
+**HARD STOP — Queue confirmation is mandatory.**
+
+After presenting the queue, you MUST stop and ask the user:
 
 > "Would you like to add, reorder, merge, split, or remove any items before we proceed?"
 
-The user may modify the queue in any way. If they add or change items, present the updated queue and ask again.
+Then WAIT for the user's response. Do NOT proceed, do NOT create worktrees, do NOT generate artifacts, do NOT invoke any Phase 2 steps. The user may modify the queue in any way. If they add or change items, present the updated queue and ask again.
 
-**Do not move to Phase 2 until the user explicitly confirms the queue.**
+**Phase 2 is BLOCKED until the user explicitly says the queue is confirmed (e.g., "looks good", "go ahead", "confirmed"). Absence of objection is NOT confirmation — you must receive an affirmative response.**
 
 ### Phase 2 — Execute Queue
 
