@@ -53,9 +53,13 @@ Example:
 
 Changes should be ordered so foundational work comes first. Each change must be independently implementable in its own worktree off the current HEAD — if change B depends on change A being merged first, combine them into one change.
 
-Iterate with the user until the queue is finalized. The user may reorder, merge, split, or remove changes.
+Iterate with the user until the queue is finalized. After presenting the queue, explicitly ask:
 
-**Do not move to Phase 2 until the user confirms the queue.**
+> "Would you like to add, reorder, merge, split, or remove any items before we proceed?"
+
+The user may modify the queue in any way. If they add or change items, present the updated queue and ask again.
+
+**Do not move to Phase 2 until the user explicitly confirms the queue.**
 
 ### Phase 2 — Execute Queue
 
