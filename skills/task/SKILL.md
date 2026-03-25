@@ -65,14 +65,14 @@ Then WAIT for the user's response. Do NOT proceed, do NOT create worktrees, do N
 
 ### Phase 2 — Execute Queue
 
-Process each change one at a time. For each change, run steps 2a through 2h below, then move to the next.
+Process the entire queue without stopping for user input. Run steps 2a through 2h for each change, then immediately start the next. The only user interaction point is Phase 3 — after every change in the queue is complete.
 
 #### 2a — Create Worktree
 
-Create a git worktree branching from HEAD:
+Create a git worktree branching from HEAD. Append the current Unix timestamp to the branch name to avoid collisions:
 
 ```bash
-git worktree add -b <change-name> "../$(basename "$PWD")-<change-name>" HEAD
+git worktree add -b <change-name>-$(date +%s) "../$(basename "$PWD")-<change-name>" HEAD
 ```
 
 Record the original project directory. All subsequent work for this change happens in the worktree — `cd` into it before proceeding.
@@ -125,9 +125,9 @@ If no test suite exists, skip this step — do not create a test framework unles
 
 #### 2g — Verify Loop
 
-Invoke `/opsx:verify` to validate implementation against artifacts.
+Invoke `/opsx:verify` to validate implementation against artifacts. Verification catches drift between what was planned and what was built — fixing suggestions too prevents spec debt from accumulating.
 
-Fix ALL findings — including suggestions. **Parallelization:** Group findings by file, dispatch one subagent per file to fix concurrently. Re-run `/opsx:verify`. Repeat until zero findings.
+Fix ALL findings — including suggestions. **Parallelization:** Group findings by file, dispatch one subagent per file to fix concurrently. Re-run `/opsx:verify`. Repeat until zero findings. Maximum 100 passes — if findings persist, log the remaining ones and proceed to 2h.
 
 #### 2h — Exit Worktree
 
@@ -137,21 +137,19 @@ This change is verified. Return to the original project directory:
 cd <original-project-directory>
 ```
 
-Report to the user:
-> "Change N/M complete: **change-name** — verified with zero findings. Worktree: `<path>`, branch: `<branch>`"
+Log progress inline — do NOT stop or wait for user input:
+> "Change N/M complete: **change-name** — verified. Worktree: `<path>`, branch: `<branch>`. Continuing to next change..."
 
-Move to the next change in the queue. Repeat from 2a.
+Immediately proceed to the next change in the queue (back to 2a). Do not ask the user to review, confirm, or approve anything between queue items. The user reviews everything in Phase 3.
 
 ### Phase 3 — Summary & User Verification
 
-After all changes are processed, present a summary:
+After all changes are processed, present a summary table with smoke test steps the user can run to verify each change. Use `-` if nothing is testable from outside:
 
-| # | Change | Branch | Worktree Path | Status |
-|---|--------|--------|---------------|--------|
-| 1 | add-user-model | add-user-model | ../project-add-user-model | Verified |
-| 2 | add-auth-endpoints | add-auth-endpoints | ../project-add-auth-endpoints | Verified |
-
-Ask the user to review each worktree. Changes are fully isolated — reviewing or modifying one does not affect the others.
+| # | Change | Branch | Worktree Path | Status | Smoke Test |
+|---|--------|--------|---------------|--------|------------|
+| 1 | add-user-model | add-user-model-1711234567 | ../project-add-user-model | Verified | `cd ../project-add-user-model && npm test -- --grep User` |
+| 2 | add-auth-endpoints | add-auth-endpoints-1711234589 | ../project-add-auth-endpoints | Verified | `curl -X POST localhost:3000/auth/login -d '{"email":"test@test.com"}'` |
 
 > "All changes are verified and ready for review. Each worktree is independent — review them in any order. Let me know which to finalize, and if any need fixes."
 
