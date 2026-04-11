@@ -44,6 +44,19 @@ Build powerful, stateful CLI interfaces for any GUI application as compiled Go b
 |---------|-------------|
 | `/cli-anything-go` | Generate a CLI tool from a specification |
 
+### engineering-principles
+
+Meta-skills that shape how Claude approaches code. These skills don't add new commands — they activate automatically and change Claude's working habits.
+
+```
+/plugin install engineering-principles@claude-skills
+```
+
+| Skill | Description |
+|-------|-------------|
+| `dry-principle` | Enforces DRY thinking on every coding task — scans for knowledge duplication, magic values, boundary literals, and repeated logic patterns, while guarding against premature abstraction via the Rule of Three, coincidental similarity, and YAGNI. |
+| `fact-check` | Enforces evidence-based problem solving. No guessing — reads the actual source, traces callers and callees, checks git history, verifies library behavior against the version in use, and confirms each fix before moving on. |
+
 ## License
 
 MIT
