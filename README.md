@@ -32,6 +32,18 @@ Extensions for [OpenSpec](https://github.com/Fission-AI/OpenSpec) — autonomous
 |---------|-------------|
 | `/opsx-ext:task` | Queue-based autonomous workflow: explore, break into changes, execute each in an isolated worktree (plan, implement, test, verify), then review and commit |
 
+### commit
+
+Clean, minimal git commits — conventional-style summary, optional bullet body, no co-author trailers. Activates whenever you ask Claude to commit.
+
+```
+/plugin install commit@claude-skills
+```
+
+| Skill | Description |
+|-------|-------------|
+| `commit` | Stages relevant files by name, writes a conventional-style summary (with a bulleted body when multiple distinct changes are staged), and commits without `Co-Authored-By` trailers or trailing narration. |
+
 ### cli-anything-go
 
 Build powerful, stateful CLI interfaces for any GUI application as compiled Go binaries using Cobra + bubbletea.
