@@ -44,6 +44,18 @@ Clean, minimal git commits — conventional-style summary, optional bullet body,
 |-------|-------------|
 | `commit` | Stages relevant files by name, writes a conventional-style summary (with a bulleted body when multiple distinct changes are staged), and commits without `Co-Authored-By` trailers or trailing narration. |
 
+### tdd
+
+Test-Driven Development workflow — enforces Red/Green/Refactor discipline with test-first design.
+
+```
+/plugin install tdd@claude-skills
+```
+
+| Command | Description |
+|---------|-------------|
+| `/tdd [task]` | Work test-first: list scenarios, write a failing test, implement minimal code to pass, refactor, repeat |
+
 ### cli-anything-go
 
 Build powerful, stateful CLI interfaces for any GUI application as compiled Go binaries using Cobra + bubbletea.

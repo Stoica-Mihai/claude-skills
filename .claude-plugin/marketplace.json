@@ -28,6 +28,16 @@
       ]
     },
     {
+      "name": "tdd",
+      "source": "./",
+      "description": "Test-Driven Development workflow — Red/Green/Refactor discipline with test-first design",
+      "version": "1.0.0",
+      "keywords": ["tdd", "testing", "test-driven", "red-green-refactor", "workflow"],
+      "skills": [
+        "./skills/tdd"
+      ]
+    },
+    {
       "name": "cli-anything-go",
       "source": "./plugins/cli-anything-go",
       "description": "Build powerful, stateful CLI interfaces for any GUI application as compiled Go binaries using Cobra + bubbletea.",
