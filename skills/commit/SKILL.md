@@ -1,4 +1,5 @@
 ---
+version: 1.1.0
 name: commit
 description: >
   Handles git commits with concise, list-style messages and no co-author trailers.
@@ -13,8 +14,8 @@ Create clean, minimal git commits. No fluff, no co-author lines.
 
 ## Process
 
-1. Run `git status` and `git diff` (staged + unstaged) to understand what changed.
-2. Run `git log --oneline -5` to match the repo's existing message style.
+1. Run `git status` and `git diff` (staged + unstaged) to understand what changed. Also run `git log --oneline -5` to match the repo's existing message style.
+2. **Read the full output.** Never truncate diffs or logs with `head`, `tail`, line limits, or any other form of partial reading. A truncated diff means you're guessing about changes you haven't seen — and that leads to wrong or vague commit messages. If the diff is large, read all of it before writing the message. The quality of the commit message depends entirely on seeing the complete picture.
 3. Stage the relevant files by name — avoid `git add -A` or `git add .` to prevent accidentally staging secrets or junk.
 4. Write a commit message following the format below.
 5. Commit. Do not push unless explicitly asked.
