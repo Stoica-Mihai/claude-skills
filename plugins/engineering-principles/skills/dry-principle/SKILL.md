@@ -234,6 +234,131 @@ blocks that compose into larger pieces.
   and service modules. A 500-line class with multiple responsibilities will inevitably
   contain logic that gets duplicated elsewhere because nobody realizes it's buried in there.
 
+### Interaction and wiring duplication
+
+Event handlers, listeners, callbacks, middleware chains, and glue code across sibling modules
+often duplicate without looking duplicated. They're *behavioral* patterns — they don't show up
+as "same styled element" or "same magic number", so grep-based reviews and eyeball diffs miss
+them. What repeats is the *shape of the interaction*, not the surrounding content.
+
+Signals that point here:
+
+- Multiple sibling widgets each define a click / tap / gesture handler with the same button
+  set and emit three signals whose names differ by one word (`togglePopup` / `toggleConfigPopup`
+  / `dismissPopup` in one file, `togglePopup` / `toggleEditPopup` / `dismissPopup` in another).
+- Multiple HTTP handlers each start with an identical `load → authenticate → authorize` prelude
+  before their domain-specific body.
+- Multiple worker classes each wrap their main method in `emit("start"); try { ... } catch (e)
+  { emit("error", e); } finally { emit("done"); }`.
+- Multiple trait / interface impls share the same prelude and postlude around the one line
+  that actually differs.
+
+**Before (React, but the same shape appears in Android `OnClickListener`s, iOS `IBAction`s,
+Qt/QML `MouseArea`s, or plain DOM `addEventListener`):**
+
+```jsx
+// Clock.jsx
+function Clock({ onView, onConfig }) {
+  const handle = e => { e.button === 2 ? onConfig() : onView(); };
+  return <div onClick={handle} onContextMenu={handle}>{time}</div>;
+}
+
+// Weather.jsx — same click shape, different emitted callbacks
+function Weather({ onView, onEdit }) {
+  const handle = e => { e.button === 2 ? onEdit() : onView(); };
+  return <div onClick={handle} onContextMenu={handle}>{temp}</div>;
+}
+
+// CpuMeter.jsx — same again
+function CpuMeter({ onView, onConfig }) {
+  const handle = e => { e.button === 2 ? onConfig() : onView(); };
+  return <div onClick={handle} onContextMenu={handle}>{meter}</div>;
+}
+```
+
+**After — interaction contract declared once, widgets only supply the content:**
+
+```jsx
+function DualClickable({ onPrimary, onSecondary, children }) {
+  const handle = e => { e.button === 2 ? onSecondary() : onPrimary(); };
+  return <div onClick={handle} onContextMenu={handle}>{children}</div>;
+}
+
+function Clock()    { return <DualClickable onPrimary={openView} onSecondary={openConfig}>{time}</DualClickable>; }
+function Weather()  { return <DualClickable onPrimary={openView} onSecondary={openEdit}>{temp}</DualClickable>; }
+function CpuMeter() { return <DualClickable onPrimary={openView} onSecondary={openConfig}>{meter}</DualClickable>; }
+```
+
+The knowledge being unified isn't the widget's appearance — it's the *interaction contract*:
+left = primary, right = secondary. Declaring that contract once means when you decide
+middle-click should close, or that hold-to-reveal needs a keyboard equivalent, you change one
+file instead of N.
+
+### Call-site duplication
+
+A subtler form of duplication — and one the "extract a helper function" instinct tends to miss
+because the duplicate isn't the function itself. The *callers* share the same orchestration
+shape around a polymorphic dependency: before-hooks, after-hooks, error wrapping, bookkeeping.
+Callee-site duplication is "the same function lives in three files." Call-site duplication is
+"three call sites wrap their calls in the same orchestration."
+
+You look for this pattern by asking **"what did every caller do *around* the interesting
+call?"** rather than **"what did every caller call?"**.
+
+Examples across ecosystems:
+
+- Every panel opener runs `dismissOtherPanels(); panel.toggle();`.
+- Every DB write does `tx.begin(); try { work(); tx.commit(); } catch { tx.rollback(); throw; }`.
+- Every React data-fetcher does `setLoading(true); try { setData(await fetch()); } catch (e)
+  { setError(e); } finally { setLoading(false); }`.
+- Every Go HTTP handler does `defer log.Trace(...)(); if err := auth(r); err != nil { return
+  401 }; if err := validate(r); err != nil { return 400 }; ...business...`.
+
+The fix is to lift the orchestration into a helper that accepts the varying piece as a
+parameter — a context manager, a decorator, a higher-order function, a hook, a middleware
+layer, a trait default method. The name of the mechanism differs by language; the move is the
+same.
+
+**Before (Python):**
+```python
+# order_service.py
+tx.begin()
+try:
+    order.save()
+    tx.commit()
+except Exception:
+    tx.rollback()
+    raise
+
+# invoice_service.py — same orchestration, different work
+tx.begin()
+try:
+    invoice.save()
+    tx.commit()
+except Exception:
+    tx.rollback()
+    raise
+```
+
+**After:**
+```python
+@contextmanager
+def transactional(tx):
+    tx.begin()
+    try:
+        yield
+        tx.commit()
+    except Exception:
+        tx.rollback()
+        raise
+
+with transactional(tx): order.save()
+with transactional(tx): invoice.save()
+```
+
+Call-site duplication is how "shotgun surgery" smells are born — a change to the orchestration
+touches every caller. Unifying it turns one conceptual change into one file change.
+
 ## Guardrails: when NOT to deduplicate
 
 DRY's biggest failure mode is premature or wrong abstraction. These guardrails are just as
@@ -306,6 +431,17 @@ duplication, not when you imagine you might.
    refactor if the path is clear, or note it as tech debt if the fix is complex.
 3. If you're about to copy-paste-modify, stop. Can you parameterize the existing code instead?
    But only if the variation represents the same underlying knowledge.
+4. **Look sideways before finishing.** When the module you're touching has 3+ sibling files
+   at the same level (components in `components/`, handlers in a route package, services
+   under `services/`, structs implementing the same trait, views in an MVC app), take 30
+   seconds to diff their *interface surfaces* — exported functions, emitted events, signal
+   names, method signatures, prop types. If three siblings expose the same outward shape in
+   parallel (same signal triples, same event set, same prop interface), that's the Rule of
+   Three across files, and it's exactly the archetype the rule was designed to catch.
+   In-file review misses this every time because each file reads fine on its own. Repeated
+   invocations of DRY review on a project that never surface a given duplication are a
+   signal to widen the scan: if narrow review has already been run three times without
+   catching something, the something lives between files rather than within one.
 
 ### When fixing bugs
 
