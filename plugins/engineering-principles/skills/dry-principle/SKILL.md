@@ -32,6 +32,35 @@ Before writing or modifying code, scan the relevant context for these patterns:
   authoritative implementation that others reference.
 - **Parallel data structures** — two arrays/objects that must be kept in sync (a list of names
   and a separate list of IDs at matching indices). Merge into a single structure.
+- **Redundant or un-derived state** — a stored value, cache, observer, or effect that restates
+  knowledge already held elsewhere. If `total` is kept alongside `items`, both encode the same
+  fact and will drift. If a `useEffect` mirrors one field of a store into local state, the
+  local copy is duplicated knowledge. If a watcher fires every tick to recompute something
+  that could be derived at read time, the "when it's fresh" rule lives in two places.
+
+  **Before:**
+  ```jsx
+  function Cart({ items }) {
+    const [total, setTotal] = useState(0);
+    useEffect(() => {
+      setTotal(items.reduce((s, i) => s + i.price, 0));
+    }, [items]);
+    return <div>{total}</div>;
+  }
+  ```
+  **After:**
+  ```jsx
+  function Cart({ items }) {
+    const total = items.reduce((s, i) => s + i.price, 0);
+    return <div>{total}</div>;
+  }
+  ```
+
+  The test: "can this value be computed from other values I already have?" If yes, derive it at
+  read time instead of storing a parallel copy. Storing it creates two jobs — computing it and
+  keeping it in sync — and "keeping in sync" is where the bugs live. Similarly, an
+  observer/effect/watcher that exists only to push a value from A into B is usually a sign that
+  B should be a derivation of A, not a separate piece of state.
 - **Scattered configuration** — the same value (URL, timeout, threshold, feature flag) hardcoded
   in multiple files. Extract to a single config source.
 - **Repeated validation** — identical input checks in the UI, API layer, and database. Derive
@@ -67,6 +96,14 @@ Before writing or modifying code, scan the relevant context for these patterns:
   thresholds, pixel values, regex patterns, format strings, error messages, and config
   defaults scattered through logic. Extract them to named constants at the top of the file
   or in a shared constants module.
+
+  Before hardcoding a literal, check whether the codebase *already* has a name for it. An
+  existing enum, string union, branded type, or constants module is the authoritative source
+  of that knowledge — using `"active"` as a raw string when `UserStatus.Active` already exists
+  introduces a second representation that can drift. Common hiding places: `constants.ts`,
+  `types.ts`, `enums.rs`, a domain-specific module (`order/status.ts`), or a generated types
+  file from a schema. "Stringly-typed" code that ignores these existing names is duplicated
+  knowledge dressed up as a shortcut.
 
 - **Boundary and state-check literals** — values like `0`, `1`, `-1` look harmless but often
   encode meaningful state boundaries. When a comparison against a small literal is really
@@ -155,6 +192,41 @@ Before writing or modifying code, scan the relevant context for these patterns:
   Signs you need a helper: you're copying a block and changing one or two values, multiple
   functions follow the same setup/validate/act structure, or the same error handling pattern
   appears across handlers.
+
+- **Parameter sprawl** — a function that has accumulated booleans, mode strings, or optional
+  hooks because each new caller needed "just one more tweak." Each flag encodes a branch of
+  behavior, and the *which-flags-mean-what* knowledge ends up duplicated at every call site.
+  The fix is usually not another parameter — it's a restructure: split into two functions,
+  take a strategy object, or let callers compose smaller pieces.
+
+  **Before:**
+  ```python
+  def send_email(to, subject, body, *,
+                 html=False,
+                 retry=False,
+                 track_opens=False,
+                 dry_run=False,
+                 async_=False,
+                 skip_unsubscribed=True):
+      ...
+  ```
+  Every caller now has to know that `(html=True, track_opens=True, skip_unsubscribed=True)`
+  means "marketing email" and `(retry=True, async_=True)` means "transactional." That mapping
+  is real knowledge, and it's being reassembled at each call site instead of living in one
+  place.
+
+  **After:**
+  ```python
+  def send_transactional(to, subject, body): ...
+  def send_marketing(to, subject, body): ...
+  # or, when the variants really are the same operation with a policy:
+  send_email(to, subject, body, policy=TRANSACTIONAL)
+  ```
+
+  Signs of sprawl: the *next* change to the signature is obviously another boolean; multiple
+  call sites pass the same constellation of flags; internal branches share little beyond the
+  function's name. When you feel the urge to add a parameter to existing code, ask whether
+  you're really describing a new operation — and give it its own name if so.
 
 - **Boilerplate patterns** — if every new module requires the same 15-line setup sequence,
   that's a sign the setup should be a shared helper or generated from a template.
@@ -408,8 +480,19 @@ duplication, not when you imagine you might.
 
 ### When writing new code
 
-1. Before writing, check existing code for related patterns. Is there already a helper,
-   constant, config value, or component that does what you need? Use it.
+1. **Before writing, search for existing helpers.** Scan the places this codebase keeps
+   shared knowledge:
+   - The file you're editing and its adjacent siblings in the same directory
+   - Utility / helper / shared modules (common names: `utils/`, `lib/`, `common/`, `shared/`,
+     `helpers/`)
+   - Type and constant modules (`constants.ts`, `types.ts`, `enums.rs`) — existing string
+     unions, enums, or branded types the literal you're about to hardcode may already live in
+   - Central homes for cross-cutting concerns (auth, logging, HTTP clients, db helpers,
+     feature flags)
+
+   If a helper, constant, config value, or component already does what you need, use it. If
+   one *almost* does, consider extending it rather than writing a parallel version — but only
+   when the two callers really share the same knowledge (see "Coincidental similarity" below).
 2. If you're about to write something that looks like existing code, pause and ask: is this
    the same knowledge? If yes, extend or reuse the existing implementation. If no (different
    reasons to change), write it fresh.

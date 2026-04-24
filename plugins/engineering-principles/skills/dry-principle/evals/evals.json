@@ -49,6 +49,42 @@
         {"name": "no_raw_negative_one", "description": "The indexOf not-found check (=== -1) uses a named constant like NOT_FOUND, not raw -1"},
         {"name": "boundary_constants_or_helpers", "description": "Boundary values are centralized — either as constants at the top or as reusable helper functions"}
       ]
+    },
+    {
+      "id": 4,
+      "prompt": "Write a React TodoList component that receives a `todos` prop (array of {id, title, completed}). It should display: the total item count, completed count, active count, a completion-percentage progress bar (as a number 0-100), and a 'Clear completed' button that is disabled when there are no completed items. Render the counts and percentage in the header.",
+      "expected_output": "Counts and percentage are derived from the `todos` prop at render time, not stored as separate useState values synchronized via useEffect. No redundant state, no mirroring effects.",
+      "files": [],
+      "assertions": [
+        {"name": "no_redundant_count_state", "description": "totalCount/completedCount/activeCount/percentage are computed at render time, not held as separate useState values"},
+        {"name": "no_mirroring_effect", "description": "There is no useEffect whose sole job is to recompute counts/percentage from todos and push them into state"},
+        {"name": "clear_button_derived", "description": "The Clear-completed button's disabled prop is computed from todos (e.g. completedCount === 0), not stored in separate state"},
+        {"name": "single_source_of_truth", "description": "The todos prop is the single source of truth; all displayed numbers derive from it in one place"}
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "We have an existing function `notify_user(user, message)` that sends a default email. Extend it to also support: sending SMS instead of email, retrying up to 3 times on failure, writing to an audit log, skipping users who have opted out, and deferring sends until business hours. Call sites: signup_handler needs email + audit log; password_reset_handler needs email + retry; marketing_flow needs SMS + opt-out check + business-hours deferral; alert_system needs SMS + retry + audit log. Write the notify function and the four call sites.",
+      "expected_output": "The function is NOT extended with a growing list of boolean flags. Instead, distinct named operations (notify_signup, notify_password_reset, notify_marketing, notify_alert) or a policy/strategy object carries the per-use-case knowledge. Call sites read as intent, not as flag combinations.",
+      "files": [],
+      "assertions": [
+        {"name": "no_boolean_parameter_sprawl", "description": "The notification function does not accept a long list of boolean/mode parameters (e.g. sms=, retry=, audit=, skip_optout=, business_hours=)"},
+        {"name": "call_sites_describe_intent", "description": "Call sites express what they're doing (signup notification, marketing notification, etc.) rather than assembling flag constellations"},
+        {"name": "shared_pieces_factored", "description": "Common building blocks (retry, audit, opt-out check, business-hours deferral, SMS vs email transport) exist as reusable helpers/decorators/policies, not inlined at each call site"},
+        {"name": "no_parallel_flag_knowledge", "description": "No two call sites independently encode the same 'what this notification type does' knowledge via duplicated flag sets"}
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "The file evals/fixtures/order_status.ts already defines an OrderStatus type and constants used throughout this codebase. Write a TypeScript function `getCustomerMessage(order)` that returns a user-facing message: 'Awaiting fulfillment' for pending, 'Your package is on its way' for shipped, 'Order complete — please leave a review' for delivered, and 'Order cancelled — contact support' for cancelled. Also write a second function `isTerminalStatus(order)` that returns true for delivered or cancelled orders. Use the existing type and constants — do not redeclare them.",
+      "expected_output": "The code imports OrderStatus from the existing fixture and references the named constants (OrderStatus.Pending, etc.) rather than hardcoding raw strings like 'pending' or 'shipped' in comparisons.",
+      "files": ["evals/fixtures/order_status.ts"],
+      "assertions": [
+        {"name": "imports_existing_type", "description": "The code imports OrderStatus from the existing fixture file instead of redeclaring it"},
+        {"name": "no_raw_status_strings", "description": "Comparisons use OrderStatus.Pending / .Shipped / .Delivered / .Cancelled (or the equivalent string-union reference), NOT raw string literals like 'pending' in conditionals or switch cases"},
+        {"name": "terminal_status_uses_constants", "description": "isTerminalStatus references the named constants, not raw 'delivered'/'cancelled' strings"},
+        {"name": "no_redeclared_enum", "description": "The code does not define its own parallel OrderStatus enum, union, or constants block"}
+      ]
     }
   ]
 }
