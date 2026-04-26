@@ -1,5 +1,5 @@
 ---
-version: 1.0.0
+version: 1.1.0
 name: tdd
 description: >
   Test-Driven Development workflow. Use when the user asks to work test-first,
@@ -41,6 +41,11 @@ Every unit of work follows three steps. Never skip the third.
 
 - Pick the next smallest piece of behavior
 - Write a test that will pass once that behavior exists
+- Assert what you actually expect, not a placeholder. If you don't know the
+  exact value (e.g., a specific error message string), assert the contract
+  you care about (e.g., "raises `ValueError`") rather than guess. Tweaking
+  the assertion later to match whatever the implementation happens to emit
+  is test-after, not test-first — see Pitfalls.
 - Run it — confirm it **fails for the right reason** (not a syntax error or import failure)
 - If writing the test is hard, that's a design signal: the interface isn't clear yet
 
@@ -154,3 +159,4 @@ integration and acceptance tests for full coverage.
 | Testing implementation, not behavior | Test interfaces and outputs, not internal calls |
 | Over-mocking | Default to real objects; mock only what's genuinely awkward |
 | Writing code before a failing test | If there's no red, go back and write the test |
+| Editing the test's expected value to match what the implementation produced | Tests specify the contract; implementation conforms to tests. If the assertion was wrong or over-specific, change it **deliberately** (back to red, then green again) — not silently while debugging to green. If the exact value was incidental, assert the looser contract (type, shape, key invariant) instead of pinning a string you guessed at. |
