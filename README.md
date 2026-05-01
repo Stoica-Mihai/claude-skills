@@ -30,7 +30,8 @@ Extensions for [OpenSpec](https://github.com/Fission-AI/OpenSpec) — autonomous
 
 | Command | Description |
 |---------|-------------|
-| `/opsx-ext:task` | Queue-based autonomous workflow: explore, break into changes, execute each in an isolated worktree (plan, implement, test, verify), then review and commit |
+| `/opsx-ext:task` | Single-change autonomous workflow: explore, plan, self-review, implement, test, verify in the current working tree, then review and commit |
+| `/opsx-ext:task-queue` | Queue-based autonomous workflow for multi-change requests: explore, break into changes, execute each in an isolated worktree (plan, implement, test, verify), then review and commit |
 
 ### commit
 

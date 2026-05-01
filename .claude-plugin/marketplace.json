@@ -11,10 +11,11 @@
       "name": "opsx-ext",
       "source": "./",
       "description": "Extensions for OpenSpec — autonomous task workflows with self-correction and verification loops",
-      "version": "1.5.0",
+      "version": "1.6.0",
       "keywords": ["openspec", "opsx", "workflow", "spec-driven", "autonomous"],
       "skills": [
-        "./skills/task"
+        "./skills/task",
+        "./skills/task-queue"
       ]
     },
     {
