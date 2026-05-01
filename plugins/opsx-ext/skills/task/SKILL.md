@@ -45,17 +45,11 @@ After exploration, present:
 - Gaps, ambiguities, or open questions
 - A short, descriptive change name (kebab-case)
 
-**HARD STOP — Scope confirmation is mandatory.**
-
-If the request looks like it should split into multiple independent changes (e.g., "add the user model AND the auth endpoints AND the middleware"), say so and recommend `opsx-ext:task-queue` instead. Otherwise, ask the user:
-
-> "Ready to proceed with the change `<change-name>`? Any clarifications or scope adjustments before we plan?"
-
-Then WAIT for the user's response. Do NOT generate artifacts, do NOT invoke any Phase 2 steps until the user explicitly confirms (e.g., "looks good", "go ahead", "confirmed"). Absence of objection is NOT confirmation — you must receive an affirmative response.
+If the request clearly splits into multiple independent changes (e.g., "add the user model AND the auth endpoints AND the middleware"), stop and recommend `opsx-ext:task-queue` instead — that case warrants worktree-per-change isolation. Otherwise, proceed directly to Phase 2 without asking for confirmation. The user reviews everything in Phase 3; gating the start of implementation on a confirmation prompt just adds friction.
 
 ### Phase 2 — Plan & Implement
 
-Once the user confirms, run steps 2a through 2f without stopping. The next user interaction point is Phase 3.
+Run steps 2a through 2f without stopping. The next user interaction point is Phase 3.
 
 #### 2a — Create Change
 
