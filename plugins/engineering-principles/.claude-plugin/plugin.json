@@ -1,0 +1,11 @@
+{
+  "name": "engineering-principles",
+  "description": "Meta-skills that shape how Claude approaches code — DRY thinking on every edit, and evidence-based investigation for every bug and code change.",
+  "version": "1.2.0",
+  "author": {
+    "name": "MCS"
+  },
+  "repository": "https://github.com/Stoica-Mihai/claude-skills",
+  "license": "MIT",
+  "keywords": ["dry", "fact-check", "code-quality", "debugging", "engineering", "principles"]
+}

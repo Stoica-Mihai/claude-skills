@@ -1,0 +1,10 @@
+{
+  "name": "cli-anything-go",
+  "description": "Build powerful, stateful CLI interfaces for any GUI application as compiled Go binaries using Cobra + bubbletea.",
+  "version": "1.0.0",
+  "author": {
+    "name": "MCS"
+  },
+  "repository": "https://github.com/Stoica-Mihai/claude-skills",
+  "license": "MIT"
+}

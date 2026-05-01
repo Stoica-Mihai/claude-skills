@@ -1,0 +1,11 @@
+{
+  "name": "opsx-ext",
+  "description": "Extensions for OpenSpec — autonomous task workflows with self-correction and verification loops",
+  "version": "1.6.1",
+  "author": {
+    "name": "MCS"
+  },
+  "repository": "https://github.com/Stoica-Mihai/claude-skills",
+  "license": "MIT",
+  "keywords": ["openspec", "opsx", "workflow", "spec-driven", "autonomous"]
+}

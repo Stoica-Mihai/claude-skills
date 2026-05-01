@@ -1,0 +1,11 @@
+{
+  "name": "tdd",
+  "description": "Test-Driven Development workflow — Red/Green/Refactor discipline with test-first design",
+  "version": "1.1.1",
+  "author": {
+    "name": "MCS"
+  },
+  "repository": "https://github.com/Stoica-Mihai/claude-skills",
+  "license": "MIT",
+  "keywords": ["tdd", "testing", "test-driven", "red-green-refactor", "workflow"]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "commit",
+  "description": "Clean, minimal git commits — conventional-style summary, optional bullet body, no co-author trailers",
+  "version": "1.0.1",
+  "author": {
+    "name": "MCS"
+  },
+  "repository": "https://github.com/Stoica-Mihai/claude-skills",
+  "license": "MIT",
+  "keywords": ["git", "commit", "workflow"]
+}
