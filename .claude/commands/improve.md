@@ -1,7 +1,7 @@
 ---
 name: improve
 description: Use when the user wants to improve an existing skill in this repository. Reads a skill's SKILL.md (and any supporting files), analyzes it for quality and clarity, applies improvements, increments the plugin version in marketplace.json, and updates README.md if anything user-facing changed. Trigger this whenever someone says "improve this skill", "make this skill better", "refine skill X", "clean up the task skill", or wants to enhance an existing skill's instructions, description, or structure.
-argument-hint: <skill name or path, e.g. "task" or "skills/task">
+argument-hint: <skill name or path, e.g. "task" or "plugins/opsx-ext/skills/task">
 ---
 
 # Skill Improvement Workflow
@@ -12,12 +12,10 @@ Takes an existing marketplace skill and makes it better — clearer instructions
 
 Resolve the target skill from the argument:
 
-- **Name** (e.g., `task`): look in `skills/<name>/SKILL.md`
-- **Qualified name** (e.g., `opsx-ext:task`): strip the plugin prefix and resolve as above
+- **Name** (e.g., `task`): search `plugins/*/skills/<name>/SKILL.md`
+- **Qualified name** (e.g., `opsx-ext:task`): split on `:` — look in `plugins/<plugin>/skills/<skill>/SKILL.md`
 - **Directory path**: look for `SKILL.md` inside it
 - **File path**: use directly if it ends in `SKILL.md`
-
-Also check `plugins/` if nothing is found under `skills/`.
 
 Read the full SKILL.md and scan for any referenced resources (scripts, references, assets directories). Read those too — you need the complete picture to improve anything.
 

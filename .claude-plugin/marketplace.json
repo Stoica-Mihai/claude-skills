@@ -9,34 +9,24 @@
   "plugins": [
     {
       "name": "opsx-ext",
-      "source": "./",
+      "source": "./plugins/opsx-ext",
       "description": "Extensions for OpenSpec — autonomous task workflows with self-correction and verification loops",
-      "version": "1.6.0",
-      "keywords": ["openspec", "opsx", "workflow", "spec-driven", "autonomous"],
-      "skills": [
-        "./skills/task",
-        "./skills/task-queue"
-      ]
+      "version": "1.6.1",
+      "keywords": ["openspec", "opsx", "workflow", "spec-driven", "autonomous"]
     },
     {
       "name": "commit",
-      "source": "./",
+      "source": "./plugins/commit",
       "description": "Clean, minimal git commits — conventional-style summary, optional bullet body, no co-author trailers",
-      "version": "1.0.0",
-      "keywords": ["git", "commit", "workflow"],
-      "skills": [
-        "./skills/commit"
-      ]
+      "version": "1.0.1",
+      "keywords": ["git", "commit", "workflow"]
     },
     {
       "name": "tdd",
-      "source": "./",
+      "source": "./plugins/tdd",
       "description": "Test-Driven Development workflow — Red/Green/Refactor discipline with test-first design",
-      "version": "1.1.0",
-      "keywords": ["tdd", "testing", "test-driven", "red-green-refactor", "workflow"],
-      "skills": [
-        "./skills/tdd"
-      ]
+      "version": "1.1.1",
+      "keywords": ["tdd", "testing", "test-driven", "red-green-refactor", "workflow"]
     },
     {
       "name": "cli-anything-go",
