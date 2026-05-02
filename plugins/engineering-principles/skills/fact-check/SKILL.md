@@ -77,7 +77,26 @@ If after thorough investigation something remains unclear:
 - Propose a way to resolve the uncertainty (run a test, check logs, ask the user for context)
 - **Never fill gaps with assumptions presented as facts**
 
-### 6. Verify each fix before moving on
+### 6. Update your hypothesis when evidence contradicts it
+
+Investigation produces evidence — traces, logs, screenshots, error messages, test output, debugger state, or a flag from a check (including this skill). When new evidence contradicts something you previously said, **the prior claim is wrong**. Update it. Do not:
+
+- Re-assert the original position with more confidence
+- Hand-wave the conflicting evidence as "probably noise" or "not the real problem"
+- Propose a fix that's still consistent with the discarded model while ignoring what the trace actually shows
+
+**Repeated assertion is a red flag.** If you have stated the same conclusion two or more times and the user is still pushing back — or the trace keeps showing something else each time you re-run it — treat that as strong evidence that your model is wrong. Stop. Read the actual output (not your remembered interpretation of it). Investigate the discrepancy directly before saying anything else.
+
+Concretely:
+
+- **Read the full trace/log/screenshot/output before responding.** Not a snippet you recall, not a paraphrase — the actual lines. If the user pasted output, re-read it.
+- **If a check or skill flags a pattern, that flag IS evidence.** Act on it. Don't argue with it or rationalize past it. The whole point of running the check was to surface things you'd otherwise miss.
+- **Name the contradiction explicitly.** "The trace shows X at line Y, which contradicts my earlier claim that Z. Re-investigating: the actual root cause appears to be…"
+- **When the symptom doesn't move after a fix, your model is wrong, not the fix incomplete.** Stop iterating on the same hypothesis. Re-read the evidence and form a different one.
+
+The cost of updating is small. The cost of doubling down — stacking fix after fix on a wrong model — is large, and the user pays it.
+
+### 7. Verify each fix before moving on
 
 A fix isn't done when you write it — it's done when you've confirmed it works **and** hasn't broken anything else. After every change:
 
@@ -87,7 +106,7 @@ A fix isn't done when you write it — it's done when you've confirmed it works 
 
 This matters because skipping verification creates a false sense of progress. You think bug A is fixed and move on, but it wasn't actually fixed — or your fix was subtly wrong — and now you're stacking bug B's fix on a broken foundation.
 
-### 7. Protect previous fixes when making new changes
+### 8. Protect previous fixes when making new changes
 
 This is where regressions happen: you fix bug A, then while fixing bug B you accidentally undo or conflict with the bug A fix. To prevent this:
 
@@ -104,6 +123,8 @@ The pattern to watch for: you make a change, it doesn't quite work, so you rever
 - **Don't assume API behavior.** Look it up. Libraries change between versions, and projects sometimes use wrappers that alter behavior.
 - **Don't skip the investigation because the fix seems obvious.** Obvious-looking bugs often have non-obvious causes. The "obvious" fix might break something else you didn't check.
 - **Don't present hypotheses as conclusions.** If you're theorizing, make that explicit: "Based on what I've read so far, I think X might be the cause — let me verify by checking Y."
+- **Don't re-assert a claim after evidence contradicts it.** If the trace, log, screenshot, test output, or a flag from a check disagrees with what you said, your claim is wrong — update it instead of repeating it with more confidence. Saying the same thing two or three times in a row, against pushback, is a strong sign you should stop and re-read the evidence.
+- **Don't ignore output from your own checks.** If you ran a fact-check, a linter, a test, or this skill itself and it surfaced a pattern, that surfacing is the whole point — treat it as evidence and act on it, not as commentary you can dismiss.
 - **Don't move on to the next bug without verifying the current fix.** Unverified fixes compound — by the time you notice something's wrong, you won't know which change caused it.
 - **Don't make broad edits to "clean up" while fixing a specific bug.** Each change is a chance to regress. Keep your edits minimal and focused on the problem at hand. Refactoring is a separate task.
 - **Don't revert or rewrite code without re-checking what else that code was doing.** A line you want to change might also be carrying a previous fix. Read the surrounding context and recent git history before touching it.
@@ -122,8 +143,14 @@ Task received (may involve multiple bugs/changes)
     ├── Form diagnosis based on evidence
     ├── State what you verified
     │
+    ├── New evidence contradicts the diagnosis?
+    │   ├── Update the hypothesis — do not re-assert
+    │   ├── Re-read the actual trace/log/output (not a remembered version)
+    │   └── Stated the same conclusion 2+ times against pushback → STOP, re-investigate
+    │
     ├── Apply fix
     ├── Verify the fix works (run tests, re-read diff)
+    ├── Symptom unchanged → model was wrong, not fix incomplete → re-investigate
     │
     ├── Moving to next fix?
     │   ├── Note what you changed and where
