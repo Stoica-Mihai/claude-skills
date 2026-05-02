@@ -73,11 +73,34 @@ Collect all concerns, fix them, re-review. Repeat until zero concerns. Maximum 1
 
 #### 2d — Implement
 
-Invoke `/opsx:apply` to implement all tasks from the change.
+Run implementation in **parallel waves**, orchestrated by this skill directly. Do **not** invoke `/opsx:apply` here — that command's step 6 is an in-process serial loop ("for each pending task: implement, mark complete, continue"), so once it starts there is no task list left to fan out from. Parallelism must be planned before any task is touched.
 
-**Parallelization:** After `/opsx:apply` generates the task list, identify independent tasks (no shared file edits, no data dependencies). Dispatch one subagent per independent task. Serialize tasks that modify the same file, but run them in parallel with tasks touching other files.
+**Step 1 — Read the task list.** Open `openspec/changes/<change-name>/tasks.md` and the change's other artifacts (`proposal.md`, `design.md`, `specs/`).
 
-If any subagent reports errors, dispatch fix subagents in parallel for independent errors. Resolve all before proceeding.
+**Step 2 — Group tasks by primary edit target.** Tasks within tasks.md are usually grouped into sections that each map to one source file (e.g. Section 4 → `src/paint.rs`). All tasks within one such file group MUST be handled by the same subagent — concurrent edits to the same file by separate subagents corrupt each other. Identify each group's primary file(s) and the inter-group dependencies (does group B's file `use`/`import`/re-export from group A's file?).
+
+**Step 3 — Build a wave plan.** A typical wave structure:
+
+- **Wave 0 — Scaffolding.** Cargo.toml / package.json / pyproject.toml / workspace registration / module declarations / error types and other primitives that every later group depends on. Run as a single subagent or do directly — usually small enough to not need fan-out.
+- **Wave 1 — Independent modules.** Every file group whose only inter-group dependency is on Wave 0 artifacts. Fan out: one subagent per group, dispatched in parallel.
+- **Wave 2+ — Aggregators.** Files that re-export from or wire together Wave 1 modules (e.g. `lib.rs`, `index.ts`, `mod.rs`, top-level `__init__.py`). Run after Wave 1 is fully complete.
+- **Test wave.** Test files. Usually one subagent per test file, in parallel — but only after the code under test is complete.
+- **Verify wave.** Build / typecheck / lint / `openspec validate` commands. Sequential; the orchestrator runs these directly via Bash.
+
+When in doubt, prefer one extra wave with cleaner dependency lines over packing borderline-independent groups into the same wave.
+
+**Step 4 — Dispatch each wave.** For each wave, send all subagent calls in a single tool-use turn (multiple Agent tool calls in one assistant message). Each subagent prompt MUST include:
+
+- The exact tasks it owns, by their tasks.md numbering (e.g. "implement tasks 4.1 through 4.7")
+- The full text of those tasks copied inline (don't make subagents re-read tasks.md)
+- The relevant cross-references from `proposal.md` / `design.md` / spec deltas inline
+- The list of files it is allowed to create/edit (its primary file(s))
+- An explicit instruction to **return a JSON list of completed task numbers** in its final summary, e.g. `completed: ["4.1","4.2","4.3","4.4","4.5","4.6","4.7"]`
+- An explicit instruction to **NOT edit `tasks.md`** — that file is owned by the orchestrator
+
+**Step 5 — Mark tasks complete after each wave.** Once every subagent in the current wave has returned, the orchestrator reads `tasks.md` and edits each `- [ ] N.M` → `- [x] N.M` for the task numbers the subagents reported as complete. This is the only place tasks.md is mutated. Then proceed to the next wave.
+
+**Step 6 — Errors.** If any subagent in a wave reports errors or partial completion, dispatch fix subagents in the next turn (still parallel for independent errors). Do not start the next wave until the current wave's outputs are clean.
 
 **Config file update:** After implementation, check whether the change introduces config-driven behavior (env vars, feature flags, settings). If so, update relevant existing config files (`.env.example`, config templates, schema files, Docker/compose files). Only update files that already exist — do not create new config infrastructure.
 

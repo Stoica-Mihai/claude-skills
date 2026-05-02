@@ -1,7 +1,7 @@
 {
   "name": "opsx-ext",
   "description": "Extensions for OpenSpec — autonomous task workflows with self-correction and verification loops",
-  "version": "1.6.2",
+  "version": "1.7.0",
   "author": {
     "name": "MCS"
   },
