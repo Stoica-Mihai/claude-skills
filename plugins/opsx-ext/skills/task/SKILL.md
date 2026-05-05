@@ -77,7 +77,7 @@ Run implementation in **parallel waves**, orchestrated by this skill directly. D
 
 **Step 1 — Read the task list.** Open `openspec/changes/<change-name>/tasks.md` and the change's other artifacts (`proposal.md`, `design.md`, `specs/`).
 
-**Step 2 — Group tasks by primary edit target.** Tasks within tasks.md are usually grouped into sections that each map to one source file (e.g. Section 4 → `src/paint.rs`). All tasks within one such file group MUST be handled by the same subagent — concurrent edits to the same file by separate subagents corrupt each other. Identify each group's primary file(s) and the inter-group dependencies (does group B's file `use`/`import`/re-export from group A's file?).
+**Step 2 — Group tasks by primary edit target.** Tasks within tasks.md are usually grouped into sections that each map to one source file (e.g. Section 4 → `src/paint.rs`). All tasks within one such file group MUST be handled by the same subagent — concurrent edits to the same file by separate subagents corrupt each other. Then identify each group's primary file(s) and which groups depend on symbols exported by which other groups.
 
 **Step 3 — Build a wave plan.** A typical wave structure:
 
@@ -126,13 +126,11 @@ Fix ALL findings — including suggestions. **Parallelization:** Group findings 
 
 ### Phase 3 — Summary & User Verification
 
-Present a summary of what was changed and a smoke test the user can run to verify it. Use `-` if nothing is testable from outside.
+Present a one-paragraph summary: the change name, file count, and a smoke test the user can run to verify it. Omit the smoke test if nothing is testable from outside (e.g. an internal refactor).
 
-| Change | Status | Files Changed | Smoke Test |
-|--------|--------|---------------|------------|
-| add-user-model | Verified | 4 files | `npm test -- --grep User` |
+Example:
 
-> "Change is verified and ready for review. Let me know if it looks good to finalize, or what needs fixing."
+> "`add-user-model` is verified and ready for review (4 files changed). Smoke test: `npm test -- --grep User`. Let me know if it looks good to finalize, or what needs fixing."
 
 If the user reports issues, fix them, re-run `/opsx:verify` until clean, then return and wait for confirmation.
 
