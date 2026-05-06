@@ -101,6 +101,7 @@ When in doubt, prefer one extra wave with cleaner dependency lines over packing 
 - The list of files it is allowed to create/edit (its primary file(s))
 - An explicit instruction to **return a JSON list of completed task numbers** in its final summary, e.g. `completed: ["4.1","4.2","4.3","4.4","4.5","4.6","4.7"]`
 - An explicit instruction to **NOT edit `tasks.md`** — that file is owned by the orchestrator
+- An explicit comment policy: **only write a comment when it captures a non-obvious WHY** (hidden constraint, surprising invariant, workaround for a specific bug). Do not restate the grammar, type signatures, or what the code does — readers can see that. When in doubt, omit.
 
 **Step 5 — Mark tasks complete after each wave.** Once every subagent in the current wave has returned, the orchestrator reads `tasks.md` and edits each `- [ ] N.M` → `- [x] N.M` for the task numbers the subagents reported as complete. This is the only place tasks.md is mutated. Then proceed to the next wave.
 
