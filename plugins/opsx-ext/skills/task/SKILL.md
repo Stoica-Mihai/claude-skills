@@ -59,6 +59,8 @@ Invoke `/opsx:new` with the change name from Phase 1.
 
 Invoke `/opsx:ff` to fast-forward and generate all planning artifacts (proposal, specs, design, tasks).
 
+**Validate structure.** Run `openspec validate <change-name>` as a Bash call. Validation enforces format rules that the semantic review in 2c does not check — every `### Requirement:` must contain SHALL/MUST, must have body text, and must include at least one `#### Scenario:` block. If validation errors, edit the artifacts to fix the structural issues and re-run until clean before proceeding to 2c.
+
 #### 2c — Self-Review Artifacts
 
 Ask yourself: **"Are there any concerns about these artifacts?"**
@@ -70,6 +72,8 @@ Ask yourself: **"Are there any concerns about these artifacts?"**
 - Technical risks in the design
 
 Collect all concerns, fix them, re-review. Repeat until zero concerns. Maximum 100 passes — if concerns persist, present remaining to the user.
+
+Once concerns are resolved, re-run `openspec validate <change-name>` to confirm the semantic edits didn't break the format. Fix any new structural errors before exiting the loop.
 
 #### 2d — Implement
 
