@@ -129,8 +129,6 @@ Invoke `/opsx:verify` to validate implementation against artifacts. Verification
 
 Fix ALL findings — including suggestions. **Parallelization:** Group findings by file, dispatch one subagent per file to fix concurrently. Re-run `/opsx:verify`. Repeat until zero findings. Maximum 100 passes — if findings persist, log the remaining ones and proceed to Phase 3.
 
-Once verify is clean, invoke the `simplify` skill on all changed files. If it makes any edits, re-run `/opsx:verify` once and fix any new findings before exiting this phase. This ensures simplifications don't silently break the implementation.
-
 ### Phase 3 — Summary & User Verification
 
 Present a one-paragraph summary: the change name, file count, and a smoke test the user can run to verify it. Omit the smoke test if nothing is testable from outside (e.g. an internal refactor).
