@@ -231,6 +231,23 @@ Before writing or modifying code, scan the relevant context for these patterns:
 - **Boilerplate patterns** — if every new module requires the same 15-line setup sequence,
   that's a sign the setup should be a shared helper or generated from a template.
 
+- **Parallel and inverse operations** — when you create a helper for one direction of an
+  action, check whether the inverse should also be centralized. Common pairs: `set` / `clear`,
+  `open` / `close`, `lock` / `unlock`, `subscribe` / `unsubscribe`, `acquire` / `release`,
+  `register` / `unregister`, `attach` / `detach`, `start` / `stop`, `enable` / `disable`,
+  `push` / `pop`, `save` / `load`. If you extract `setNotice(m, title, body)` but leave the
+  reset (`m.notice = ""; m.noticeTitle = ""`) inlined at three call sites, the knowledge of
+  "what fields constitute a notice" lives in two places — the setter and every reset. Adding a
+  field to a notice now requires updating both the setter and every reset site. The fix is
+  symmetry: define the inverse alongside the helper. Same applies when the inverse is
+  conceptual rather than literal — e.g., a `serialize` helper without a matching `parse`,
+  or a `format` helper without a matching `unformat`, leaves the round-trip knowledge split.
+
+  Signs to watch for: you've just extracted a helper and the call sites that *don't* use it
+  are all doing the opposite of what the helper does; multiple call sites set fields back to
+  zero values together; "reset" / "teardown" / "cleanup" blocks that mirror a "setup" helper
+  with no corresponding centralization.
+
 ### Beyond code
 
 - **Config files** — same dependency version in multiple build files, same env var in multiple
@@ -489,6 +506,15 @@ duplication, not when you imagine you might.
      unions, enums, or branded types the literal you're about to hardcode may already live in
    - Central homes for cross-cutting concerns (auth, logging, HTTP clients, db helpers,
      feature flags)
+   - **The standard library.** Before writing a helper that does generic data manipulation —
+     cloning a map, checking membership, equality, sorting, reversing, finding, mapping,
+     filtering, deduping, batching — check whether the language's stdlib already provides it.
+     This is especially worth a check for newer stdlib additions: Go's `maps.Clone` /
+     `slices.Contains` / `cmp.Or`, Python's `itertools.batched` / `functools.cache`,
+     JavaScript's `Array.prototype.findLast` / `Object.groupBy`, Rust's `slice::is_sorted` —
+     these regularly replace hand-rolled utilities that were written before the stdlib caught
+     up. A 4-line helper that wraps a single stdlib call is duplicated knowledge with
+     extra steps.
 
    If a helper, constant, config value, or component already does what you need, use it. If
    one *almost* does, consider extending it rather than writing a parallel version — but only
@@ -525,6 +551,21 @@ duplication, not when you imagine you might.
    invocations of DRY review on a project that never surface a given duplication are a
    signal to widen the scan: if narrow review has already been run three times without
    catching something, the something lives between files rather than within one.
+
+5. **Scan within a single file for scattered duplication.** Cross-file scanning catches
+   "same function name in two packages." Within-file scanning catches "same 4-line block
+   embedded inside three different functions of the same file." The latter is invisible to
+   anyone reading one function at a time and easy to miss when reviewing diffs that touch
+   only one function. The trick: when you're in a file with several similarly-shaped
+   functions (multiple `summarize*`, `format*`, `parse*`, `handle*`, or all the methods on a
+   struct), pull up each one and read the bodies side-by-side. Identical literal boundaries
+   (`if len(runes) > 40`), identical setup/teardown shapes, identical error-formatting calls
+   embedded in different functions are the typical hit. Same-file scattered duplication is
+   especially common in:
+   - Utility modules with many small functions
+   - Formatter/renderer/serializer modules where each function handles a different type
+   - Handler/dispatcher modules where each case has its own preamble
+   - Test files (covered separately under "Tests" — DRY the setup, not the intent)
 
 ### When fixing bugs
 
