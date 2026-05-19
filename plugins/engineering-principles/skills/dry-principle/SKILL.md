@@ -383,6 +383,83 @@ left = primary, right = secondary. Declaring that contract once means when you d
 middle-click should close, or that hold-to-reveal needs a keyboard equivalent, you change one
 file instead of N.
 
+### Symbol / label duplication
+
+A behavior identified by some token — a key code, route path, CLI flag, env var name, metric
+label, command id, event name, signal name, localization key — frequently lives in two
+places: the wiring that *acts on* the token and the surface that *renders* it to a user
+(button caption, help text, docs, dashboard query, translation table). The token is one piece
+of knowledge: "what this thing is called *and* how it appears to the reader." When the two
+sides drift, the binding still works but the UI lies.
+
+Example sites across ecosystems:
+
+- Key handlers + their displayed shortcut hints (`match KeyCode::Tab => …` ↔ footer string
+  `"Tab toggles danger"`)
+- HTTP route definitions + `<Link to="…">` / `href` strings in views
+- CLI flag names declared in clap/argparse/cobra + the same flag spelled out in README usage
+  examples and onboarding docs
+- Command dispatch maps + their auto-generated or hand-written `--help` text
+- Metric / counter names emitted by instrumentation (`counter!("api.requests")`) + the same
+  names baked into dashboard queries and alert rules
+- Event emitter names + listener registrations + analytics docs
+- Localization keys in code (`t("auth.signin")`) + the key columns of translation files
+- Env var names in `os.getenv(...)` + onboarding docs and Dockerfiles
+- Permission / role strings checked by middleware + the same strings rendered in admin UI
+
+**Fix:** define each token (and its display form) once and have every side reference it.
+
+**Before (Rust TUI — key binding and its UI label live in two files):**
+```rust
+// handlers/picker.rs
+match key.code {
+    KeyCode::Tab => state.dangerous = !state.dangerous,
+    ...
+}
+
+// ui/picker.rs — independent literal, will drift the moment the binding moves
+draw_hint("Tab = toggle danger");
+```
+
+**After:**
+```rust
+// keys.rs — single source of truth
+pub struct Chord { pub codes: &'static [KeyCode], pub label: &'static str }
+pub const PICKER_TOGGLE_DANGER: Chord = Chord {
+    codes: &[KeyCode::Tab],
+    label: "Tab",
+};
+
+// handlers/picker.rs
+if keys::PICKER_TOGGLE_DANGER.matches(&key) { state.dangerous = !state.dangerous }
+
+// ui/picker.rs
+draw_hint(&format!("{} = toggle danger", keys::PICKER_TOGGLE_DANGER.label));
+```
+
+Now the binding and its label are one decision. Move the chord to Ctrl-D and the hint
+updates automatically; nobody has to remember to grep for "Tab".
+
+Signs you're looking at this pattern:
+
+- "Why didn't the help text update when I changed the keybinding?" — the handler moved, the
+  label didn't.
+- Touching one feature requires edits in both `handlers/` and `ui/` (or `docs/`), even though
+  the change is conceptually one decision.
+- A grep for the token finds it as both a typed constant (`KeyCode::Tab`, route enum, flag
+  struct field) *and* a bare string literal (`"Tab"`, `"/users"`, `"--verbose"`) in nearby
+  files.
+
+**Why narrow DRY sweeps miss it.** Each side reads fine in isolation: the handler is clearly
+a `match`, the UI is clearly a label string, the README is clearly prose. Neither is a copy
+of the other in *shape*, so structural diffing and "find duplicated blocks" reviews skim past.
+The duplication is *semantic*: two representations of the same name in two languages
+(code-form and display-form) pointing at the same concept.
+
+When scanning, ask: **for every named action this module wires, where does its name show up
+to the user?** If the answer is "a string literal in another file" rather than "the same
+constant", that's the duplication — even when no two lines look alike.
+
 ### Call-site duplication
 
 A subtler form of duplication — and one the "extract a helper function" instinct tends to miss
@@ -552,7 +629,14 @@ duplication, not when you imagine you might.
    signal to widen the scan: if narrow review has already been run three times without
    catching something, the something lives between files rather than within one.
 
-5. **Scan within a single file for scattered duplication.** Cross-file scanning catches
+5. **Cross-check handler ↔ label pairs.** For every named action the module wires — a key
+   binding, route, CLI flag, command, event, metric, env var, permission, localization key —
+   confirm the *user-visible* name comes from the same source as the handler matches on, not
+   a parallel string literal in a sibling file. This duplication is invisible to
+   structural diffs because the two sides aren't shaped alike (typed match arm vs. bare
+   string), so it survives narrow DRY sweeps. See "Symbol / label duplication" above.
+
+6. **Scan within a single file for scattered duplication.** Cross-file scanning catches
    "same function name in two packages." Within-file scanning catches "same 4-line block
    embedded inside three different functions of the same file." The latter is invisible to
    anyone reading one function at a time and easy to miss when reviewing diffs that touch
