@@ -1,0 +1,9 @@
+{
+  "expectations": [
+    {"text": "Identifies utils/helpers.py as the primary hub / refactor target", "passed": true, "evidence": "Section 1 titled '`utils/helpers.py` — grab-bag hub (fan-in 8, LOC 152)' with detailed explanation"},
+    {"text": "Identifies services/order_service.py as a tangle / coordination problem", "passed": true, "evidence": "Section 2 titled '`services/order_service.py` — coordination tangle (fan-out 6)'"},
+    {"text": "Identifies the user <-> order cycle", "passed": true, "evidence": "Section 3 'Cycle between `models/user.py` and `models/order.py` (size 2)'"},
+    {"text": "Gives concrete refactor suggestions, not just metrics", "passed": true, "evidence": "Each finding has a 'Suggestion:' block proposing specific splits (formatting/, datetime_utils.py, repository pattern)"},
+    {"text": "States caveats / limitations of the analysis", "passed": true, "evidence": "Final 'Caveats on the analysis' section covers intra-repo only, LOC non-stripped, resolver limits, file-level"}
+  ]
+}

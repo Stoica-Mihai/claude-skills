@@ -1,0 +1,26 @@
+{
+  "skill_name": "architectural-hotspots",
+  "evals": [
+    {
+      "id": 1,
+      "name": "synthetic-ground-truth",
+      "prompt": "I inherited a small Python app at /home/mcs/Documents/git/claude-skills/plugins/architectural-analysis/skills/architectural-hotspots/evals/fixtures/synthetic and need to understand what's architecturally wrong with it before I start refactoring. Where should I focus?",
+      "expected_output": "Report should identify (a) utils/helpers.py as oversized hub, (b) services/order_service.py as the tangle, (c) the user<->order cycle. Findings explained, not just dumped.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "real-go-repo",
+      "prompt": "I'm looking at /home/mcs/Documents/git/ghyll — a Go streaming/CLI tool. Can you find the architectural hotspots and tell me what's tightly coupled or which files concentrate too much responsibility? I want a refactor shortlist, not a wall of metrics.",
+      "expected_output": "Report should call out the largest files (e.g. picker.go, main.go) and the http.go hub, with concrete refactor framing. Should acknowledge limitations of the analysis.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "implicit-trigger",
+      "prompt": "Looking at the C shell repo at /home/mcs/Documents/git/mcshell — which modules feel like they're doing too much and tangling the rest of the codebase? Trying to figure out what to break apart.",
+      "expected_output": "Skill should trigger from 'doing too much' / 'tangling' even without the word 'hotspot'. Output should be a focused refactor shortlist for mcshell.",
+      "files": []
+    }
+  ]
+}

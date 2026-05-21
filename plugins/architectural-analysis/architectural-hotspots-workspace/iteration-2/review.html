@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eval Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #faf9f5;
+      --surface: #ffffff;
+      --border: #e8e6dc;
+      --text: #141413;
+      --text-muted: #b0aea5;
+      --accent: #d97757;
+      --accent-hover: #c4613f;
+      --green: #788c5d;
+      --green-bg: #eef2e8;
+      --red: #c44;
+      --red-bg: #fceaea;
+      --header-bg: #141413;
+      --header-text: #faf9f5;
+      --radius: 6px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lora', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .header .instructions {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-top: 0.25rem;
+    }
+    .header .progress {
+      font-size: 0.875rem;
+      opacity: 0.8;
+      text-align: right;
+    }
+
+    /* ---- Main content ---- */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ---- Sections ---- */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      flex-shrink: 0;
+    }
+    .section-header {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .section-body {
+      padding: 1rem;
+    }
+
+    /* ---- Config badge ---- */
+    .config-badge {
+      display: inline-block;
+      padding: 0.2rem 0.625rem;
+      border-radius: 9999px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-left: 0.75rem;
+      vertical-align: middle;
+    }
+    .config-badge.config-primary {
+      background: rgba(33, 150, 243, 0.12);
+      color: #1976d2;
+    }
+    .config-badge.config-baseline {
+      background: rgba(255, 193, 7, 0.15);
+      color: #f57f17;
+    }
+
+    /* ---- Prompt ---- */
+    .prompt-text {
+      white-space: pre-wrap;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+    }
+
+    /* ---- Outputs ---- */
+    .output-file {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .output-file + .output-file {
+      margin-top: 1rem;
+    }
+    .output-file-header {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .output-file-header .dl-btn {
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-decoration: none;
+      cursor: pointer;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+    .output-file-header .dl-btn:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+    .output-file-content {
+      padding: 0.75rem;
+      overflow-x: auto;
+    }
+    .output-file-content pre {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    }
+    .output-file-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+    .output-file-content iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+    }
+    .output-file-content table {
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+      width: 100%;
+    }
+    .output-file-content table td,
+    .output-file-content table th {
+      border: 1px solid var(--border);
+      padding: 0.375rem 0.5rem;
+      text-align: left;
+    }
+    .output-file-content table th {
+      background: var(--bg);
+      font-weight: 600;
+    }
+    .output-file-content .download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+    .output-file-content .download-link:hover {
+      background: var(--border);
+    }
+    .empty-state {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    /* ---- Feedback ---- */
+    .prev-feedback {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.625rem 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .prev-feedback-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.25rem;
+      color: var(--text-muted);
+    }
+    .feedback-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      resize: vertical;
+      color: var(--text);
+    }
+    .feedback-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .feedback-status {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      min-height: 1.1em;
+    }
+
+    /* ---- Grades (collapsible) ---- */
+    .grades-toggle {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .grades-toggle:hover {
+      color: var(--accent);
+    }
+    .grades-toggle .arrow {
+      margin-right: 0.5rem;
+      transition: transform 0.15s;
+      font-size: 0.75rem;
+    }
+    .grades-toggle .arrow.open {
+      transform: rotate(90deg);
+    }
+    .grades-content {
+      display: none;
+      margin-top: 0.75rem;
+    }
+    .grades-content.open {
+      display: block;
+    }
+    .grades-summary {
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .grade-badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .grade-pass { background: var(--green-bg); color: var(--green); }
+    .grade-fail { background: var(--red-bg); color: var(--red); }
+    .assertion-list {
+      list-style: none;
+    }
+    .assertion-item {
+      padding: 0.625rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem;
+    }
+    .assertion-item:last-child { border-bottom: none; }
+    .assertion-status {
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+    .assertion-status.pass { color: var(--green); }
+    .assertion-status.fail { color: var(--red); }
+    .assertion-evidence {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      padding-left: 1.5rem;
+    }
+
+    /* ---- View tabs ---- */
+    .view-tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 2rem;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .view-tab {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .view-tab:hover { color: var(--text); }
+    .view-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .view-panel { display: none; }
+    .view-panel.active { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    /* ---- Benchmark view ---- */
+    .benchmark-view {
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .benchmark-table {
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.8125rem;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+    .benchmark-table th, .benchmark-table td {
+      padding: 0.625rem 0.75rem;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+    .benchmark-table th {
+      font-family: 'Poppins', sans-serif;
+      background: var(--header-bg);
+      color: var(--header-text);
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .benchmark-table tr:hover { background: var(--bg); }
+    .benchmark-table tr.benchmark-row-with { background: rgba(33, 150, 243, 0.06); }
+    .benchmark-table tr.benchmark-row-without { background: rgba(255, 193, 7, 0.06); }
+    .benchmark-table tr.benchmark-row-with:hover { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-without:hover { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-table tr.benchmark-row-avg { font-weight: 600; border-top: 2px solid var(--border); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-with { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-without { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-delta-positive { color: var(--green); font-weight: 600; }
+    .benchmark-delta-negative { color: var(--red); font-weight: 600; }
+    .benchmark-notes {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+    .benchmark-notes h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+    .benchmark-notes ul {
+      list-style: disc;
+      padding-left: 1.25rem;
+    }
+    .benchmark-notes li {
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      margin-bottom: 0.375rem;
+    }
+    .benchmark-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 3rem;
+    }
+
+    /* ---- Navigation ---- */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .nav-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: all 0.15s;
+    }
+    .nav-btn:hover:not(:disabled) {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .done-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .done-btn:hover {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .done-btn.ready {
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+    }
+    .done-btn.ready:hover {
+      background: var(--accent-hover);
+    }
+    /* ---- Done overlay ---- */
+    .done-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    .done-overlay.visible {
+      display: flex;
+    }
+    .done-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 2rem 3rem;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+    }
+    .done-card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .done-card p {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .done-card .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .done-card button {
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .done-card button:hover {
+      background: var(--bg);
+    }
+    /* ---- Toast ---- */
+    .toast {
+      position: fixed;
+      bottom: 5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 0.625rem 1.25rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 200;
+    }
+    .toast.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" style="height:100vh; display:flex; flex-direction:column;">
+    <div class="header">
+      <div>
+        <h1>Eval Review: <span id="skill-name"></span></h1>
+        <div class="instructions">Review each output and leave feedback below. Navigate with arrow keys or buttons. When done, copy feedback and paste into Claude Code.</div>
+      </div>
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <!-- View tabs (only shown when benchmark data exists) -->
+    <div class="view-tabs" id="view-tabs" style="display:none;">
+      <button class="view-tab active" onclick="switchView('outputs')">Outputs</button>
+      <button class="view-tab" onclick="switchView('benchmark')">Benchmark</button>
+    </div>
+
+    <!-- Outputs panel (qualitative review) -->
+    <div class="view-panel active" id="panel-outputs">
+    <div class="main">
+      <!-- Prompt -->
+      <div class="section">
+        <div class="section-header">Prompt <span class="config-badge" id="config-badge" style="display:none;"></span></div>
+        <div class="section-body">
+          <div class="prompt-text" id="prompt-text"></div>
+        </div>
+      </div>
+
+      <!-- Outputs -->
+      <div class="section">
+        <div class="section-header">Output</div>
+        <div class="section-body" id="outputs-body">
+          <div class="empty-state">No output files found</div>
+        </div>
+      </div>
+
+      <!-- Previous Output (collapsible) -->
+      <div class="section" id="prev-outputs-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="togglePrevOutputs()">
+            <span class="arrow" id="prev-outputs-arrow">&#9654;</span>
+            Previous Output
+          </div>
+        </div>
+        <div class="grades-content" id="prev-outputs-content"></div>
+      </div>
+
+      <!-- Grades (collapsible) -->
+      <div class="section" id="grades-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="toggleGrades()">
+            <span class="arrow" id="grades-arrow">&#9654;</span>
+            Formal Grades
+          </div>
+        </div>
+        <div class="grades-content" id="grades-content"></div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="section">
+        <div class="section-header">Your Feedback</div>
+        <div class="section-body">
+          <textarea
+            class="feedback-textarea"
+            id="feedback"
+            placeholder="What do you think of this output? Any issues, suggestions, or things that look great?"
+          ></textarea>
+          <div class="feedback-status" id="feedback-status"></div>
+          <div class="prev-feedback" id="prev-feedback" style="display:none;">
+            <div class="prev-feedback-label">Previous feedback</div>
+            <div id="prev-feedback-text"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav" id="outputs-nav">
+      <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">&#8592; Previous</button>
+      <button class="done-btn" id="done-btn" onclick="showDoneDialog()">Submit All Reviews</button>
+      <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next &#8594;</button>
+    </div>
+    </div><!-- end panel-outputs -->
+
+    <!-- Benchmark panel (quantitative stats) -->
+    <div class="view-panel" id="panel-benchmark">
+      <div class="benchmark-view" id="benchmark-content">
+        <div class="benchmark-empty">No benchmark data available. Run a benchmark to see quantitative results here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Done overlay -->
+  <div class="done-overlay" id="done-overlay">
+    <div class="done-card">
+      <h2>Review Complete</h2>
+      <p>Your feedback has been saved. Go back to your Claude Code session and tell Claude you're done reviewing.</p>
+      <div class="btn-row">
+        <button onclick="closeDoneDialog()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ---- Embedded data (injected by generate_review.py) ----
+    const EMBEDDED_DATA = {"skill_name": "architectural-hotspots", "runs": [{"id": "synthetic-ground-truth-with_skill", "prompt": "I inherited a small Python app at /home/mcs/Documents/git/claude-skills/plugins/architectural-analysis/skills/architectural-hotspots/evals/fixtures/synthetic and need to understand what's architecturally wrong with it before I start refactoring. Where should I focus?", "eval_id": 1, "outputs": [{"name": "raw_report.md", "type": "text", "content": "# Architectural Hotspots \u2014 `/home/mcs/Documents/git/claude-skills/plugins/architectural-analysis/skills/architectural-hotspots/evals/fixtures/synthetic`\n\nAnalyzed **16** source files, **20** internal import edges. Edges count file-to-file imports inside the repo only; external/unresolved imports are dropped.\n\n## Hubs \u2014 high fan-in\nMany files depend on these. Hubs are often legitimate (core libraries, shared types). They become interesting when paired with god-size, grab-bag naming (`utils`, `helpers`, `common`), or high churn in git history.\n\n| File | Fan-in | LOC |\n|------|-------:|----:|\n| `utils/helpers.py` | 8 | 151 |\n| `models/user.py` | 4 | 8 |\n| `models/order.py` | 2 | 8 |\n| `core/config.py` | 2 | 3 |\n| `services/order_service.py` | 1 | 18 |\n| `services/notification_service.py` | 1 | 5 |\n| `core/db.py` | 1 | 3 |\n| `models/audit.py` | 1 | 3 |\n\n## Tangles \u2014 high fan-out\nThese files reach into many corners of the repo. Often a sign of weak single-responsibility \u2014 the file is doing too many things, or is a coordination layer that should be split.\n\n| File | Fan-out | LOC |\n|------|--------:|----:|\n| `services/order_service.py` | 6 | 18 |\n| `models/user.py` | 2 | 8 |\n| `models/order.py` | 2 | 8 |\n| `handlers/order_handler.py` | 2 | 8 |\n| `services/notification_service.py` | 2 | 5 |\n| `handlers/user_handler.py` | 2 | 4 |\n| `handlers/notification_handler.py` | 2 | 4 |\n| `core/db.py` | 1 | 3 |\n| `models/audit.py` | 1 | 3 |\n\n## God modules \u2014 LOC \u2265 400\nLarge files concentrate too much responsibility in one place. Cross-reference with the Hubs table \u2014 a file that is both god-sized *and* a hub is a refactor priority.\n\n_None above threshold._\n\n## Cycles \u2014 strongly-connected components\nFiles inside a cycle cannot be understood, tested, or deployed independently. Cycles of size 2 often mean a missing seam (extract a third module both depend on); larger cycles usually signal a layering violation.\n\n### Cycle 1 \u2014 2 files\n- `models/order.py`\n- `models/user.py`\n\n## Limitations\n- Imports resolved by relative path (where possible) and basename match across the repo. Path aliases, dynamic imports, re-exports, and codegen are likely missed.\n- LOC counts non-blank lines; comments are not stripped.\n- External / third-party imports are not counted \u2014 only intra-repo coupling.\n- Treats each file as a node. Class- or function-level coupling is invisible here.\n"}, {"name": "response.md", "type": "text", "content": "# Where to focus your refactor\n\nRan the hotspot analyzer on the synthetic app (16 Python files, 20 internal import edges). No file is over the god-module LOC threshold, but three architectural problems stand out \u2014 in priority order:\n\n## 1. `utils/helpers.py` \u2014 grab-bag hub (top priority)\n\n- **Fan-in: 8** (every other top-level package depends on it) \u2014 by far the most depended-on file.\n- **LOC: 151**, containing **~40 unrelated functions**: currency/percent formatting, date math, slugify, retry, deep_merge, phone/email validation, byte humanization, list flattening, case conversion, env parsing, sha256 hashing, CSV/HTML escaping, windowing, partitioning, predicates\u2026\n\nThis is the textbook \"grab-bag utils\" smell: a generic name accumulating responsibilities because nobody knew where else to put them. Every module touches it, so the blast radius of any change is the whole app, and unrelated concerns share a change history.\n\n**Suggestion:** split by domain into focused modules \u2014 e.g. `utils/formatting.py` (currency, percent, bytes, truncate, case), `utils/text.py` (slugify, html/csv escape, trim, normalize), `utils/collections.py` (chunk, flatten, group_by, partition, dedupe, window\u2026), `utils/validation.py` (is_valid_email, is_blank, normalize_phone), `utils/runtime.py` (retry, env_bool, hash_dict, safe_get/deep_merge). Each becomes a small, cohesive hub that callers import only when they actually need it.\n\n## 2. `services/order_service.py` \u2014 tangled coordinator\n\n- **Fan-out: 6** (the highest in the repo, more than 3x the next file) reaching across **every layer**: `core.config`, `core.db`, `models.user`, `models.order`, `models.audit`, `utils.helpers`.\n- Only 18 LOC, so it isn't huge yet \u2014 but it already orchestrates connection, user construction, order lookup, audit logging, totaling, and formatting in a single function.\n\nIt's the classic glue/service that knows about everything. As the app grows this will become the file that always breaks and always conflicts.\n\n**Suggestion:** push responsibilities down. `User` should not be constructed by the service from a raw id \u2014 let `models.user` handle that. Audit logging belongs behind a decorator or an event the service emits, not inline calls. Currency formatting belongs at the presentation seam, not in the service return value. After that, this file should depend on `models` and an `audit` port only \u2014 fan-out drops to 2\u20133.\n\n## 3. `models/user.py` <-> `models/order.py` \u2014 2-cycle\n\n- Strongly-connected component of size 2: `user.py` imports `order.find_by_user`; `order.py` imports `user.User` to return from `owner()`.\n\nA size-2 cycle almost always means a missing seam \u2014 two modules share a concept that wants its own home. Here both files reach across the boundary purely to express the user<->order relationship.\n\n**Suggestion:** invert the dependency. Move the `User.orders()` lookup out of the model (let callers query `order.find_by_user(user.id)` directly), and have `order.owner()` return a user id instead of constructing a `User`. That removes both edges and leaves the models as plain data with no cross-imports. If you'd rather keep rich navigation, extract a small `models/relations.py` that both depend on.\n\n## Caveats on the analysis\n\n- The repo is small (16 files); the analyzer is designed for ~30+ files, so treat the numeric rankings as directional rather than authoritative.\n- Imports are resolved by relative path and basename match \u2014 fine for this layout, but path-aliased or dynamic imports would be undercounted.\n- The graph is file-level: a god-class hiding inside a moderate-LOC file is invisible here.\n\nRaw report (full tables, all four sections) is at `raw_report.md` in the same directory.\n"}], "grading": null}, {"id": "synthetic-ground-truth-without_skill", "prompt": "I inherited a small Python app at /home/mcs/Documents/git/claude-skills/plugins/architectural-analysis/skills/architectural-hotspots/evals/fixtures/synthetic and need to understand what's architecturally wrong with it before I start refactoring. Where should I focus?", "eval_id": 1, "outputs": [{"name": "response.md", "type": "text", "content": "# Architectural Review \u2014 `synthetic/`\n\n## Scope\n16 files, ~275 lines, layout:\n\n```\ncore/       config.py, db.py\nhandlers/   user_handler.py, order_handler.py, notification_handler.py\nservices/   order_service.py, notification_service.py\nmodels/     user.py, order.py, audit.py\nutils/      helpers.py\n```\n\nIntent appears to be a classic layered architecture: `handlers -> services -> models -> core`, with `utils` cross-cutting. Reality diverges from that intent in several load-bearing ways.\n\n## Where to focus (ranked)\n\n### 1. `models/user.py` <-> `models/order.py` \u2014 circular import between models (highest priority)\n\n- `models/user.py` imports `models.order` to expose `User.orders()`.\n- `models/order.py` imports `models.user` to expose `order.owner()` returning a `User`.\n\nThis is a true module-level cycle inside the *same* layer. It will:\n- Surface as `ImportError`/half-initialized modules the moment one is imported before the other in a new context (tests, scripts, workers).\n- Block any attempt to extract `models/` into its own package or split files further.\n- Cause subtle bugs where `user.User` is partially defined when `order` first resolves it.\n\nFix direction: move the relationship traversal out of the model classes. Either (a) introduce a `repository` / `service` layer that joins `User` and `Order`, or (b) keep one direction only (e.g. `Order.owner_id` as a plain id, lookup done by caller). The `notification_service` and `order_service` already need this \u2014 they're the natural home.\n\n### 2. `utils/helpers.py` \u2014 God module / kitchen-sink utility (highest blast radius)\n\n- 192 lines, ~40 unrelated functions: currency formatting, date math, retry, deep_merge, html_escape, csv_escape, hash_dict, env_bool, slugify, snake_case, chunk/window/partition, etc.\n- Imported by *every* other non-`core` module: `models/user`, `models/order`, `models/audit`, `services/order_service`, `services/notification_service`, `handlers/user_handler`, `handlers/order_handler`, `handlers/notification_handler`.\n- Mixes concerns that should not share a module: formatting, validation, collection algorithms, crypto/hashing, env/config access, HTML/CSV escaping.\n- Several functions reach into env (`env_bool`) or do crypto (`hash_dict`) \u2014 these are not \"helpers\", they're side-effectful infra.\n- `retry()` swallows exceptions and re-raises the last one, but `last` starts as `None` \u2014 if `attempts <= 0` it'll raise `None`. Latent bug.\n\nFix direction: split by concern. Suggested first cut:\n- `utils/formatting.py` \u2014 currency, percent, title_case, camel_case, snake_case, truncate, humanize_bytes\n- `utils/text.py` \u2014 html_escape, csv_escape, slugify, trim_lines, is_blank\n- `utils/collections.py` \u2014 chunk, flatten, group_by, partition, dedupe, window, take, drop, find_index, count_if, any/all_match, first, coalesce, zip_longest_fill, split_chunks\n- `utils/dictutil.py` \u2014 safe_get, deep_merge, pick, omit, hash_dict\n- `utils/dates.py` \u2014 parse_iso_date, days_between, hours_between\n- `utils/validation.py` \u2014 is_valid_email, normalize_phone\n- `core/env.py` \u2014 env_bool (it's config, not a helper)\n- `core/retry.py` \u2014 retry (and fix the empty-attempts bug)\n\nThis single change cuts the fan-in on `utils.helpers` from 8 modules to roughly 1-2 per split file, which is the biggest architectural-coupling win available.\n\n### 3. Layer-violation: `models/` imports `utils.helpers`\n\n- `models/user.py` calls `helpers.title_case` inside `__init__` to mutate the name.\n- `models/order.py` calls `helpers.format_currency` inside `total()`.\n- `models/audit.py` calls `helpers.hash_dict`.\n\nDomain models should not depend on presentation/formatting helpers. `format_currency` belongs in a view/serializer; the model should store an amount. `title_case` is also presentation \u2014 and worse, it's applied silently in the constructor, so the stored `name` is no longer what the caller passed in (lossy mutation).\n\nFix direction: keep models as plain data + invariants. Move formatting to handler/serializer layer. `User.__init__` should store `name` verbatim (or validate it), not transform it.\n\n### 4. `User.__init__` signature mismatch (real bug, follows from #3)\n\n- Definition: `User(self, id, name)`.\n- `services/order_service.place_order`: `user.User(user_id, \"buyer\")` \u2014 passes the literal string `\"buyer\"` as the name.\n- `services/notification_service.notify`: same \u2014 `user.User(user_id, \"buyer\")`.\n- `handlers/user_handler.handle_create`: passes the real name from the request.\n- `models/order.owner`: `user.User(1, \"alice\")` \u2014 hardcoded.\n\nSo `User` is being constructed as both \"a named user from a request\" and \"a placeholder with role-as-name\" from inside services. The second argument is being abused. This is a symptom of missing repository/lookup: services should be *fetching* users, not minting fake ones.\n\n### 5. Service layer is anemic and bypasses itself\n\n- `order_service.place_order` constructs a fake `User`, ignores `o = order.find_by_user(...)` (return value discarded), sums prices itself, returns a *formatted string*. It does no persistence, no validation, no transaction.\n- `cancel_order` / `refund_order` only call `audit.log` and return `True` \u2014 no state change.\n- `notification_service.notify` builds a throwaway `User` it doesn't use, then just truncates the message.\n- `order_handler.handle_send` already truncates the message to 200, then `notification_service.notify` truncates again to 140 \u2014 duplicated, inconsistent truncation logic split across layers.\n\nThese services aren't doing service work; handlers could call models directly with the same result. Either flesh out the service layer (transactions, validation, orchestration) or collapse it. Don't keep a layer that adds only indirection.\n\n### 6. `core/db.connect()` doesn't connect\n\n- It returns the URL string. No connection object, no pool, no lifecycle. `order_service.place_order` calls it and discards the result.\n\nThis is a stub, but it's a stub at the foundation, so every service that \"uses the DB\" is actually using nothing. Worth flagging because refactoring services without a real DB boundary will mislead you about coupling.\n\n### 7. Cross-cutting `audit.log` called ad-hoc from services\n\n`audit.log` is invoked inline in `place_order`, `cancel_order`, `refund_order`. It's not wrapped, not transactional with the operation, and its return value (a hash) is discarded. If audit matters, it belongs in a decorator or middleware around service calls, not as scattered inline calls that are easy to forget.\n\n## Suggested refactor order\n\n1. Break the `user <-> order` model cycle (#1) \u2014 unblocks everything else.\n2. Split `utils/helpers.py` by concern (#2) \u2014 biggest decoupling win, mechanical, low-risk.\n3. Remove `helpers` usage from `models/` and stop mutating fields in `__init__` (#3, #4).\n4. Decide: flesh out or delete the service layer (#5).\n5. Replace `core/db.connect()` stub with a real boundary, then revisit service responsibilities (#6).\n6. Move `audit.log` to a decorator/middleware (#7).\n\n## TL;DR\n\nTwo architectural hotspots dominate:\n- `utils/helpers.py` \u2014 God module, fan-in from 8 of the 10 non-init source files.\n- `models/user.py` <-> `models/order.py` \u2014 same-layer circular import.\n\nEverything else (anemic services, layer violations into utils, the `User(\"buyer\")` abuse, the `db.connect()` stub) is a downstream symptom of those two plus a missing repository concept between models and services.\n"}], "grading": null}, {"id": "real-go-repo-with_skill", "prompt": "I'm looking at /home/mcs/Documents/git/ghyll \u2014 a Go streaming/CLI tool. Can you find the architectural hotspots and tell me what's tightly coupled or which files concentrate too much responsibility? I want a refactor shortlist, not a wall of metrics.", "eval_id": 2, "outputs": [{"name": "raw_report.md", "type": "text", "content": "# Architectural Hotspots \u2014 `/home/mcs/Documents/git/ghyll`\n\nAnalyzed **59** source files, **53** internal import edges. Edges count file-to-file imports inside the repo only; external/unresolved imports are dropped.\n\n## Hubs \u2014 high fan-in\nMany files depend on these. Hubs are often legitimate (core libraries, shared types). They become interesting when paired with god-size, grab-bag naming (`utils`, `helpers`, `common`), or high churn in git history.\n\n| File | Fan-in | LOC |\n|------|-------:|----:|\n| `pkg/stream/filtered.go` | 13 | 59 |\n| `pkg/plugin/args.go` | 9 | 8 |\n| `plugins/twitch/hls.go` | 8 | 369 |\n| `pkg/session/cache.go` | 4 | 158 |\n| `plugins/youtube/api.go` | 3 | 547 |\n| `plugins/twitch/api.go` | 3 | 390 |\n| `plugins/kick/api.go` | 3 | 187 |\n| `plugins/twitch/errors.go` | 3 | 24 |\n| `pkg/ui/picker.go` | 2 | 1520 |\n| `pkg/notify/notify.go` | 2 | 115 |\n| `pkg/stream/hls/hls.go` | 1 | 584 |\n| `pkg/output/player.go` | 1 | 129 |\n| `pkg/plugin/errors.go` | 1 | 7 |\n\n## Tangles \u2014 high fan-out\nThese files reach into many corners of the repo. Often a sign of weak single-responsibility \u2014 the file is doing too many things, or is a coordination layer that should be split.\n\n| File | Fan-out | LOC |\n|------|--------:|----:|\n| `cmd/ghyll/main.go` | 9 | 1581 |\n| `cmd/ghyll/check_test.go` | 4 | 837 |\n| `plugins/twitch/twitch.go` | 4 | 452 |\n| `plugins/kick/kick.go` | 4 | 216 |\n| `cmd/ghyll/check.go` | 4 | 214 |\n| `plugins/youtube/youtube_test.go` | 3 | 650 |\n| `plugins/youtube/youtube.go` | 3 | 271 |\n| `cmd/ghyll/integration_test.go` | 3 | 250 |\n| `cmd/ghyll/main_test.go` | 2 | 1458 |\n| `plugins/kick/kick_test.go` | 2 | 748 |\n| `plugins/twitch/api.go` | 2 | 390 |\n| `pkg/session/session.go` | 2 | 181 |\n| `pkg/plugin/plugin_test.go` | 2 | 107 |\n| `plugins/twitch/api_test.go` | 1 | 799 |\n| `pkg/stream/hls/hls.go` | 1 | 584 |\n\n## God modules \u2014 LOC \u2265 400\nLarge files concentrate too much responsibility in one place. Cross-reference with the Hubs table \u2014 a file that is both god-sized *and* a hub is a refactor priority.\n\n| File | LOC | Fan-in | Fan-out |\n|------|----:|-------:|--------:|\n| `pkg/ui/picker_test.go` | 3021 | 0 | 0 |\n| `cmd/ghyll/main.go` | 1581 | 0 | 9 |\n| `pkg/ui/picker.go` | 1520 | 2 | 0 |\n| `cmd/ghyll/main_test.go` | 1458 | 0 | 2 |\n| `pkg/stream/hls/hls_test.go` | 1063 | 0 | 0 |\n| `plugins/youtube/api_test.go` | 951 | 0 | 0 |\n| `cmd/ghyll/check_test.go` | 837 | 0 | 4 |\n| `plugins/twitch/api_test.go` | 799 | 0 | 1 |\n| `plugins/kick/kick_test.go` | 748 | 0 | 2 |\n| `plugins/youtube/youtube_test.go` | 650 | 0 | 3 |\n| `pkg/stream/hls/hls.go` | 584 | 1 | 1 |\n| `pkg/stream/hls/m3u8_test.go` | 554 | 0 | 0 |\n| `plugins/youtube/api.go` | 547 | 3 | 0 |\n| `pkg/stream/hls/m3u8.go` | 497 | 0 | 0 |\n| `plugins/twitch/twitch.go` | 452 | 0 | 4 |\n\n## Cycles \u2014 strongly-connected components\nFiles inside a cycle cannot be understood, tested, or deployed independently. Cycles of size 2 often mean a missing seam (extract a third module both depend on); larger cycles usually signal a layering violation.\n\n_No cycles detected._\n\n## Limitations\n- Imports resolved by relative path (where possible) and basename match across the repo. Path aliases, dynamic imports, re-exports, and codegen are likely missed.\n- LOC counts non-blank lines; comments are not stripped.\n- External / third-party imports are not counted \u2014 only intra-repo coupling.\n- Treats each file as a node. Class- or function-level coupling is invisible here.\n"}, {"name": "response.md", "type": "text", "content": "# ghyll \u2014 architectural hotspots, refactor shortlist\n\nRan the hotspot analyzer over the 59 Go files (53 internal edges, no\ncycles). Skipping the test-file noise in the god-modules table, four\nfiles stand out as actually worth your time, plus one resolver caveat\nthat changes how the report should be read.\n\n## Refactor shortlist\n\n1. **`cmd/ghyll/main.go`** \u2014 **1581 LOC, fan-out 9, 25 top-level funcs.**\n   The clearest god module in the repo. It's the CLI entry point but it\n   has also absorbed: viper config loading, a first-run config-format\n   picker (`renderFormatPicker`, `promptConfigFormat`,\n   `generateConfigFile`), per-format theme writers (`writeThemeTOML`,\n   `writeThemeYAML`, `writeThemeJSON`), avatar downloading, the entire\n   playback pipeline (`runPlayback`, `setupSession`), and stream-quality\n   selection logic (`selectStream`, `streamWeight`, `sortedStreamNames`).\n   Most of these have no business in `main` \u2014 they're libraries.\n   *Suggestion:* extract three packages \u2014 `internal/cli/config` (loader\n   + format prompt + theme writers), `internal/cli/playback` (session\n   setup + run + avatar fetch), `internal/cli/quality` (selectStream +\n   streamWeight). Leaves `main.go` as wiring only.\n\n2. **`pkg/ui/picker.go`** \u2014 **1520 LOC, 36 funcs, all hung off one\n   `model` struct.** Single-file Bubble Tea TUI that owns the main\n   table, plus four overlays (help, quality, streams, theme), plus\n   layout, plus scroll, plus title-scroll animation, plus an `Update`\n   method that starts at line 517 (so roughly 500 lines of one\n   function). Not a hub problem \u2014 fan-in is only 2 \u2014 but a\n   single-responsibility one. Every overlay added to the picker\n   widens this file further.\n   *Suggestion:* split overlays into their own files\n   (`picker_quality.go`, `picker_streams.go`, `picker_theme.go`,\n   `picker_help.go`), each owning its render + key-handling slice. The\n   shared `model` stays in `picker.go`; the giant `Update` switch\n   becomes a dispatcher.\n\n3. **`plugins/youtube/api.go`** \u2014 **547 LOC, fan-in 3, 18 funcs.**\n   Wraps three InnerTube endpoints (player / browse / resolve_url) with\n   three rotating client configs (ANDROID_VR / ANDROID / WEB), all in\n   one file. Touches HTTP, JSON, multiple bot-detection workarounds.\n   It's a real coordination layer \u2014 but it's also the kind of file that\n   silently grows whenever YouTube changes anything.\n   *Suggestion:* lower-priority than 1\u20132, but worth keeping an eye on.\n   If a fourth client config gets added, split per-client into\n   `client_androidvr.go` / `client_android.go` / `client_web.go`.\n\n4. **`pkg/stream/hls/hls.go`** \u2014 **584 LOC, hub for every plugin that\n   does HLS (twitch, youtube, kick).** Genuinely load-bearing, not a\n   grab-bag \u2014 so the *size* matters more than the fan-in. Every\n   streaming plugin depends on its behaviour; a bug here ripples\n   everywhere. Treat it as well-placed but worth keeping under change\n   discipline (good test coverage, careful PRs, no opportunistic\n   features). The 1063-LOC `hls_test.go` shows you already feel this.\n\n## What is *not* a problem despite scoring high\n\n- **`pkg/stream/filtered.go`** (fan-in 13, 59 LOC) and\n  **`pkg/plugin/args.go`** (fan-in 9, 8 LOC) \u2014 both legitimate hubs:\n  one is a focused stream wrapper, the other is a 9-line type\n  definition. High fan-in here is exactly what shared primitives\n  should look like. Leave alone.\n- **`plugins/twitch/hls.go`** (reported fan-in 8) \u2014 this is the\n  resolver caveat below biting; nothing actually imports it as a\n  package. The hits belong to `pkg/stream/hls/hls.go`.\n\n## Caveat on the numbers\n\nThe analyzer resolves Go imports by basename match across the repo\nwith a directory-proximity tie-breaker. ghyll has two files named\n`hls.go` (`pkg/stream/hls/hls.go` and `plugins/twitch/hls.go`), so\nimports of `pkg/stream/hls` from within `plugins/twitch/` got\nattributed to the local `plugins/twitch/hls.go` instead of the real\ntarget. The shape of the report (which files are large, which are\nglue) is still correct; just don't trust the fan-in number on\n`plugins/twitch/hls.go` specifically.\n\nRaw report (full tables) at:\n`/home/mcs/Documents/git/claude-skills/plugins/architectural-analysis/architectural-hotspots-workspace/iteration-2/real-go-repo/with_skill/outputs/raw_report.md`\n"}], "grading": null}, {"id": "real-go-repo-without_skill", "prompt": "I'm looking at /home/mcs/Documents/git/ghyll \u2014 a Go streaming/CLI tool. Can you find the architectural hotspots and tell me what's tightly coupled or which files concentrate too much responsibility? I want a refactor shortlist, not a wall of metrics.", "eval_id": 2, "outputs": [{"name": "response.md", "type": "text", "content": "# ghyll \u2014 architectural hotspots & refactor shortlist\n\nQuick orientation: 28 non-test `.go` files, ~9.7k LOC. Two files dominate the curve (1.7k and 1.65k LOC); the rest are healthy-sized. Hotspots cluster in two places \u2014 the CLI entrypoint and the TUI picker \u2014 with a secondary hotspot in the HLS base type and the Twitch plugin.\n\n## Refactor shortlist (ranked)\n\n### 1. `cmd/ghyll/main.go` \u2014 1,744 LOC, god-package for the CLI\n**Why it's a hotspot:** It is the integration seam for everything: imports `notify`, `output`, `plugin`, `session`, `stream`, `ui`, plus all three concrete plugin packages (`kick`, `twitch`, `youtube`) directly. Concrete plugin imports mean adding a plugin requires editing `main.go` \u2014 the plugin registry isn't actually pluggable from this seam.\n\nConcrete smells:\n- `buildRootCmd` is ~399 lines (lines 695-1093). It wires flags, viper config, signal handling, session setup, the picker, and playback all in one function.\n- `runPlayback` is ~270 lines (1248-1517). It owns stream resolution, metadata fetch, quality selection, player spawn, notification dispatch, status callbacks, fallback logic, and ad-break wiring.\n- Three local types live here that belong elsewhere: `formatOption`, `sessionConfig`, `playbackConfig`. Plus four `writeTheme*` helpers (TOML/YAML/JSON) that are config-file plumbing, not CLI code.\n- Stream-ranking logic (`selectStream`, `streamWeight`, `sortedStreamNames`) is business logic stranded in `main`.\n\n**Refactor moves:**\n- Split `buildRootCmd` into per-subcommand builders (`buildPlayCmd`, `buildCheckCmd`, `buildConfigCmd`) in sibling files.\n- Extract `runPlayback` into a new package `pkg/playback` with a `Runner` type \u2014 it has enough state (status callbacks, metadata cache, fallback policy) to deserve its own type.\n- Move `selectStream`/`streamWeight`/`sortedStreamNames` into `pkg/stream` (probably `stream/selection.go`).\n- Move theme-write helpers into `pkg/ui/theme.go` or a new `pkg/ui/themeio.go`.\n- Replace direct `kick`/`twitch`/`youtube` imports with a registry pattern (slice of plugin constructors that each subpackage registers via `init()` or that `main.go` builds from a single list).\n\n### 2. `pkg/ui/picker.go` \u2014 1,651 LOC, god-component TUI model\n**Why it's a hotspot:** A single `model` struct carries **41 fields** that span at least 6 distinct concerns:\n- Table/list state (`entries`, `filteredIdx`, `cursor`, `offset`, `width`, `height`, `titleScroll*`)\n- Refresh loop (`refresh`, `interval`, `countdown`, `refreshing`)\n- Playback sessions (`launch`, `sessions`, `playbackGen`, `launchTimeout`)\n- Quality overlay (8 `quality*` fields)\n- Streams overlay (7 `streams*` fields)\n- Theme overlay (`showTheme`, `themeCursor`, `savedStyles`, `savedThemeName`, `currentTheme`, `themeWriteFn`)\n- Filter mode (`filterText`, `filterActive`)\n- Help overlay (`showHelp`)\n\nThe `Update` method is **497 lines** (517-1013) \u2014 one switch that dispatches every key event across every overlay state. The four `show*` booleans (`showHelp`, `showQuality`, `showStreams`, `showTheme`) form an implicit mode enum that should be one `mode` field.\n\n**Refactor moves:**\n- Extract each overlay into its own sub-model (`qualityOverlay`, `streamsOverlay`, `themeOverlay`, `helpOverlay`) that satisfies a small `overlay` interface (`Init/Update/View`). The main `model` then holds one `current overlay` field instead of 22 overlay-related fields.\n- Collapse `show*` booleans into a `viewMode` enum.\n- Move `playbackSession`/`playbackState` tracking into a dedicated `playbackTracker` struct.\n- Split file: `picker.go` (model + Update), `picker_render.go` (View + render helpers \u2014 `renderEntry`, `compositeOverlay`, etc.), `picker_layout.go` (`computeLayout`, `padRight`, `truncate`, `entryLineCount`).\n\n### 3. `pkg/stream/hls/hls.go` \u2014 672 LOC, leaky inheritance via public hooks\n**Why it's a hotspot:** `HLSStream` exposes four exported callback fields meant for subclass-style override: `ProcessSegments`, `ShouldFilter`, `OnOpen`, `OnPlaylistParsed`. This is Go-flavored protected inheritance and creates tight coupling \u2014 the Twitch plugin reaches into these directly (see `plugins/twitch/twitch.go` `newHLSStream` and `buildStreams`). Any change to the segment lifecycle ripples into Twitch.\n\n`HLSStream` also mixes: HTTP fetching, retry/backoff (`parseRetryAfter`, `retryDelay`), AES-128 decryption (`decryptAES128CBC`, `getKey`, `keyCache`), playlist reloading, segment scheduling (worker/writer goroutines), and an `io.PipeWriter` pipeline. That's at least three responsibilities.\n\n**Refactor moves:**\n- Replace the four override fields with a single `SegmentHandler` interface (one type, explicit methods). Twitch implements it.\n- Extract `keyCache` + `getKey` + `decryptAES128CBC` into `pkg/stream/hls/crypto.go`.\n- Extract retry helpers (`parseRetryAfter`, `retryDelay`) into `pkg/stream/hls/retry.go` (note: `retry_test.go` already exists, so the test file is ahead of the source split).\n\n### 4. `plugins/twitch/twitch.go` (513 LOC) \u2014 does too many jobs\nThe plugin file mixes: URL matching, stream listing, metadata, HLS construction, transport mutation (`twitchTransport.RoundTrip` injects headers), restriction parsing, error parsing, and an `annotatedStream` wrapper. Split:\n- `twitch_plugin.go` \u2014 plugin contract (`Matchers`/`Streams`/`Metadata`/`Arguments`)\n- `twitch_playlist.go` \u2014 `fetchMasterPlaylist`/`buildStreams`/`validatePlaylistURL`/`variantName`\n- `twitch_transport.go` \u2014 `twitchTransport` and header logic\n- `twitch_stream.go` \u2014 `annotatedStream` + ad-break callback plumbing\n\n### 5. `plugins/youtube/api.go` \u2014 600 LOC, multi-client API soup\nTwo parallel InnerTube clients (VR + Android), four `extract*` walkers over untyped `any` trees, cookie injection, and channel-handle resolution all in one file. Split the extractors into `youtube/extractors.go` and isolate the two client paths.\n\n## Cross-cutting coupling notes\n\n- **`main.go` \u2192 every plugin (concrete imports):** breaks the \"plugin\" abstraction. The whole point of `pkg/plugin` is to keep `main` agnostic; right now it isn't.\n- **`twitch` \u2192 `pkg/stream/hls` public callback fields:** the only real consumer of those hooks. Replace with an interface and the coupling becomes explicit/typed.\n- **Picker model \u2194 session/playback:** the picker owns `playbackSession` lifetime via raw channels and a generation counter. Extracting a `playbackTracker` (see hotspot 2) decouples UI from session bookkeeping.\n\n## Files I'd touch first\n\nIf you only have time for two, do (1) and (2) \u2014 they're 35% of the codebase by line count, and both have giant functions that block readability. (3) is the highest-leverage architectural win because it removes inheritance-style coupling between core and plugins.\n\n## Notes\n- Excluded `_test.go` files from LOC ranking; some test files (`retry_test.go`) already imply a planned split that hasn't happened in source.\n- Did not run static-analysis tools; ranking is based on file size, function size, struct-field count, import fan-out, and exported-hook coupling read directly from the source.\n"}], "grading": null}, {"id": "implicit-trigger-with_skill", "prompt": "Looking at the C shell repo at /home/mcs/Documents/git/mcshell \u2014 which modules feel like they're doing too much and tangling the rest of the codebase? Trying to figure out what to break apart.", "eval_id": 3, "outputs": [{"name": "raw_report.md", "type": "text", "content": "# Architectural Hotspots \u2014 `/home/mcs/Documents/git/mcshell`\n\nAnalyzed **122** source files, **11** internal import edges. Edges count file-to-file imports inside the repo only; external/unresolved imports are dropped.\n\n## Hubs \u2014 high fan-in\nMany files depend on these. Hubs are often legitimate (core libraries, shared types). They become interesting when paired with god-size, grab-bag naming (`utils`, `helpers`, `common`), or high churn in git history.\n\n| File | Fan-in | LOC |\n|------|-------:|----:|\n| `Launcher/AppLauncher.qml` | 1 | 629 |\n| `Notifications/NotificationCard.qml` | 1 | 335 |\n| `LockScreen/LockScreen.qml` | 1 | 296 |\n| `Screencast/ScreenCastPickerDialog.qml` | 1 | 294 |\n| `Bluetooth/BluetoothPairingDialog.qml` | 1 | 187 |\n| `Polkit/PolkitDialog.qml` | 1 | 168 |\n| `Wallpaper/WallpaperRenderer.qml` | 1 | 115 |\n| `Core/Brightness.qml` | 1 | 77 |\n| `Screenshot/ScreenshotOverlay.qml` | 1 | 63 |\n| `Bar/ActiveWindow.qml` | 1 | 26 |\n| `Config/Namespaces.qml` | 1 | 17 |\n\n## Tangles \u2014 high fan-out\nThese files reach into many corners of the repo. Often a sign of weak single-responsibility \u2014 the file is doing too many things, or is a coordination layer that should be split.\n\n| File | Fan-out | LOC |\n|------|--------:|----:|\n| `shell.qml` | 11 | 297 |\n\n## God modules \u2014 LOC \u2265 400\nLarge files concentrate too much responsibility in one place. Cross-reference with the Hubs table \u2014 a file that is both god-sized *and* a hub is a refactor priority.\n\n| File | LOC | Fan-in | Fan-out |\n|------|----:|-------:|--------:|\n| `Bar/StatusBar.qml` | 791 | 0 | 0 |\n| `Config/Theme.qml` | 674 | 0 | 0 |\n| `Launcher/AppLauncher.qml` | 629 | 1 | 0 |\n\n## Cycles \u2014 strongly-connected components\nFiles inside a cycle cannot be understood, tested, or deployed independently. Cycles of size 2 often mean a missing seam (extract a third module both depend on); larger cycles usually signal a layering violation.\n\n_No cycles detected._\n\n## Limitations\n- Imports resolved by relative path (where possible) and basename match across the repo. Path aliases, dynamic imports, re-exports, and codegen are likely missed.\n- LOC counts non-blank lines; comments are not stripped.\n- External / third-party imports are not counted \u2014 only intra-repo coupling.\n- Treats each file as a node. Class- or function-level coupling is invisible here.\n"}, {"name": "response.md", "type": "text", "content": "# mcshell \u2014 modules doing too much\n\nRan the hotspot analyzer on the repo, then read the biggest files directly\nbecause the automated report has a major blind spot here (see caveat at the\nend). What follows is the human reading; raw numbers are in `raw_report.md`.\n\n## TL;DR \u2014 four real hotspots\n\n1. **`Config/Theme.qml` (739 LOC)** \u2014 *the* tangling module in this repo.\n   Referenced by **91 of ~120 QML files** as a singleton. It bundles\n   palettes, color application, wallpaper-hue handling, strategy\n   construction, font sizing, and persistence wiring all in one Singleton.\n   The analyzer shows it with fan-in = 0 only because QML singleton\n   coupling is invisible to import parsing \u2014 the *actual* fan-in is the\n   highest in the codebase by a wide margin. Any change to Theme's surface\n   ripples through nearly every widget.\n   **Split it:** `ThemePalettes.qml` (data), `ThemeColors.qml` (currently\n   active values), `WallpaperHueStrategy.qml` (the hue-derivation logic),\n   `ThemePersistence.qml` (UserSettings wiring). Keep the Singleton facade\n   thin and pure-property.\n\n2. **`Bar/StatusBar.qml` (892 LOC, top of god-modules list)** \u2014 orchestrates\n   weather, clock, sysinfo, systray, workspaces, media, calendar popups,\n   waveforms, *and* dropdown coordination with the launcher. The `Bar/`\n   directory already has 36 files (5,162 LOC); StatusBar is the assembler\n   that knows about all of them and owns popup state for several. Multiple\n   `_toggleWeather`, `_panelHeightFor`, `dismissPopups`, `_isFocusedScreen`\n   functions point to a single Scope acting as both layout root and\n   cross-cutting controller.\n   **Split it:** extract a `BarPopupController.qml` (popup open/close +\n   focused-screen logic) and let StatusBar.qml only declare the layout.\n\n3. **`Launcher/AppLauncher.qml` (700 LOC, hub of `Launcher/`)** \u2014 the only\n   file in `Launcher/` that other modules reach (fan-in 1 from `shell.qml`),\n   but it pulls together Apps / Wallpaper / Bluetooth / Wifi / Clipboard /\n   Power / Audio / Display category panes plus settings. The `Launcher/`\n   directory is the second-largest (3,871 LOC across 16+ files) and\n   AppLauncher is the single entry point gluing all categories together \u2014\n   classic coordinator that has grown into a god component.\n   **Split it:** introduce a `LauncherCategoryRegistry.qml` (declarative\n   list of categories + their delegates) so AppLauncher becomes a thin\n   shell that iterates the registry instead of hard-coding every category.\n\n4. **`shell.qml` (328 LOC, fan-out 11 \u2014 the only file in the Tangles\n   table)** \u2014 imports every top-level directory (Bar, Notifications,\n   Launcher, LockScreen, Polkit, Bluetooth, Screencast, Wallpaper,\n   Screenshot, Core, Config). That's expected for a root, but combined\n   with 23 in-line references to `Theme.` and one-off logic like\n   `_windowScreenshotPath = Theme.screenshotPrefix + Date.now() + \".png\"`\n   it's accumulating glue that doesn't belong at the root. Worth a pass to\n   move that screenshot-path composition into `Screenshot/` and let\n   `shell.qml` just compose components.\n\n## What the report missed (important)\n\nThe analyzer parsed 122 QML files but only resolved **11 internal import\nedges**, and the entire `Hubs` table shows fan-in = 1. That is the\nQML-coupling caveat the skill warns about: in QML the dominant coupling\nmechanism isn't `import` statements \u2014 it's **singleton references**\n(`Theme.foo`, `UserSettings.bar`) and **component instantiation by name**.\nThe analyzer can't see either.\n\nConcretely:\n- `Config/Theme.qml` is referenced by 91 files but appears with fan-in 0.\n- `Config/UserSettings.qml` (432 LOC) is similarly invisible.\n- The `Bar/*` and `Launcher/*` internal coupling (StatusBar instantiating\n  dozens of sibling components) shows up as 0 edges because QML\n  instantiates by component name from the same module's namespace.\n\nSo **treat the raw report's hub/cycle sections as not informative for this\ncodebase**. The god-modules section (which is pure LOC, no graph) and the\nsingle Tangles entry (`shell.qml` \u2014 caught only because it has explicit\n`import qs.*` statements) are the only mechanically-trustworthy parts. The\nfour findings above lean primarily on file-size signals plus a manual\ngrep of singleton references, not on the analyzer's graph.\n\n## Suggested order of attack\n\n`Theme.qml` first \u2014 it's the most-coupled module by far, and splitting it\nunblocks safer refactors elsewhere because every other widget touches it.\nThen `StatusBar.qml`, since extracting popup control there will reduce the\namount of state Theme needs to broadcast. `AppLauncher.qml` and\n`shell.qml` are lower priority \u2014 they're large but contained.\n"}], "grading": null}, {"id": "implicit-trigger-without_skill", "prompt": "Looking at the C shell repo at /home/mcs/Documents/git/mcshell \u2014 which modules feel like they're doing too much and tangling the rest of the codebase? Trying to figure out what to break apart.", "eval_id": 3, "outputs": [{"name": "response.md", "type": "text", "content": "# mcshell \u2014 architectural hotspots\n\nQuick read of `/home/mcs/Documents/git/mcshell` (122 QML files, ~16.5k LOC). Looked at file sizes, section markers (`// \u2500\u2500 \u2026`), imports/fan-in across `qs.*`, and the structural primitives (`Loader`, `Timer`, `Process`, `FileView`, `Connections`) inside the biggest files.\n\n## Coupling overview\n\nFan-in on the `qs.*` singletons / module exports (number of files importing each):\n\n| Module      | Imported by |\n| ----------- | ----------- |\n| `qs.Config` | 99          |\n| `qs.Widgets`| 41          |\n| `qs.Core`   | 23          |\n| everyone else | 1\u20132       |\n\nPlus direct symbol references:\n- `Theme.*` referenced in **91** QML files\n- `UserSettings.*` referenced in **34** files\n- `ShellActions.*` referenced in 3 files\n\nSo `qs.Config` (which exports `Theme` + `UserSettings` + `Namespaces`) is the spine of the codebase, and almost everything reaches into it. That's the single biggest source of \"tangling\" \u2014 any change to those two files ripples broadly.\n\n## Top hotspots, ranked by \"doing too much\"\n\n### 1. `Config/UserSettings.qml` \u2014 432 lines, ~138 properties/functions\nFile: `/home/mcs/Documents/git/mcshell/Config/UserSettings.qml`\n\nThis is the clearest god-object in the repo. It is nominally a persisted-settings singleton, but it has absorbed at least six unrelated responsibilities:\n\n- JSON adapter for `~/.config/mcshell/settings.json` (FileView + debounce Timer + mkdir SafeProcess) \u2014 lines ~215\u2013315\n- **Night-light gamma scheduling** \u2014 sunrise/sunset math, `_nightFactor`, auto-phase timer, `_setGammaTemp` (lines ~317\u2013414). This is a runtime service, not a setting.\n- **Wallpaper path/folder logic** \u2014 `_splitPath`, `setWallpaper`, `setWallpaperForScreen`, `setWallpapersForScreens`, per-screen JSON cache (lines ~152\u2013210)\n- **Wallpaper folder auto-detection** \u2014 another `SafeProcess` shelling out to bash (lines ~418\u2013431)\n- **SysInfo / GPU filtering** \u2014 `sysInfoHiddenGpus`, `primaryGpu()` scanning `SysInfo.gpus[].connectedDisplay` (lines ~104\u2013135)\n- **Clock format composition** \u2014 `clockTimeFormatString`, `clockFormatString` (lines ~140\u2013147)\n- Static option tables that belong to the UI (wallpaperRotateOptions, wallpaperFillModes) \u2014 lines ~34\u201350\n\nWhy this matters for tangling: 34 files import `UserSettings.*`, so every one of those responsibilities is wired to consumers. Touching night-light scheduling forces editing the same file that 34 UI sites pull from for unrelated settings. The JsonAdapter block at lines 226\u2013282 already lists ~60 raw properties \u2014 adding any setting means editing both the adapter block and the alias block above it.\n\nSuggested splits:\n- `Core/NightLight.qml` \u2014 owns mode, schedule, gamma, timer (UserSettings keeps only the persisted strings)\n- `Core/WallpaperPaths.qml` \u2014 `setWallpaper*`, `_splitPath`, per-screen map, default-folder detection\n- `Core/SysInfoGpus.qml` \u2014 hidden-GPU list, `primaryGpu()`\n- Leave `UserSettings` as a thin facade over the JsonAdapter\n\n### 2. `Config/Theme.qml` \u2014 739 lines\nFile: `/home/mcs/Documents/git/mcshell/Config/Theme.qml`\n\nSection headers tell the story \u2014 this single singleton holds: palette tables, wallpaper auto-theming (`onWallpaperPathChanged`, `onThemeNameChanged`, `onWallpaperStrategyChanged` Connections), **wallpaper-color-extraction strategies** (`_strategyParams`, `_buildStrategy`, `_applyWallpaperHue` \u2014 pulling from `Qs.VibrantColor`), then ~20 writable color properties, opacity scale, surface alphas, animation durations, notification timeouts, screenshot constants, layout constants, typography, ~100 Nerd-Font icon codepoints, and \"legend hint building blocks\".\n\nConcretely: design tokens (colors/spacing/typography/animation) are mixed with runtime behavior (wallpaper hue extraction + signal handlers + strategy registry). Since 91 files import Theme, any change to the strategy code recompiles the binding graph for nearly every QML component in the shell.\n\nSuggested splits:\n- `Theme.qml` keeps just tokens (colors, sizes, animations, icons)\n- `Core/Palette.qml` for palettes + applyPalette\n- `Core/WallpaperTheming.qml` for strategies + Connections (already adjacent to existing `Qs.VibrantColor` integration)\n\n### 3. `Bar/StatusBar.qml` \u2014 892 lines (largest file in the repo)\nFile: `/home/mcs/Documents/git/mcshell/Bar/StatusBar.qml`\n\nImports 7 different `qs.*` / `Quickshell.*` namespaces (Wayland, Bluetooth, Networking, SystemTray, Config, Core, Widgets, NotificationHistory, KeybindHints \u2014 basically all of the shell). What it actually contains in one file:\n\n- Exclusive-zone reservation surface\n- Fullscreen click-dismiss surface\n- Left / center / right bar segments with their layouts\n- **A \"shared dropdown\" right-segment popup** that internally Loader-gates 8 different panels: volume, tray icons, sysinfo, sysinfo settings, wifi settings, bluetooth settings, notifications, media (lines 614\u2013768)\n- A center dropdown for calendar / weather / clock settings (lines 777\u2013817)\n- A left dropdown for keybind hints (lines 820\u2013845)\n- WiFi state derivation walking `Networking.devices.values` (lines 863\u2013879)\n- Bluetooth state derivation walking `Bluetooth.defaultAdapter.devices.values` (lines 881\u2013891)\n- Recording state proxy\n- Hidden Volume + Battery instances kept at root for accessibility\n\nThe `sharedDropdown` is effectively a switch-statement-as-QML \u2014 it's the routing fabric for every right-segment panel, and right now both the routing and the panel composition live inline. Each `activePanel === \"\u2026\"` string is a string contract repeated in `togglePanel` calls scattered through the bar's left/center/right capsules.\n\nSuggested splits:\n- Extract `Bar/RightDropdown.qml` (the AnimatedPopup + its 8 Loaders), `Bar/CenterDropdown.qml`, `Bar/LeftDropdown.qml`. StatusBar then just composes three dropdowns.\n- Move the WiFi/Bluetooth state derivation into `Core/NetworkState.qml` + `Core/BluetoothState.qml` \u2014 those derivations also appear (or are duplicated) in the settings popups, so consolidating gives multiple call sites a single source of truth.\n- The panel-id strings (\"volume\", \"trayicons\", \"sysinfo\", \"sysInfoSettings\", \"wifiSettings\", \"bluetoothSettings\", \"notifications\", \"media\") should be a named enum/constants object so the bar capsules and the dropdown agree by symbol, not string.\n\n### 4. `shell.qml` \u2014 328 lines (root entry)\nFile: `/home/mcs/Documents/git/mcshell/shell.qml`\n\nImports **15 `qs.*` / `Quickshell.*` modules** directly \u2014 this is the natural choke-point so big fan-out is expected, but it has also accumulated:\n\n- Panel-toggle dispatcher (`_togglePanel`, `_toggleMode`, `_dispatchPanel`, `_resolveMode`) \u2014 lines ~28\u201391\n- AppLauncher lifecycle (Loader gating, `_toggleLauncher`, `_dispatchLauncher`) \u2014 lines ~92\u2013109, 217\u2013220\n- Recording lifecycle (Loader + `_toggleRecording`) \u2014 lines 218\u2013222\n- xdg-desktop-portal screencast wiring (`_portalRequest`, Connections) \u2014 lines ~171\u2013185\n- Screenshot orchestration (`screenshotFull`, `screenshotArea`, `screenshotWindow`, `_windowScreenshotPath`) \u2014 lines ~186\u2013242\n- Two DBus services exposing the same toggleLauncher / lock / toggleDnd / toggleBluetooth / toggleWifi / toggleVolume / toggleNotifications / toggleSysInfo / toggleKeybinds \u2014 lines ~265\u2013297\n\nThe DBus surface in particular looks duplicated (both services expose `toggleLauncher` and `lock`). And the \"dispatch a panel by name with a mode\" pattern is implemented inline here on top of being implemented inline in StatusBar \u2014 same string-keyed routing in two places.\n\nSuggested splits:\n- `Core/PanelRouter.qml` \u2014 single source of truth for panel ids, mode resolution, and dispatch. Both `shell.qml` and `StatusBar.qml` consume it; the `activePanel === \"x\"` strings become enum-like constants.\n- `Core/ScreenshotController.qml` \u2014 the three capture flows + window-screenshot path bookkeeping\n- `Core/DBusFacade.qml` \u2014 the two `DBusService` blocks (likely collapsible into one once the duplication is visible side-by-side)\n\n### 5. `Launcher/AppLauncher.qml` \u2014 700 lines\nFile: `/home/mcs/Documents/git/mcshell/Launcher/AppLauncher.qml`\n\nLess egregious than the above but still mixes a lot: public API (`open/close/toggle/openTab`), focused-output-aware open flow, open/close transition state machine, window setup, category registry, tab-state machine, **carousel geometry math + snap/animate state machine** (lines ~183\u2013390), tab-switching, search-bar custom Canvas paint with two `Connections` re-paint hooks, plus the giant UI tree.\n\nThe carousel/tab animation engine (200+ lines around 183\u2013390) is self-contained and could move to `Launcher/TabCarousel.qml`. The \"_requestOpen \u2192 focused-output \u2192 transition\" sequencing could move to a small controller so `AppLauncher.qml` is just the UI shell.\n\n## Cross-cutting observation: the `Config` package is the bottleneck\n\nThe most useful change here isn't any single split \u2014 it's recognizing that `qs.Config` has become the \"everything\" module. `Theme` (91 importers) and `UserSettings` (34 importers) collectively touch most of the codebase, and both files have absorbed runtime behavior (gamma scheduling, wallpaper hue extraction, GPU filtering, wallpaper path math, default-folder probing) that has no business in a config singleton.\n\nIf you only do one round of breaking-apart, the highest-leverage move is:\n\n1. Carve runtime services out of `Config/UserSettings.qml` and `Config/Theme.qml` into new `Core/` singletons (NightLight, WallpaperPaths, WallpaperTheming, Palette, SysInfoGpus).\n2. Leave `Config/` holding only persisted-settings aliases and static design tokens.\n3. Then extract the right-segment dropdown out of `StatusBar.qml` and introduce a `PanelRouter` shared by `shell.qml` and `StatusBar.qml` so panel-id strings stop being duplicated routing keys in two places.\n\nThose changes should drop the per-file import surface on the bar/launcher significantly and make config edits stop ricocheting through the binding graph of 91 files.\n"}], "grading": null}], "previous_feedback": {}, "previous_outputs": {"synthetic-ground-truth-with_skill": [{"name": "raw_report.md", "type": "text", "content": "# Architectural Hotspots \u2014 `/home/mcs/Documents/git/claude-skills/plugins/architectural-analysis/skills/architectural-hotspots/evals/fixtures/synthetic`\n\nAnalyzed **16** source files, **20** internal import edges. Edges count file-to-file imports inside the repo only; external/unresolved imports are dropped.\n\n## Hubs \u2014 high fan-in\nMany files depend on these. Hubs are often legitimate (core libraries, shared types). They become interesting when paired with god-size, grab-bag naming (`utils`, `helpers`, `common`), or high churn in git history.\n\n| File | Fan-in | LOC |\n|------|-------:|----:|\n| `utils/helpers.py` | 8 | 152 |\n| `models/user.py` | 4 | 9 |\n| `models/order.py` | 2 | 9 |\n| `core/config.py` | 2 | 3 |\n| `services/order_service.py` | 1 | 19 |\n| `services/notification_service.py` | 1 | 5 |\n| `core/db.py` | 1 | 3 |\n| `models/audit.py` | 1 | 3 |\n\n## Tangles \u2014 high fan-out\nThese files reach into many corners of the repo. Often a sign of weak single-responsibility \u2014 the file is doing too many things, or is a coordination layer that should be split.\n\n| File | Fan-out | LOC |\n|------|--------:|----:|\n| `services/order_service.py` | 6 | 19 |\n| `models/user.py` | 2 | 9 |\n| `models/order.py` | 2 | 9 |\n| `handlers/order_handler.py` | 2 | 8 |\n| `services/notification_service.py` | 2 | 5 |\n| `handlers/user_handler.py` | 2 | 4 |\n| `handlers/notification_handler.py` | 2 | 4 |\n| `core/db.py` | 1 | 3 |\n| `models/audit.py` | 1 | 3 |\n\n## God modules \u2014 LOC \u2265 400\nLarge files concentrate too much responsibility in one place. Cross-reference with the Hubs table \u2014 a file that is both god-sized *and* a hub is a refactor priority.\n\n_None above threshold._\n\n## Cycles \u2014 strongly-connected components\nFiles inside a cycle cannot be understood, tested, or deployed independently. Cycles of size 2 often mean a missing seam (extract a third module both depend on); larger cycles usually signal a layering violation.\n\n### Cycle 1 \u2014 2 files\n- `models/order.py`\n- `models/user.py`\n\n## Limitations\n- Imports resolved by relative path (where possible) and basename match across the repo. Path aliases, dynamic imports, re-exports, and codegen are likely missed.\n- LOC counts non-blank lines; comments are not stripped.\n- External / third-party imports are not counted \u2014 only intra-repo coupling.\n- Treats each file as a node. Class- or function-level coupling is invisible here.\n"}, {"name": "response.md", "type": "text", "content": "# Architectural hotspots in `synthetic/`\n\nRan the hotspot analyzer over the 16 source files (20 internal import edges). The app is small enough that the picture is clear \u2014 there are three things worth focusing on before you start moving code around, in priority order.\n\n## 1. `utils/helpers.py` \u2014 grab-bag hub (fan-in 8, LOC 152)\n\nThis is the single most architecturally problematic file. It is:\n\n- **The top hub by a wide margin** (fan-in 8 out of 16 files \u2014 half the codebase imports it).\n- **Generically named** (`helpers`), which is the classic warning sign the SKILL.md flags: when a file is called `helpers`/`utils`/`common`, dependents accumulate not because they share a real abstraction, but because nobody knew where else to put things.\n- **A grab-bag in practice**, not just in name. Skimming it, the responsibilities are wildly mixed \u2014 currency/percent formatting, date math, slugify, retry, deep_merge, phone normalization, email validation, byte humanization, flatten, group_by, pick/omit, case conversion, env parsing, hash/csv/html escaping, list windowing, etc. Roughly 40 unrelated utilities in one file.\n\nIt does not cross the god-module LOC threshold (152 < 400), but the *blast radius* metric matters more than raw size: every one of those 8 importers is coupled to a file whose contents have nothing to do with each other.\n\n**Suggestion:** split by domain rather than refactoring in place. Reasonable seams visible in the file: `formatting/` (currency, percent, bytes, title/camel/snake_case, truncate, csv/html escape), `datetime_utils.py` (parse_iso_date, days_between, hours_between), `collections_utils.py` (chunk, flatten, group_by, pick, omit, dedupe, partition, window, zip_longest_fill, take/drop, find_index, count_if, any_match, all_match, first, coalesce), `validation.py` (is_valid_email, is_blank, normalize_phone), `retry.py`, `config_env.py` (env_bool), `hashing.py` (hash_dict). Once split, each importer pulls in only what it actually uses, and the hub disappears.\n\n## 2. `services/order_service.py` \u2014 coordination tangle (fan-out 6)\n\nTop of the tangles table. In a 19-line file it reaches into `core.config`, `core.db`, `models.user`, `models.order`, `models.audit`, and `utils.helpers` \u2014 basically every layer of the app. The functions are also doing mixed-level work: `place_order` opens a DB connection, constructs a domain object, queries orders, writes an audit event, computes a sum, and formats currency for return \u2014 all in one body.\n\nThe fan-out is not large in absolute terms, but it is large *relative to the size of the repo* \u2014 this one file touches ~38% of the source files. That makes it the obvious \"coordinator that does too much\" candidate.\n\n**Suggestion:** introduce a seam. Either (a) pull the DB connection / audit logging out behind a small unit-of-work or context object that `place_order` receives, so the service stops importing `core.db` and `models.audit` directly; or (b) split the service into an orchestrator (`place_order`, `cancel_order`, `refund_order` as thin top-level functions) plus per-step helpers, so each step owns its imports. Either way the return type also wants attention \u2014 returning a formatted currency string out of `place_order` mixes presentation into the service layer.\n\n## 3. Cycle between `models/user.py` and `models/order.py` (size 2)\n\nThe analyzer found one strongly-connected component: `user.py` imports `order.py` (so `User.orders()` can call `order.find_by_user`) and `order.py` imports `user.py` (so `order.owner` can return a `User`). Per the SKILL.md guidance, size-2 cycles almost always mean **a missing seam** \u2014 there's a shared concept that wants its own module.\n\n**Suggestion:** the cleanest extraction is usually a query/repository layer: move `find_by_user` and `owner` into a `models/queries.py` (or `repositories/`) that depends on both `user` and `order`, leaving `user.py` and `order.py` as pure data definitions that don't know about each other. Alternatively, invert one of the two \u2014 e.g. have `User.orders()` accept a callable or repository at construction time rather than importing `order` at module top level.\n\n## What I am *not* flagging\n\n- **No god modules.** Nothing in the repo crosses the 400-LOC threshold. `helpers.py` at 152 LOC is the largest file and even that is only a \"hub problem\", not a \"size problem\".\n- **`models/user.py`, `models/order.py`, `core/config.py` showing up in the hubs table** \u2014 these have fan-in 2\u20134 with tiny LOC counts. They are doing what models and config files are *supposed* to do; ignore them.\n- **Handlers fan-out of 2 each** \u2014 that's normal for handler code (route + service), not a smell.\n\n## Where to start\n\nIf you can only do one thing this week: **split `utils/helpers.py`**. It is the highest-leverage change because it both reduces fan-in across the most files and forces each call site to declare what it actually needs (which often surfaces dead imports). Do the order-service cleanup second, since it'll be easier once helpers is split. Break the user/order cycle last \u2014 it's the cleanest of the three to fix but also the most localized in impact.\n\n## Caveats on the analysis\n\n- The graph only reflects intra-repo coupling \u2014 external dependencies (stdlib, third-party) are not counted, so a file that's \"small\" here could still be doing a lot via outside imports.\n- LOC counts non-blank lines and does not strip comments; treat it as a rough size signal.\n- Resolution is by relative path + basename match. Dynamic imports, re-exports, or path-aliased imports could be undercounted (not really an issue on this fixture \u2014 Python imports are plain \u2014 but worth knowing for larger codebases).\n- The graph is file-level, so a god-class hiding inside a moderate-sized file would be invisible to this report.\n- This repo is small (16 files) \u2014 below the ~30-file scale where the analyzer is most useful. The findings above are still real, but you can confirm them by reading the files directly in a few minutes, which is usually faster than tooling at this size.\n\nRaw analyzer output is at `outputs/raw_report.md` if you want the numbers.\n"}], "synthetic-ground-truth-without_skill": [{"name": "response.md", "type": "text", "content": "# Architectural review \u2014 `synthetic/`\n\nI read every `.py` file in the tree (10 source files, plus 5 empty `__init__.py`s) and traced imports by hand. Below is what's structurally wrong, ordered by where I'd focus refactoring effort.\n\n## Module dependency map\n\n```\ncore/config.py        (leaf)\ncore/db.py            -> core.config\nutils/helpers.py      (leaf, ~40 funcs)\n\nmodels/user.py        -> models.order, utils.helpers       [cycle]\nmodels/order.py       -> models.user,  utils.helpers       [cycle]\nmodels/audit.py       -> utils.helpers\n\nservices/order_service.py        -> core.config, core.db,\n                                    models.user, models.order, models.audit,\n                                    utils.helpers\nservices/notification_service.py -> models.user, utils.helpers\n\nhandlers/order_handler.py        -> services.order_service, utils.helpers (unused)\nhandlers/user_handler.py         -> models.user, utils.helpers\nhandlers/notification_handler.py -> services.notification_service, utils.helpers\n```\n\nFan-in counts (how many internal modules import each):\n- `utils.helpers` \u2014 9 importers (every non-leaf module)\n- `models.user` \u2014 4\n- `models.order` \u2014 2\n- everything else \u2014 1 or 0\n\n## Where to focus, in priority order\n\n### 1. Circular import: `models.user` <-> `models.order` (critical)\n\n`models/user.py` imports `models.order`, and `models/order.py` imports `models.user`. They each instantiate the other (`User.orders()` calls `order.find_by_user`; `order.owner()` returns `User(...)`). Both files even carry docstrings that say `\"Planted size-2 cycle\"` \u2014 this is the most obvious red flag in the codebase.\n\nFix direction: pick the dominant aggregate (almost certainly `User`) and have `Order` reference a user only by `user_id` (string/int), not by importing the `User` class. If you need a `User` back from an order, that's a service/repository concern, not a model concern.\n\n### 2. `utils/helpers.py` is a god module / hub (critical)\n\n`helpers.py` contains ~40 unrelated functions: currency formatting, date parsing, slugify, retry, deep_merge, phone normalization, email validation, byte humanization, flatten, group_by, pick/omit, case conversions, env parsing, SHA-256 hashing, CSV escape, HTML escape, partition, windowing, etc. It is imported by every single non-leaf module in the system.\n\nTwo distinct problems sit on top of each other:\n- **God module**: unrelated concerns share a file. Any change to formatting forces a re-read of hashing, retry policy, collection utilities, and HTML escape.\n- **Hub dependency**: 9 modules touch it, so every edit has system-wide blast radius and the file is a magnet for unrelated future additions.\n\nFix direction: split by concern \u2014 `formatting.py` (currency/percent/bytes/dates), `strings.py` (case, slugify, escape, truncate), `collections.py` (chunk, flatten, group_by, pick/omit, partition, window), `hashing.py`, `validation.py` (email, phone), `env.py`. Then let callers depend on the narrow module they actually need. After the split, several callers will drop to zero `helpers` imports.\n\n### 3. `services/order_service.py` has the highest fan-out (high)\n\nIt reaches into `core.config`, `core.db`, `models.user`, `models.order`, `models.audit`, and `utils.helpers` \u2014 and inside one function (`place_order`) it does all of: connect to DB, construct a `User` from raw fields, look up orders, write an audit event, sum prices, and format currency for the return value. That's at least four responsibilities in 7 lines, and the return value is a *display string* (`\"$12.34\"`), not a domain result.\n\nSpecific smells:\n- `place_order` returns formatted currency \u2014 presentation logic in a service.\n- `refund_order` reads `config.DEBUG` and prints \u2014 logging concern bleeding into business logic.\n- `user.User(user_id, \"buyer\")` hardcodes a role string; the service is fabricating a user object instead of loading one.\n- `db.connect()` is called but its return value is discarded; there is no transaction or connection object threaded through.\n\nFix direction: services should return domain values (a total as a number or `Money`), delegate formatting to the handler/presentation edge, take a real user via a repository, and log via a logger \u2014 not via `config.DEBUG` + `print`.\n\n### 4. Layering is inconsistent (high)\n\nThe intended layers look like `handlers -> services -> models -> core`, but:\n- `handlers/user_handler.py` skips services and constructs `models.user.User` directly. The other two handlers go through a service. Pick one and apply it consistently \u2014 handlers should not know about model constructors.\n- `models/*` imports `utils/helpers` for presentation (`title_case`, `format_currency`). Models should hold identity/state; formatting belongs at the edges. This is what makes `helpers` a hub in the first place.\n- `core/db.connect()` returns a config string. There's no real persistence boundary \u2014 the \"core\" layer is currently just a constants bag with a misleading function name.\n\n### 5. Dead and misleading code (medium)\n\n- `handlers/order_handler.py` imports `utils.helpers` and never uses it. Remove the import.\n- `services/notification_service.py` constructs `user.User(user_id, \"buyer\")` then throws it away. Either look the user up properly or drop the import.\n- `models/order.py::find_by_user` returns `[]` unconditionally; `models/audit.py::log` only hashes the dict and returns it. Names imply persistence/side effects that don't happen \u2014 easy source of false confidence when refactoring.\n- `core/config.py` is three module-level constants with no environment-variable override and no type. `CACHE_TTL` isn't read anywhere in the tree.\n\n### 6. `core/config.py` as mutable globals (low, but easy win)\n\nModule-level `DEBUG = False` is the kind of flag that someone will eventually mutate at runtime or shadow with a monkeypatch in tests. Replace with a `Settings` object loaded from env (e.g. `pydantic-settings` or even a frozen dataclass) so the truth source is explicit and immutable per-process.\n\n## Suggested order of attack\n\n1. **Break the `user <-> order` cycle first.** Until that's gone, any other refactor in `models/` risks import-time surprises.\n2. **Carve `utils/helpers.py` into focused modules.** This single change shrinks every other module's fan-out and makes layering violations visible (e.g. it'll be obvious that `models/*` shouldn't depend on `formatting`).\n3. **Push presentation out of services.** Make `place_order` return a number; format at the handler. Remove `config.DEBUG`+`print` in favor of `logging`.\n4. **Pick one entry pattern for handlers** (all go through services) and route `user_handler` through a `user_service`.\n5. **Make `core/db` an actual boundary** (or delete `connect()` until it does something).\n6. **Clean up dead imports and misleading stubs** as part of each touch \u2014 they're cheap, and they otherwise mislead the next person.\n\n## Files to focus on, ranked\n\n1. `utils/helpers.py` \u2014 god module, hub, blast radius 9\n2. `models/user.py` + `models/order.py` \u2014 circular dependency (must be fixed together)\n3. `services/order_service.py` \u2014 highest fan-out, mixes concerns, presentation in service layer\n4. `handlers/user_handler.py` \u2014 inconsistent layering vs the other two handlers\n5. `core/config.py` + `core/db.py` \u2014 weak boundary, mutable globals, no real persistence\n\nThe first three account for essentially all of the structural risk; the rest are cleanup that becomes easy once those land.\n"}], "real-go-repo-with_skill": [{"name": "raw_report.md", "type": "text", "content": "# Architectural Hotspots \u2014 `/home/mcs/Documents/git/ghyll`\n\nAnalyzed **59** source files, **37** internal import edges. Edges count file-to-file imports inside the repo only; external/unresolved imports are dropped.\n\n## Hubs \u2014 high fan-in\nMany files depend on these. Hubs are often legitimate (core libraries, shared types). They become interesting when paired with god-size, grab-bag naming (`utils`, `helpers`, `common`), or high churn in git history.\n\n| File | Fan-in | LOC |\n|------|-------:|----:|\n| `pkg/stream/http.go` | 21 | 164 |\n| `plugins/twitch/errors.go` | 10 | 24 |\n| `pkg/plugin/errors.go` | 6 | 7 |\n\n## Tangles \u2014 high fan-out\nThese files reach into many corners of the repo. Often a sign of weak single-responsibility \u2014 the file is doing too many things, or is a coordination layer that should be split.\n\n| File | Fan-out | LOC |\n|------|--------:|----:|\n| `plugins/youtube/api_test.go` | 2 | 951 |\n| `cmd/ghyll/check_test.go` | 2 | 837 |\n| `plugins/twitch/api_test.go` | 2 | 799 |\n| `plugins/kick/kick_test.go` | 2 | 748 |\n| `plugins/twitch/api.go` | 2 | 390 |\n| `plugins/youtube/youtube.go` | 2 | 271 |\n| `plugins/kick/kick.go` | 2 | 216 |\n| `plugins/twitch/dispatch_test.go` | 2 | 91 |\n| `pkg/ui/picker_test.go` | 1 | 3021 |\n| `cmd/ghyll/main.go` | 1 | 1581 |\n| `cmd/ghyll/main_test.go` | 1 | 1458 |\n| `pkg/stream/hls/hls_test.go` | 1 | 1063 |\n| `plugins/youtube/youtube_test.go` | 1 | 650 |\n| `pkg/stream/hls/hls.go` | 1 | 584 |\n| `plugins/youtube/api.go` | 1 | 547 |\n\n## God modules \u2014 LOC \u2265 400\nLarge files concentrate too much responsibility in one place. Cross-reference with the Hubs table \u2014 a file that is both god-sized *and* a hub is a refactor priority.\n\n| File | LOC | Fan-in | Fan-out |\n|------|----:|-------:|--------:|\n| `pkg/ui/picker_test.go` | 3021 | 0 | 1 |\n| `cmd/ghyll/main.go` | 1581 | 0 | 1 |\n| `pkg/ui/picker.go` | 1520 | 0 | 0 |\n| `cmd/ghyll/main_test.go` | 1458 | 0 | 1 |\n| `pkg/stream/hls/hls_test.go` | 1063 | 0 | 1 |\n| `plugins/youtube/api_test.go` | 951 | 0 | 2 |\n| `cmd/ghyll/check_test.go` | 837 | 0 | 2 |\n| `plugins/twitch/api_test.go` | 799 | 0 | 2 |\n| `plugins/kick/kick_test.go` | 748 | 0 | 2 |\n| `plugins/youtube/youtube_test.go` | 650 | 0 | 1 |\n| `pkg/stream/hls/hls.go` | 584 | 0 | 1 |\n| `pkg/stream/hls/m3u8_test.go` | 554 | 0 | 0 |\n| `plugins/youtube/api.go` | 547 | 0 | 1 |\n| `pkg/stream/hls/m3u8.go` | 497 | 0 | 0 |\n| `plugins/twitch/twitch.go` | 452 | 0 | 1 |\n\n## Cycles \u2014 strongly-connected components\nFiles inside a cycle cannot be understood, tested, or deployed independently. Cycles of size 2 often mean a missing seam (extract a third module both depend on); larger cycles usually signal a layering violation.\n\n### Cycle 1 \u2014 2 files\n- `pkg/plugin/errors.go`\n- `plugins/twitch/errors.go`\n\n## Limitations\n- Imports resolved by relative path (where possible) and basename match across the repo. Path aliases, dynamic imports, re-exports, and codegen are likely missed.\n- LOC counts non-blank lines; comments are not stripped.\n- External / third-party imports are not counted \u2014 only intra-repo coupling.\n- Treats each file as a node. Class- or function-level coupling is invisible here.\n"}, {"name": "response.md", "type": "text", "content": "Ran the hotspot analyzer on `/home/mcs/Documents/git/ghyll` (59 source files, 37 internal edges). Here's the refactor shortlist \u2014 four files, in priority order.\n\n## Refactor shortlist\n\n1. **`pkg/ui/picker.go`** (LOC 1520 by the analyzer, 1651 on disk) \u2014 **god module, top priority.**\n   By far the largest non-test file in the repo and it's a UI picker. A 1.5k-LOC view component is almost certainly multiple concerns fused: model, update/reducer, table layout, key handling, theme glue. The natural split for a Bubble Tea program is one file per state/screen plus a thin root model \u2014 look for the `Update`/`View` switch arms and peel them off first. The companion test (`pkg/ui/picker_test.go`, 3021 LOC) is a tell that you're already paying for the size.\n\n2. **`cmd/ghyll/main.go`** (LOC 1581 / 1744 on disk) \u2014 **god module in the entrypoint.**\n   `main.go` should be wiring, not logic. At 1.5k+ LOC this is doing command parsing, dispatch, and probably most of the check/run flows itself (`check_test.go` at 837 LOC backs that up). Move the subcommand bodies into `cmd/ghyll/check.go`, `cmd/ghyll/run.go`, etc., or into a `pkg/cli` package, and leave `main.go` as flag parsing + dispatch. This also unblocks unit-testing the subcommands without driving the full binary.\n\n3. **`pkg/stream/http.go`** (LOC 164, fan-in 21) \u2014 **the real hub.**\n   It is the single most depended-on file in the repo by a wide margin (21 importers vs. ~10 for the next one, which is a false positive \u2014 see caveat). At 164 LOC it's not god-sized, so it's a *healthy* hub today. Flagging it because that means it is your de-facto stream HTTP contract: any breaking change ripples to 21 files. Treat its public surface as load-bearing \u2014 narrow the exported API if you can, and resist adding unrelated helpers to it. No refactor needed now; just protect it.\n\n4. **`pkg/stream/hls/hls.go`** (LOC 584) **and `plugins/youtube/api.go`** (LOC 547), **`plugins/twitch/api.go`** (LOC 390), **`plugins/twitch/twitch.go`** (LOC 452) \u2014 **plugin-shaped god modules.**\n   Each plugin has one fat file doing parsing + API calls + dispatch. They aren't hubs (nobody imports across plugin boundaries, which is correct), so the blast radius is contained \u2014 but they're individually overloaded. The HLS file in particular pairs with a 1063-LOC test, which usually means several distinct behaviours are tangled in one file. Split each plugin into `api.go` (HTTP/GQL calls), `parse.go` (response \u2192 entry types), and `dispatch.go` (URL matching + plugin entry points).\n\n## What I am *not* recommending\n\n- The analyzer reports a cycle between `pkg/plugin/errors.go` and `plugins/twitch/errors.go`. **This is a false positive** \u2014 I opened both files and neither imports the other; they just share the basename `errors.go`, which the resolver's basename-match path tied together. Ignore.\n- The high fan-out entries are all `_test.go` files importing one or two packages. That's normal for Go table-driven tests; not a coupling problem.\n- `plugins/twitch/errors.go` showing fan-in 10 is the same basename-collision artefact as the cycle. The real twitch coupling is normal package-internal use.\n\n## Caveat on the numbers\n\nThe resolver matches Go imports by basename across the repo, which works for most of this codebase but produces the `errors.go` false positives above and probably undercounts a few edges where multiple files share a stem. The fan-in on `pkg/stream/http.go` (21) is high enough that I trust the *signal* even if the exact count is +/- a couple. LOC counts are non-blank lines without comment stripping, so treat them as rough size rather than precise.\n\nFull raw report: `plugins/architectural-analysis/architectural-hotspots-workspace/iteration-1/real-go-repo/with_skill/outputs/raw_report.md`.\n"}], "real-go-repo-without_skill": [{"name": "response.md", "type": "text", "content": "# ghyll architectural hotspots \u2014 refactor shortlist\n\nTwo files are doing far too much, and a third has a coupling problem hiding under a \"subclass hook\" pattern. That's basically the whole story.\n\n## 1. `cmd/ghyll/main.go` \u2014 the god file (1744 LOC)\n\nThis single file is not really `main`. It contains, in order:\n\n- `main`, `run`, `buildRootCmd` (the Cobra wiring)\n- Viper config loading, key mapping, debug logging of applied keys (`loadViperConfig`, `viperConfigKeys`)\n- First-run config-file generation including **three** full TOML/YAML/JSON template constants (`configTemplateTOML/YAML/JSON`, `ensureConfig`, `promptConfigFormat`, `generateConfigFile`)\n- An inline interactive picker for the config format with its own ANSI rendering (`renderFormatPicker`, `formatOptions`, `formatPickerLines`) \u2014 a mini-TUI built into the entrypoint\n- Theme persistence with **three** parallel writers (`writeThemeTOML`, `writeThemeYAML`, `writeThemeJSON`) \u2014 duplicated format dispatch logic\n- Channel input parsing (`readChannelInputs`)\n- Avatar download + caching (`avatarPaths`, `downloadAvatar`)\n- Session/plugin assembly (`setupSession`)\n- Playback orchestration (`runPlayback` runs ~270 lines and owns ad-break wiring, notification gating with `sync.Once` + `atomic.Bool`, player construction, reconnect pipe, drop callbacks, stable-threshold reconnect counter)\n- Stream selection (`selectStream`, `streamWeight`, `sortedStreamNames`)\n- Misc parsers (`parseRefreshInterval`, `parseLogLevel`, `parseKeyValuePairs`, `splitPlayerArgs`, `generateOutputPath`)\n\nIt imports every internal package (`notify`, `output`, `plugin`, `session`, `stream`, `ui`, and all three platform plugins `kick`/`twitch`/`youtube`) \u2014 so it's also the single point where everything fans in.\n\n**Refactor moves:**\n- `cmd/ghyll/config_init.go` \u2014 move `ensureConfig`, all three template constants, `promptConfigFormat`, `generateConfigFile`, `renderFormatPicker` (and `formatOption[s]`, `formatPickerLines`). Better: collapse the per-format writers behind one `configWriter` interface keyed by extension; the TOML/YAML/JSON branches in `writeThemeToConfig` are crying out for it.\n- `cmd/ghyll/config_load.go` \u2014 `loadViperConfig`, `viperConfigKeys`, `parseRefreshInterval`, `parseLogLevel`, `parseKeyValuePairs`.\n- `pkg/playback/` (new package) \u2014 `runPlayback` + `selectStream` + `streamWeight` + `sortedStreamNames` + the `playbackConfig` struct. This is genuine domain logic, not CLI glue, and it's the function I'd most expect to grow further.\n- `pkg/avatar/` (new package) \u2014 `downloadAvatar` and the `avatarPaths` singleton (which is currently a process-global `struct{ sync.Mutex; ... }` \u2014 also a refactor smell).\n- Leave only Cobra flag wiring and `main`/`run` in `main.go`. That alone drops it to maybe 400 LOC.\n\n## 2. `pkg/ui/picker.go` \u2014 Bubble Tea kitchen sink (1651 LOC)\n\nOne `model` struct with ~40 fields managing **five** concurrent overlay state machines: help, quality, streams, theme, and filter. `model.Update` is ~840 lines containing 65 `case` branches.\n\nThe structural smell:\n- Each overlay has its own group of fields prefixed `show*`, `*Loading`, `*Entries`, `*Cursor`, `*Err`, sometimes `*Channel`, `saved*`, etc. The fact that the prefixes are mechanically parallel proves the abstraction is missing.\n- `Update` opens with global keys, then a cascade of `if m.showHelp / showTheme / showStreams / showQuality / filterActive { ... return }` blocks. That's a manually-implemented mode stack.\n- The file also owns: layout math (`computeLayout`, `tableLayout`, `padRight`, `truncate`), all rendering (`render*Overlay`, `renderMainTable`, `renderEntry`, `View`, `compositeOverlay`), formatting helpers (`formatViewerCount`, `formatUptime`), filter/sort logic (`sortEntries`, `refilter`, `filteredEntries`, `preserveCursor`, `clampScroll`, `liveCount`), the playback-session map, and the public `Picker` / `Run` entrypoint.\n\n**Refactor moves:**\n- Extract an `overlay` interface (`Update(tea.Msg) (overlay, tea.Cmd)`, `View() string`, `Active() bool`) and one file per overlay: `overlay_help.go`, `overlay_quality.go`, `overlay_streams.go`, `overlay_theme.go`. The main `model` just routes to the topmost active overlay. That single move probably halves `Update`.\n- Split rendering out to `picker_render.go` (everything from `renderHelpOverlay` through `View`, `renderEntry`, `compositeOverlay`, plus `computeLayout`/`padRight`/`truncate`).\n- Split formatting helpers (`formatViewerCount`, `formatUptime`) into `pkg/ui/format.go`. `PrintChannelList` looks like it belongs there too \u2014 it's a non-TUI utility currently living inside the TUI file.\n- Filter/sort/cursor helpers (`refilter`, `preserveCursor`, `clampScroll`, `sortEntries`, `filteredEntries`) into `picker_filter.go`.\n\nAfter this, `picker.go` should be just the `Picker` type, `Run`, `newModel`, `Init`, and the top-level `Update` dispatch.\n\n## 3. `pkg/stream/hls/hls.go` \u2014 open extension via mutable struct fields (672 LOC)\n\nThe smell isn't size, it's the coupling pattern. `HLSStream` exposes **callback fields as part of its public struct** to let other plugins customise behaviour:\n\n```go\n// Hooks for subclass override (e.g. Twitch)\nProcessSegments  func(segments []Segment, isFirst bool) []Segment\nShouldFilter     func(seg Segment) bool\nOnOpen           func()\nOnPlaylistParsed func(playlist *MediaPlaylist)\n```\n\nThe comment explicitly names `twitch` \u2014 and indeed `plugins/twitch/twitch.go` and `plugins/twitch/hls.go` reach into these fields. That's compile-time coupling masquerading as a hook system: any change to ad-filtering semantics ripples back into `HLSStream`'s public surface. `Filtered` is also exposed for \"subclass use (e.g. ad filtering pause/resume)\", and the comment admits it.\n\nAlso in the same file: a `keyCache` (AES key cache), the AES-128-CBC decrypt routine, `retryDelay` with `parseRetryAfter`, the 200-line `worker` goroutine, `fetchPlaylist` with retries, `fetchAndWriteMap` / `fetchAndWriteSegment` / `fetchAndDiscard`, and an `hlsReadCloser` wrapper. That's three or four jobs.\n\n**Refactor moves:**\n- Define a small `SegmentProcessor` interface (e.g. `Process([]Segment, first bool) []Segment`, `Filter(Segment) bool`, `OnPlaylistParsed(*MediaPlaylist)`) and let `TwitchPlugin` pass an implementation in via constructor. Drop the exposed function fields. This breaks the \"subclass\" anti-pattern and lets `HLSStream` go back to being a value type.\n- Move retry helpers (`parseRetryAfter`, `retryDelay`) to `pkg/stream/hls/retry.go` (there's already a `retry_test.go`, so the helpers belong in their own file).\n- Move `keyCache` + `getKey` + `decryptAES128CBC` to `pkg/stream/hls/crypto.go`. Crypto + key caching is an isolated concern, currently inlined inside the segment fetcher.\n- That leaves `hls.go` with `HLSStream`, `Open`, `worker`, and the fetch/write methods \u2014 still big but cohesive.\n\n## Smaller things worth flagging while you're in there\n\n- **`plugins/twitch/twitch.go` (513 LOC)** \u2014 `TwitchPlugin` mixes plugin-protocol methods (`Matchers`, `Streams`, `Metadata`, `Arguments`), the actual API logic (`liveStreams`, `acquireAccessToken`, `fetchMasterPlaylist`, `buildStreams`), an HLS factory (`newHLSStream`, `validatePlaylistURL`), and a custom `twitchTransport` `http.RoundTripper`. The transport and the `annotatedStream` wrapper at the bottom are both natural extractions to `transport.go` / `stream.go`.\n- **`plugins/youtube/api.go` (600 LOC)** \u2014 three InnerTube client variants (web/VR/android) inlined as code-generated context maps and per-client retry logic in `Player`/`playerRaw`/`playerWithClient`. The \"try each client until one doesn't reject\" pattern in `Player` would read better as a slice of client configs iterated in a loop, killing the duplicate `looksLikeRejection` plumbing.\n- **`pkg/stream/hls/m3u8.go` (538 LOC)** \u2014 parser is one file but has two top-level entrypoints (`ParseMaster`, `ParseMedia`) plus a pile of `attrString`/`attrQuoted`/`attrInt`/`attrFloat`/`findAttr`/`parseXAttributes` helpers. Probably fine to leave, but if you ever touch it, `attrs.go` is the obvious split.\n\n## Coupling map (most important takeaway)\n\n`pkg/stream` is the trunk \u2014 13 importers, everything depends on its interfaces (`Stream`, `Droppable`, `AdBreakNotifier`, `AdEndNotifier`, `PreRollNotifier`, `StreamInfoProvider`). That's healthy and expected.\n\nThe unhealthy concentration is at the leaves:\n- `cmd/ghyll/main.go` is the only file importing **all eight** internal packages, and it does substantive work in each of those domains rather than just wiring.\n- `plugins/twitch/twitch.go` is the only file outside `pkg/stream/hls` that knows about `HLSStream`'s \"hook\" fields \u2014 making it the de-facto subclass and giving you a coupling you can't see from the package graph.\n\n## TL;DR shortlist (in priority order)\n\n1. **Split `cmd/ghyll/main.go`** into config-init, config-load, playback, and avatar \u2014 kill the god file. Highest payoff because every future feature lands here.\n2. **Decompose the picker `model`** into per-overlay state objects behind an `overlay` interface. This is the riskiest file to touch next given the 40-field struct + 840-line `Update`.\n3. **Replace `HLSStream`'s exposed function-field hooks** with a `SegmentProcessor` interface; extract `crypto.go` and `retry.go` alongside.\n4. (Lower) clean up Twitch transport + annotated-stream and the YouTube InnerTube client cascade.\n"}], "implicit-trigger-with_skill": [{"name": "raw_report.md", "type": "text", "content": "# Architectural Hotspots \u2014 `/home/mcs/Documents/git/mcshell`\n\nQML project (Quickshell). Analyzed **122** `.qml` files, **357** internal coupling edges. Edges are file-to-file references via `qs.<Module>` imports + capitalised-identifier component instantiation, restricted to imported directories. External Quickshell/QtQuick imports are dropped.\n\n> NOTE: The skill's bundled `find_hotspots.py` does NOT recognise `.qml` extensions, so it reported 0 files. This report was produced by a QML-aware variant of the same four-dimension analysis (hubs / tangles / god modules / cycles) using the same scoring approach.\n\n## Hubs \u2014 high fan-in\n\n| File | Fan-in | LOC |\n|------|-------:|----:|\n| `Config/Theme.qml` | 90 | 674 |\n| `Config/UserSettings.qml` | 35 | 376 |\n| `Widgets/SkewRect.qml` | 12 | 56 |\n| `Config/Namespaces.qml` | 9 | 17 |\n| `Widgets/Separator.qml` | 8 | 15 |\n| `Widgets/CyclePicker.qml` | 7 | 110 |\n| `Launcher/LauncherCategory.qml` | 7 | 92 |\n| `Core/OverlayWindow.qml` | 6 | 33 |\n| `Widgets/IconButton.qml` | 5 | 33 |\n| `Bar/BarClickArea.qml` | 5 | 40 |\n| `Core/SafeProcess.qml` | 5 | 35 |\n| `Core/FocusedOutput.qml` | 5 | 30 |\n| `Widgets/ThemedTooltip.qml` | 5 | 42 |\n| `Launcher/CarouselStrip.qml` | 5 | 76 |\n| `Launcher/SettingsRow.qml` | 5 | 44 |\n\n## Tangles \u2014 high fan-out\n\n| File | Fan-out | LOC |\n|------|--------:|----:|\n| `Bar/StatusBar.qml` | 33 | 791 |\n| `Launcher/AppLauncher.qml` | 14 | 629 |\n| `Launcher/SettingsAudio.qml` | 9 | 157 |\n| `Launcher/SettingsDisplay.qml` | 9 | 241 |\n| `shell.qml` | 9 | 297 |\n| `Bar/SysInfoSettingsPopup.qml` | 8 | 274 |\n| `Launcher/CategoryBluetooth.qml` | 8 | 260 |\n| `Launcher/CategoryWifi.qml` | 8 | 251 |\n| `Launcher/SettingsPower.qml` | 8 | 210 |\n| `Bar/ClockSettingsPopup.qml` | 7 | 124 |\n| `Bar/SysWaveform.qml` | 7 | 128 |\n| `Launcher/CategoryWallpaper.qml` | 7 | 355 |\n| `Bar/CalendarPopup.qml` | 6 | 313 |\n| `Bar/MediaPopupContent.qml` | 6 | 285 |\n| `Bar/Weather.qml` | 6 | 196 |\n\n## God modules \u2014 LOC \u2265 400\n\n| File | LOC | Fan-in | Fan-out |\n|------|----:|-------:|--------:|\n| `Bar/StatusBar.qml` | 791 | 1 | 33 |\n| `Config/Theme.qml` | 674 | 90 | 1 |\n| `Launcher/AppLauncher.qml` | 629 | 0 | 14 |\n\n## Cycles \u2014 strongly-connected components\n\n_No cycles detected._\n\n## Limitations\n\n- QML references are not declarative `import` statements at the file level \u2014 components are referenced by capitalised identifier. The resolver uses imported `qs.<Module>` directories plus same-directory siblings to scope references, which can under-count cross-directory usage and over-count when two components share a name.\n- `Theme.qml` is a singleton (`pragma Singleton`) so every reference is legitimate global access, not coupling in the traditional refactor-sense.\n- LOC counts non-blank lines; comments not stripped.\n- External Quickshell/QtQuick imports are not counted.\n"}, {"name": "response.md", "type": "text", "content": "Ran a hotspot analysis on the mcshell repo (122 `.qml` files, 357 internal coupling edges). Four files stand out, and the picture is clearer than I expected \u2014 this is a fairly healthy QML tree with two genuine god-modules and one borderline one.\n\n## Files worth breaking apart\n\n1. **`Bar/StatusBar.qml`** \u2014 LOC 791 (largest file), fan-out 33, fan-in 1.\n   This is the single most obvious refactor target. It hits **both** the god-modules table and the top of the tangles table, and almost nothing depends on it (fan-in 1). That combination \u2014 huge, reaches into everything, depended on by nothing \u2014 is the textbook profile of a coordination layer that has absorbed responsibilities it should be delegating. Concretely: it appears to be orchestrating every bar segment (clock, weather, media, sys info, tray, workspaces, volume, battery, ...) inline. Worth splitting into a thin `StatusBar` shell plus per-segment composers, or pulling the segment wiring into a registry the bar iterates over.\n\n2. **`Launcher/AppLauncher.qml`** \u2014 LOC 629, fan-out 14, fan-in 0.\n   Second god module, same shape as StatusBar but smaller: a tangling root with no incoming edges. Reaches into the various `Settings*`, `Category*`, and `Carousel*` files. Likely doing tab/mode dispatch, animation, and category wiring all in one place. Candidate for extraction of a launcher-state controller + a thin view file.\n\n3. **`Config/Theme.qml`** \u2014 LOC 674, fan-in 90.\n   Massive fan-in, but this is a `pragma Singleton` \u2014 so the 90 dependents are *global access to theme tokens*, not real coupling. The size is the only concern here. If it is genuinely 674 lines of token definitions, that is fine and even desirable in one place. If it has *logic* (computed palettes, runtime theme switching, derived values) mixed in with tokens, that logic wants its own file (`ThemeRuntime.qml`) so the token file can stay a flat reference. Worth a 5-minute eyeball before deciding.\n\n4. **`shell.qml`** \u2014 LOC 297, fan-out 9.\n   Not over-sized, but it is the top-level wiring file and imports nearly every `qs.*` module. That is structurally appropriate for a shell entry point, so flag it only if you find yourself constantly editing it to plumb new modules through; if so, an event-bus / `ShellActions` pattern (which the repo already has a stub for in `Core/ShellActions.qml`) would let new modules self-register instead of being threaded through `shell.qml`.\n\n## Things that are *fine*, despite looking suspicious\n\n- **`Config/Theme.qml`** fan-in 90 \u2014 singleton, expected.\n- **`Config/UserSettings.qml`** fan-in 35, LOC 376 \u2014 also a settings hub; large but focused. Not a refactor target unless you're already in there.\n- **`Widgets/SkewRect.qml`**, **`Widgets/Separator.qml`**, **`Core/OverlayWindow.qml`**, **`Core/SafeProcess.qml`** \u2014 all small (15\u201360 LOC), high-ish fan-in, focused names. Healthy hubs; leave alone.\n\n## What's *not* in the report\n\n- **No dependency cycles.** Tarjan found zero strongly-connected components of size > 1 in the import graph. The module layering is clean.\n- No grab-bag `utils.qml` / `helpers.qml` / `common.qml` file. Naming discipline is good across the tree.\n\n## Caveats on these numbers\n\n- The skill's bundled analyzer doesn't recognise `.qml` extensions, so it reported 0 files. I ran a QML-aware variant of the same four-dimension analysis (hubs / tangles / god modules / cycles) \u2014 same scoring approach but applied to QML's import + component-instantiation model. Code lives at the raw-report path below.\n- QML coupling is fuzzier than e.g. Python imports: components are referenced by capitalised identifier, scoped by `qs.<Module>` imports. The resolver scopes references to imported directories + same-directory siblings \u2014 so a reference to a component in a *non*-imported module can be missed, and identical stems in different modules can produce false positives. Treat the numbers as directional.\n- LOC is non-blank lines, not de-commented.\n\nRaw analyzer output (full hub/tangle/god tables) is at:\n`/home/mcs/Documents/git/claude-skills/plugins/architectural-analysis/architectural-hotspots-workspace/iteration-1/implicit-trigger/with_skill/outputs/raw_report.md`\n\nIf you want a deeper look at any of the four files above (specifically what to extract from `StatusBar.qml` or `AppLauncher.qml`), say the word and I'll read through them and propose concrete split lines.\n"}], "implicit-trigger-without_skill": [{"name": "response.md", "type": "text", "content": "# Hotspots in mcshell \u2014 what's doing too much\n\nI walked the repo (122 QML files, ~16.5k LoC) looking at: file size, fan-in (who imports/references it), fan-out (what it pulls in), and how mixed its responsibilities are. Four modules stand out as \"doing too much and tangling the codebase.\" A fifth is a structural smell worth flagging.\n\n## 1. `Bar/StatusBar.qml` \u2014 892 LoC, the worst offender\n\nThe single biggest file in the repo, and it's a god-component:\n\n- Imports five sibling modules (`qs.Config`, `qs.Core`, `qs.Widgets`, `qs.NotificationHistory`, `qs.KeybindHints`) \u2014 more than any other file in `Bar/`.\n- Owns `launcherOpen` state, `unreadNotifications`, `hasPopup` aggregation across three dropdowns (`sharedDropdown`, `centerDropdown`, `leftDropdown`), `_panelHeightFor`, `_isFocusedScreen`, `_toggleWeather`, `dismissPopups`, plus the entire bar layout with ~20 distinct child component types (Loader x8, CapsuleItem x4, BarSegment x3, Workspaces, Weather, Volume, SysTray, VolumeWaveform, VolumeSlider, Separator, ThemedTooltip\u2026).\n- Acts as a hub: 7 sibling `Bar/*.qml` files reference `StatusBar` (Battery, ActiveWindow, CapsuleItem, Media, Volume, MediaPopupContent), plus `Core/NiriAppsCache.qml` and `shell.qml` \u2014 so changes here ripple everywhere.\n\n**Break it apart:** extract a `BarPopupController` (dropdown/popup state + `dismissPopups`), a `BarLayout` (the visual row composition), and a `BarFocus` (focused-screen + launcher-coordination glue). The current file is mixing layout, controller, and cross-module coordination in one place.\n\nFile: `/home/mcs/Documents/git/mcshell/Bar/StatusBar.qml`\n\n## 2. `Config/Theme.qml` \u2014 739 LoC, 91 files depend on it\n\nThis is the most-imported module in the repo (91 inbound dependents, 1378 `Theme.` references). That alone is fine for a theme singleton \u2014 but it's not just a theme:\n\n- Holds palette definitions for multiple named themes (\"Tokyo Night\", \u2026).\n- Computes wallpaper-derived colors (`_applyWallpaperHue`, `_strategyParams`, `_buildStrategy`, `_strategyIndex`, `wallpaperStrategies`).\n- Listens to `UserSettings` changes (`onWallpaperPathChanged`, `onThemeNameChanged`, `onWallpaperStrategyChanged`, `onSettingsLoaded`) and reacts.\n- Owns animation timings (`animFast/Normal/Smooth/Carousel/Slider/Crossfade`), spacing scale, font scale, opacity scale, and glass/alpha policies.\n- Exposes 23 functions including `withAlpha`, `glassSurface`, `glassBg`, plus wallpaper-strategy machinery.\n\nIt's `Theme` + `DesignTokens` + `WallpaperColorEngine` + `Animations` glued together. Because *everything* imports it (the top usages are `Theme.fontFamily` x152, `Theme.accent` x129, `Theme.spacingMedium` x43 \u2014 pure design tokens), any churn in the wallpaper-color logic forces a re-evaluation of the world.\n\n**Break it apart:** split into `Tokens` (colors, spacing, font scale, animation durations \u2014 the 90% everyone consumes), `Palette` (named palette dict + `applyPalette`), and `WallpaperColorStrategy` (the hue/strategy engine that currently lives inside Theme but only matters to one feature).\n\nFile: `/home/mcs/Documents/git/mcshell/Config/Theme.qml`\n\n## 3. `Launcher/AppLauncher.qml` \u2014 700 LoC\n\nA single component carrying the entire launcher controller plus its window chrome:\n\n- Public API: `open`, `close`, `toggle`, `openTab`, `navigate`, `switchTab`, `activate`, `refocusSearch`, `supportedModesFor`.\n- Private state machine: `_initLauncher`, `_requestOpen`, `_openTransition`, `_closeTransition`, `_animProgress`, `_suppressCarouselAnim`, `_animEnableTimer`, `_suspendVisible`, plus Wayland-specific surface-remap workarounds documented in the header comment.\n- Tab routing across apps / clipboard / wifi / bluetooth / wallpaper / settings categories.\n- Search field, carousel geometry (`calcRowX`), keyboard nav.\n\nIt's a window + a state machine + a router + an animator. The Wayland blur-remap hack alone deserves its own component.\n\n**Break it apart:** `LauncherWindow` (surface lifecycle + blur-remap workaround), `LauncherController` (open/close/tab routing, `_dispatchLauncher` already exists in `shell.qml`), `LauncherTransition` (the `_openTransition`/`_closeTransition`/`_animProgress` machinery).\n\nFile: `/home/mcs/Documents/git/mcshell/Launcher/AppLauncher.qml`\n\n## 4. `Config/UserSettings.qml` \u2014 432 LoC\n\nA \"settings singleton\" that has quietly absorbed feature logic. Settings persistence is fine, but it also owns:\n\n- Wallpaper assignment logic: `setWallpaper`, `setWallpaperForScreen`, `setWallpapersForScreens`, `_applyFolder`, `_splitPath`.\n- SysInfo GPU visibility policy: `sysInfoGpuVisible`, `setSysInfoGpuHidden`, `primaryGpu`.\n- Night-light mode constants (`modeOff/modeManual/modeAuto`, `defaultNightTemp`) \u2014 domain knowledge that doesn't belong to a generic settings store.\n- Save debouncing via `_save` / `saveTimer`.\n\nPulls in `Quickshell.Services.SysInfo`, `Qs.NightLight`, and `qs.Core` \u2014 fan-out a config store shouldn't have. 34 files reference `UserSettings.x`.\n\n**Break it apart:** keep `UserSettings` as a dumb JsonAdapter + save-debouncer. Move `setWallpaper*` / `_applyFolder` into `Wallpaper/WallpaperService`, move GPU visibility into a `SysInfoPolicy`, and put night-light constants on the night-light module.\n\nFile: `/home/mcs/Documents/git/mcshell/Config/UserSettings.qml`\n\n## 5. Structural smell: `shell.qml` as IPC concentrator\n\n`shell.qml` (328 LoC) imports 14 internal modules \u2014 by far the highest fan-out \u2014 and is doing two distinct jobs: composing the top-level scene tree *and* hosting two IpcHandler/DBusIpcHandler blocks with ~15 toggle/dispatch methods (`toggleLauncher`, `lock`, `toggleDnd`, `toggleVolume`, `toggleNotifications`, `toggleSysInfo`, `toggleBluetooth`, `toggleWifi`, `launcherApps/Clipboard/Wifi/Bluetooth/Wallpaper/Settings`, `toggleKeybinds`, screenshot dispatch\u2026). The IPC surface should be its own file (`ShellIpc.qml` or `Core/IpcRouter.qml`) so the root stays a pure scene composer.\n\nFile: `/home/mcs/Documents/git/mcshell/shell.qml`\n\n## Sanity check on the rest\n\n- `Notifications/NotificationCard.qml` (380), `Screenshot/ScreenshotScreenOverlay.qml` (378), `Bar/SysInfoPanel.qml` (424), `Launcher/CategoryWallpaper.qml` (400) are all large but feature-local \u2014 high LoC, low fan-out, single responsibility. Not priority targets.\n- `Bar/` has 36 files; the sub-component decomposition there is actually healthy *except* for StatusBar concentrating all the wiring.\n- Cross-module coupling is currently clean (only `qs.Config` x99, `qs.Widgets` x41, `qs.Core` x23 are widely imported; every other module is imported exactly once, by `shell.qml`). The tangle is **inside** the hub files, not in the dependency graph between modules.\n\n## Recommended order to break things apart\n\n1. **StatusBar** \u2014 biggest single win, highest internal fan-in, will unblock cleaner Bar/* changes.\n2. **Theme** \u2014 splitting tokens vs. wallpaper-color engine will isolate churn from 91 dependents.\n3. **UserSettings** \u2014 pulling wallpaper/sysinfo/night-light logic out shrinks fan-out and lets the persistence layer be trivially testable.\n4. **AppLauncher** \u2014 separate window/controller/transition.\n5. **shell.qml IPC** \u2014 small, mechanical extraction; do it last as a tidy-up.\n"}]}};
+
+    // ---- State ----
+    let feedbackMap = {};  // run_id -> feedback text
+    let currentIndex = 0;
+    let visitedRuns = new Set();
+
+    // ---- Init ----
+    async function init() {
+      // Load saved feedback from server — but only if this isn't a fresh
+      // iteration (indicated by previous_feedback being present). When
+      // previous feedback exists, the feedback.json on disk is stale from
+      // the prior iteration and should not pre-fill the textareas.
+      const hasPrevious = Object.keys(EMBEDDED_DATA.previous_feedback || {}).length > 0
+        || Object.keys(EMBEDDED_DATA.previous_outputs || {}).length > 0;
+      if (!hasPrevious) {
+        try {
+          const resp = await fetch("/api/feedback");
+          const data = await resp.json();
+          if (data.reviews) {
+            for (const r of data.reviews) feedbackMap[r.run_id] = r.feedback;
+          }
+        } catch { /* first run, no feedback yet */ }
+      }
+
+      document.getElementById("skill-name").textContent = EMBEDDED_DATA.skill_name;
+      showRun(0);
+
+      // Wire up feedback auto-save
+      const textarea = document.getElementById("feedback");
+      let saveTimeout = null;
+      textarea.addEventListener("input", () => {
+        clearTimeout(saveTimeout);
+        document.getElementById("feedback-status").textContent = "";
+        saveTimeout = setTimeout(() => saveCurrentFeedback(), 800);
+      });
+    }
+
+    // ---- Navigation ----
+    function navigate(delta) {
+      const newIndex = currentIndex + delta;
+      if (newIndex >= 0 && newIndex < EMBEDDED_DATA.runs.length) {
+        saveCurrentFeedback();
+        showRun(newIndex);
+      }
+    }
+
+    function updateNavButtons() {
+      document.getElementById("prev-btn").disabled = currentIndex === 0;
+      document.getElementById("next-btn").disabled =
+        currentIndex === EMBEDDED_DATA.runs.length - 1;
+    }
+
+    // ---- Show a run ----
+    function showRun(index) {
+      currentIndex = index;
+      const run = EMBEDDED_DATA.runs[index];
+
+      // Progress
+      document.getElementById("progress").textContent =
+        `${index + 1} of ${EMBEDDED_DATA.runs.length}`;
+
+      // Prompt
+      document.getElementById("prompt-text").textContent = run.prompt;
+
+      // Config badge
+      const badge = document.getElementById("config-badge");
+      const configMatch = run.id.match(/(with_skill|without_skill|new_skill|old_skill)/);
+      if (configMatch) {
+        const config = configMatch[1];
+        const isBaseline = config === "without_skill" || config === "old_skill";
+        badge.textContent = config.replace(/_/g, " ");
+        badge.className = "config-badge " + (isBaseline ? "config-baseline" : "config-primary");
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
+      }
+
+      // Outputs
+      renderOutputs(run);
+
+      // Previous outputs
+      renderPrevOutputs(run);
+
+      // Grades
+      renderGrades(run);
+
+      // Previous feedback
+      const prevFb = (EMBEDDED_DATA.previous_feedback || {})[run.id];
+      const prevEl = document.getElementById("prev-feedback");
+      if (prevFb) {
+        document.getElementById("prev-feedback-text").textContent = prevFb;
+        prevEl.style.display = "block";
+      } else {
+        prevEl.style.display = "none";
+      }
+
+      // Feedback
+      document.getElementById("feedback").value = feedbackMap[run.id] || "";
+      document.getElementById("feedback-status").textContent = "";
+
+      updateNavButtons();
+
+      // Track visited runs and promote done button when all visited
+      visitedRuns.add(index);
+      const doneBtn = document.getElementById("done-btn");
+      if (visitedRuns.size >= EMBEDDED_DATA.runs.length) {
+        doneBtn.classList.add("ready");
+      }
+
+      // Scroll main content to top
+      document.querySelector(".main").scrollTop = 0;
+    }
+
+    // ---- Render outputs ----
+    function renderOutputs(run) {
+      const container = document.getElementById("outputs-body");
+      container.innerHTML = "";
+
+      const outputs = run.outputs || [];
+      if (outputs.length === 0) {
+        container.innerHTML = '<div class="empty-state">No output files</div>';
+        return;
+      }
+
+      for (const file of outputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        // Always show file header with download link
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const content = document.createElement("div");
+        content.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          content.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          content.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          content.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(content, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          content.appendChild(a);
+        } else if (file.type === "error") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          pre.style.color = "var(--red)";
+          content.appendChild(pre);
+        }
+
+        fileDiv.appendChild(content);
+        container.appendChild(fileDiv);
+      }
+    }
+
+    // ---- XLSX rendering via SheetJS ----
+    function renderXlsx(container, b64Data) {
+      try {
+        const raw = Uint8Array.from(atob(b64Data), c => c.charCodeAt(0));
+        const wb = XLSX.read(raw, { type: "array" });
+
+        for (let i = 0; i < wb.SheetNames.length; i++) {
+          const sheetName = wb.SheetNames[i];
+          const ws = wb.Sheets[sheetName];
+
+          if (wb.SheetNames.length > 1) {
+            const sheetLabel = document.createElement("div");
+            sheetLabel.style.cssText =
+              "font-weight:600; font-size:0.8rem; color:#b0aea5; margin-top:0.5rem; margin-bottom:0.25rem;";
+            sheetLabel.textContent = "Sheet: " + sheetName;
+            container.appendChild(sheetLabel);
+          }
+
+          const htmlStr = XLSX.utils.sheet_to_html(ws, { editable: false });
+          const wrapper = document.createElement("div");
+          wrapper.innerHTML = htmlStr;
+          container.appendChild(wrapper);
+        }
+      } catch (err) {
+        container.textContent = "Error rendering spreadsheet: " + err.message;
+      }
+    }
+
+    // ---- Grades ----
+    function renderGrades(run) {
+      const section = document.getElementById("grades-section");
+      const content = document.getElementById("grades-content");
+
+      if (!run.grading) {
+        section.style.display = "none";
+        return;
+      }
+
+      const grading = run.grading;
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("grades-arrow").classList.remove("open");
+
+      const summary = grading.summary || {};
+      const expectations = grading.expectations || [];
+
+      let html = '<div style="padding: 1rem;">';
+
+      // Summary line
+      const passRate = summary.pass_rate != null
+        ? Math.round(summary.pass_rate * 100) + "%"
+        : "?";
+      const badgeClass = summary.pass_rate >= 0.8 ? "grade-pass" : summary.pass_rate >= 0.5 ? "" : "grade-fail";
+      html += '<div class="grades-summary">';
+      html += '<span class="grade-badge ' + badgeClass + '">' + passRate + '</span>';
+      html += '<span>' + (summary.passed || 0) + ' passed, ' + (summary.failed || 0) + ' failed of ' + (summary.total || 0) + '</span>';
+      html += '</div>';
+
+      // Assertions list
+      html += '<ul class="assertion-list">';
+      for (const exp of expectations) {
+        const statusClass = exp.passed ? "pass" : "fail";
+        const statusIcon = exp.passed ? "\u2713" : "\u2717";
+        html += '<li class="assertion-item">';
+        html += '<span class="assertion-status ' + statusClass + '">' + statusIcon + '</span>';
+        html += '<span>' + escapeHtml(exp.text) + '</span>';
+        if (exp.evidence) {
+          html += '<div class="assertion-evidence">' + escapeHtml(exp.evidence) + '</div>';
+        }
+        html += '</li>';
+      }
+      html += '</ul>';
+
+      html += '</div>';
+      content.innerHTML = html;
+    }
+
+    function toggleGrades() {
+      const content = document.getElementById("grades-content");
+      const arrow = document.getElementById("grades-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Previous outputs (collapsible) ----
+    function renderPrevOutputs(run) {
+      const section = document.getElementById("prev-outputs-section");
+      const content = document.getElementById("prev-outputs-content");
+      const prevOutputs = (EMBEDDED_DATA.previous_outputs || {})[run.id];
+
+      if (!prevOutputs || prevOutputs.length === 0) {
+        section.style.display = "none";
+        return;
+      }
+
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("prev-outputs-arrow").classList.remove("open");
+
+      // Render the files into the content area
+      content.innerHTML = "";
+      const wrapper = document.createElement("div");
+      wrapper.style.padding = "1rem";
+
+      for (const file of prevOutputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const fc = document.createElement("div");
+        fc.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          fc.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          fc.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          fc.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(fc, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          fc.appendChild(a);
+        }
+
+        fileDiv.appendChild(fc);
+        wrapper.appendChild(fileDiv);
+      }
+
+      content.appendChild(wrapper);
+    }
+
+    function togglePrevOutputs() {
+      const content = document.getElementById("prev-outputs-content");
+      const arrow = document.getElementById("prev-outputs-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Feedback (saved to server -> feedback.json) ----
+    function saveCurrentFeedback() {
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // Build reviews array from map
+      const reviews = [];
+      for (const [run_id, feedback] of Object.entries(feedbackMap)) {
+        if (feedback.trim()) {
+          reviews.push({ run_id, feedback, timestamp: new Date().toISOString() });
+        }
+      }
+
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviews, status: "in_progress" }),
+      }).then(() => {
+        document.getElementById("feedback-status").textContent = "Saved";
+      }).catch(() => {
+        // Static mode or server unavailable — no-op on auto-save,
+        // feedback will be downloaded on final submit
+        document.getElementById("feedback-status").textContent = "Will download on submit";
+      });
+    }
+
+    // ---- Done ----
+    function showDoneDialog() {
+      // Save current textarea to feedbackMap (but don't POST yet)
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // POST once with status: complete — include ALL runs so the model
+      // can distinguish "no feedback" (looks good) from "not reviewed"
+      const reviews = [];
+      const ts = new Date().toISOString();
+      for (const r of EMBEDDED_DATA.runs) {
+        reviews.push({ run_id: r.id, feedback: feedbackMap[r.id] || "", timestamp: ts });
+      }
+      const payload = JSON.stringify({ reviews, status: "complete" }, null, 2);
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+      }).then(() => {
+        document.getElementById("done-overlay").classList.add("visible");
+      }).catch(() => {
+        // Server not available (static mode) — download as file
+        const blob = new Blob([payload], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "feedback.json";
+        a.click();
+        URL.revokeObjectURL(url);
+        document.getElementById("done-overlay").classList.add("visible");
+      });
+    }
+
+    function closeDoneDialog() {
+      // Reset status back to in_progress
+      saveCurrentFeedback();
+      document.getElementById("done-overlay").classList.remove("visible");
+    }
+
+    // ---- Toast ----
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("visible");
+      setTimeout(() => toast.classList.remove("visible"), 2000);
+    }
+
+    // ---- Keyboard nav ----
+    document.addEventListener("keydown", (e) => {
+      // Don't capture when typing in textarea
+      if (e.target.tagName === "TEXTAREA") return;
+
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        navigate(-1);
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        navigate(1);
+      }
+    });
+
+    // ---- Util ----
+    function getDownloadUri(file) {
+      if (file.data_uri) return file.data_uri;
+      if (file.data_b64) return "data:application/octet-stream;base64," + file.data_b64;
+      if (file.type === "text") return "data:text/plain;charset=utf-8," + encodeURIComponent(file.content);
+      return "#";
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ---- View switching ----
+    function switchView(view) {
+      document.querySelectorAll(".view-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".view-panel").forEach(p => p.classList.remove("active"));
+      document.querySelector(`[onclick="switchView('${view}')"]`).classList.add("active");
+      document.getElementById("panel-" + view).classList.add("active");
+    }
+
+    // ---- Benchmark rendering ----
+    function renderBenchmark() {
+      const data = EMBEDDED_DATA.benchmark;
+      if (!data) return;
+
+      // Show the tabs
+      document.getElementById("view-tabs").style.display = "flex";
+
+      const container = document.getElementById("benchmark-content");
+      const summary = data.run_summary || {};
+      const metadata = data.metadata || {};
+      const notes = data.notes || [];
+
+      let html = "";
+
+      // Header
+      html += "<h2 style='font-family: Poppins, sans-serif; margin-bottom: 0.5rem;'>Benchmark Results</h2>";
+      html += "<p style='color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;'>";
+      if (metadata.skill_name) html += "<strong>" + escapeHtml(metadata.skill_name) + "</strong> &mdash; ";
+      if (metadata.timestamp) html += metadata.timestamp + " &mdash; ";
+      if (metadata.evals_run) html += "Evals: " + metadata.evals_run.join(", ") + " &mdash; ";
+      html += (metadata.runs_per_configuration || "?") + " runs per configuration";
+      html += "</p>";
+
+      // Summary table
+      html += '<table class="benchmark-table">';
+
+      function fmtStat(stat, pct) {
+        if (!stat) return "—";
+        const suffix = pct ? "%" : "";
+        const m = pct ? (stat.mean * 100).toFixed(0) : stat.mean.toFixed(1);
+        const s = pct ? (stat.stddev * 100).toFixed(0) : stat.stddev.toFixed(1);
+        return m + suffix + " ± " + s + suffix;
+      }
+
+      function deltaClass(val) {
+        if (!val) return "";
+        const n = parseFloat(val);
+        if (n > 0) return "benchmark-delta-positive";
+        if (n < 0) return "benchmark-delta-negative";
+        return "";
+      }
+
+      // Discover config names dynamically (everything except "delta")
+      const configs = Object.keys(summary).filter(k => k !== "delta");
+      const configA = configs[0] || "config_a";
+      const configB = configs[1] || "config_b";
+      const labelA = configA.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const labelB = configB.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const a = summary[configA] || {};
+      const b = summary[configB] || {};
+      const delta = summary.delta || {};
+
+      html += "<thead><tr><th>Metric</th><th>" + escapeHtml(labelA) + "</th><th>" + escapeHtml(labelB) + "</th><th>Delta</th></tr></thead>";
+      html += "<tbody>";
+
+      html += "<tr><td><strong>Pass Rate</strong></td>";
+      html += "<td>" + fmtStat(a.pass_rate, true) + "</td>";
+      html += "<td>" + fmtStat(b.pass_rate, true) + "</td>";
+      html += '<td class="' + deltaClass(delta.pass_rate) + '">' + (delta.pass_rate || "—") + "</td></tr>";
+
+      // Time (only show row if data exists)
+      if (a.time_seconds || b.time_seconds) {
+        html += "<tr><td><strong>Time (s)</strong></td>";
+        html += "<td>" + fmtStat(a.time_seconds, false) + "</td>";
+        html += "<td>" + fmtStat(b.time_seconds, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.time_seconds) + '">' + (delta.time_seconds ? delta.time_seconds + "s" : "—") + "</td></tr>";
+      }
+
+      // Tokens (only show row if data exists)
+      if (a.tokens || b.tokens) {
+        html += "<tr><td><strong>Tokens</strong></td>";
+        html += "<td>" + fmtStat(a.tokens, false) + "</td>";
+        html += "<td>" + fmtStat(b.tokens, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.tokens) + '">' + (delta.tokens || "—") + "</td></tr>";
+      }
+
+      html += "</tbody></table>";
+
+      // Per-eval breakdown (if runs data available)
+      const runs = data.runs || [];
+      if (runs.length > 0) {
+        const evalIds = [...new Set(runs.map(r => r.eval_id))].sort((a, b) => a - b);
+
+        html += "<h3 style='font-family: Poppins, sans-serif; margin-bottom: 0.75rem;'>Per-Eval Breakdown</h3>";
+
+        const hasTime = runs.some(r => r.result && r.result.time_seconds != null);
+        const hasErrors = runs.some(r => r.result && r.result.errors > 0);
+
+        for (const evalId of evalIds) {
+          const evalRuns = runs.filter(r => r.eval_id === evalId);
+          const evalName = evalRuns[0] && evalRuns[0].eval_name ? evalRuns[0].eval_name : "Eval " + evalId;
+
+          html += "<h4 style='font-family: Poppins, sans-serif; margin: 1rem 0 0.5rem; color: var(--text);'>" + escapeHtml(evalName) + "</h4>";
+          html += '<table class="benchmark-table">';
+          html += "<thead><tr><th>Config</th><th>Run</th><th>Pass Rate</th>";
+          if (hasTime) html += "<th>Time (s)</th>";
+          if (hasErrors) html += "<th>Crashes During Execution</th>";
+          html += "</tr></thead>";
+          html += "<tbody>";
+
+          // Group by config and render with average rows
+          const configGroups = [...new Set(evalRuns.map(r => r.configuration))];
+          for (let ci = 0; ci < configGroups.length; ci++) {
+            const config = configGroups[ci];
+            const configRuns = evalRuns.filter(r => r.configuration === config);
+            if (configRuns.length === 0) continue;
+
+            const rowClass = ci === 0 ? "benchmark-row-with" : "benchmark-row-without";
+            const configLabel = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+            for (const run of configRuns) {
+              const r = run.result || {};
+              const prClass = r.pass_rate >= 0.8 ? "benchmark-delta-positive" : r.pass_rate < 0.5 ? "benchmark-delta-negative" : "";
+              html += '<tr class="' + rowClass + '">';
+              html += "<td>" + configLabel + "</td>";
+              html += "<td>" + run.run_number + "</td>";
+              html += '<td class="' + prClass + '">' + ((r.pass_rate || 0) * 100).toFixed(0) + "% (" + (r.passed || 0) + "/" + (r.total || 0) + ")</td>";
+              if (hasTime) html += "<td>" + (r.time_seconds != null ? r.time_seconds.toFixed(1) : "—") + "</td>";
+              if (hasErrors) html += "<td>" + (r.errors || 0) + "</td>";
+              html += "</tr>";
+            }
+
+            // Average row
+            const rates = configRuns.map(r => (r.result || {}).pass_rate || 0);
+            const avgRate = rates.reduce((a, b) => a + b, 0) / rates.length;
+            const avgPrClass = avgRate >= 0.8 ? "benchmark-delta-positive" : avgRate < 0.5 ? "benchmark-delta-negative" : "";
+            html += '<tr class="benchmark-row-avg ' + rowClass + '">';
+            html += "<td>" + configLabel + "</td>";
+            html += "<td>Avg</td>";
+            html += '<td class="' + avgPrClass + '">' + (avgRate * 100).toFixed(0) + "%</td>";
+            if (hasTime) {
+              const times = configRuns.map(r => (r.result || {}).time_seconds).filter(t => t != null);
+              html += "<td>" + (times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : "—") + "</td>";
+            }
+            if (hasErrors) html += "<td></td>";
+            html += "</tr>";
+          }
+          html += "</tbody></table>";
+
+          // Per-assertion detail for this eval
+          const runsWithExpectations = {};
+          for (const config of configGroups) {
+            runsWithExpectations[config] = evalRuns.filter(r => r.configuration === config && r.expectations && r.expectations.length > 0);
+          }
+          const hasAnyExpectations = Object.values(runsWithExpectations).some(runs => runs.length > 0);
+          if (hasAnyExpectations) {
+            // Collect all unique assertion texts across all configs
+            const allAssertions = [];
+            const seen = new Set();
+            for (const config of configGroups) {
+              for (const run of runsWithExpectations[config]) {
+                for (const exp of (run.expectations || [])) {
+                  if (!seen.has(exp.text)) {
+                    seen.add(exp.text);
+                    allAssertions.push(exp.text);
+                  }
+                }
+              }
+            }
+
+            html += '<table class="benchmark-table" style="margin-top: 0.5rem;">';
+            html += "<thead><tr><th>Assertion</th>";
+            for (const config of configGroups) {
+              const label = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+              html += "<th>" + escapeHtml(label) + "</th>";
+            }
+            html += "</tr></thead><tbody>";
+
+            for (const assertionText of allAssertions) {
+              html += "<tr><td>" + escapeHtml(assertionText) + "</td>";
+
+              for (const config of configGroups) {
+                html += "<td>";
+                for (const run of runsWithExpectations[config]) {
+                  const exp = (run.expectations || []).find(e => e.text === assertionText);
+                  if (exp) {
+                    const cls = exp.passed ? "benchmark-delta-positive" : "benchmark-delta-negative";
+                    const icon = exp.passed ? "\u2713" : "\u2717";
+                    html += '<span class="' + cls + '" title="Run ' + run.run_number + ': ' + escapeHtml(exp.evidence || "") + '">' + icon + "</span> ";
+                  } else {
+                    html += "— ";
+                  }
+                }
+                html += "</td>";
+              }
+              html += "</tr>";
+            }
+            html += "</tbody></table>";
+          }
+        }
+      }
+
+      // Notes
+      if (notes.length > 0) {
+        html += '<div class="benchmark-notes">';
+        html += "<h3>Analysis Notes</h3>";
+        html += "<ul>";
+        for (const note of notes) {
+          html += "<li>" + escapeHtml(note) + "</li>";
+        }
+        html += "</ul></div>";
+      }
+
+      container.innerHTML = html;
+    }
+
+    // ---- Start ----
+    init();
+    renderBenchmark();
+  </script>
+</body>
+</html>

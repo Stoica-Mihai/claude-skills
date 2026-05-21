@@ -1,0 +1,9 @@
+{
+  "expectations": [
+    {"text": "Skill triggers from implicit phrasing ('doing too much', 'tangling') without the word 'hotspot'", "passed": true, "evidence": "N/A — no skill in baseline, but the prompt was answered"},
+    {"text": "Recognizes the repo is QML, not C", "passed": true, "evidence": "Analyzed 122 .qml files explicitly"},
+    {"text": "Either recommends adding QML support to the analyzer OR delivers analysis despite the gap", "passed": true, "evidence": "Delivered manual analysis"},
+    {"text": "Identifies a real refactor target (StatusBar.qml, Launcher, or similar god component)", "passed": true, "evidence": "StatusBar.qml (892 LOC) #1, Launcher (700 LOC), Theme (739 LOC) called out"},
+    {"text": "States caveats about analysis limitations", "passed": false, "evidence": "No explicit caveats section — manual analysis but no acknowledgment of its limits"}
+  ]
+}

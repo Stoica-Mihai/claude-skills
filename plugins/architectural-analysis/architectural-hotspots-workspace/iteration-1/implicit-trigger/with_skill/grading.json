@@ -1,0 +1,9 @@
+{
+  "expectations": [
+    {"text": "Skill triggers from implicit phrasing ('doing too much', 'tangling') without the word 'hotspot'", "passed": true, "evidence": "Subagent read SKILL.md and applied workflow; triggering succeeded"},
+    {"text": "Recognizes the repo is QML, not C", "passed": true, "evidence": "Subagent noticed it was Quickshell/QML and adapted"},
+    {"text": "Either recommends adding QML support to the analyzer OR delivers analysis despite the gap", "passed": true, "evidence": "Subagent hand-rolled a QML-aware variant AND recommended adding .qml to SOURCE_EXTENSIONS"},
+    {"text": "Identifies a real refactor target (StatusBar.qml, Launcher, or similar god component)", "passed": true, "evidence": "StatusBar.qml (791 LOC, fan-out 33) called out as top target; Launcher (629 LOC) second"},
+    {"text": "States caveats about analysis limitations", "passed": true, "evidence": "Explicitly notes script didn't handle QML, hand-rolled variant has fuzzier resolver, LOC limitations"}
+  ]
+}

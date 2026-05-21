@@ -1,0 +1,12 @@
+{
+  "eval_id": 1,
+  "eval_name": "synthetic-ground-truth",
+  "prompt": "I inherited a small Python app at /home/mcs/Documents/git/claude-skills/plugins/architectural-analysis/skills/architectural-hotspots/evals/fixtures/synthetic and need to understand what's architecturally wrong with it before I start refactoring. Where should I focus?",
+  "assertions": [
+    {"text": "Identifies utils/helpers.py as the primary hub / refactor target"},
+    {"text": "Identifies services/order_service.py as a tangle / coordination problem"},
+    {"text": "Identifies the user <-> order cycle"},
+    {"text": "Gives concrete refactor suggestions, not just metrics"},
+    {"text": "States caveats / limitations of the analysis"}
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "expectations": [
+    {"text": "Identifies picker.go or main.go as oversized / god module", "passed": true, "evidence": "Shortlist includes picker.go (1520 LOC) and main.go (1581 LOC)"},
+    {"text": "Calls out http.go fan-in or central hub role", "passed": true, "evidence": "Identified pkg/stream/http.go fan-in 21 as legitimate but load-bearing API"},
+    {"text": "Provides a refactor shortlist (4 or fewer headline items)", "passed": true, "evidence": "Refactor shortlist of 4"},
+    {"text": "Identifies or flags the false-positive errors.go cycle (basename-collision artefact)", "passed": true, "evidence": "Explicitly flagged: 'the reported cycle ... are both artefacts of the basename-match resolver tying together two unrelated errors.go files'"},
+    {"text": "States caveats about resolver limitations", "passed": true, "evidence": "Response discusses the basename-matcher false positive directly"}
+  ]
+}

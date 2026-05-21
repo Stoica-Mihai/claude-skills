@@ -1,0 +1,12 @@
+{
+  "eval_id": 2,
+  "eval_name": "real-go-repo",
+  "prompt": "I'm looking at /home/mcs/Documents/git/ghyll — a Go streaming/CLI tool. Can you find the architectural hotspots and tell me what's tightly coupled or which files concentrate too much responsibility? I want a refactor shortlist, not a wall of metrics.",
+  "assertions": [
+    {"text": "Identifies picker.go or main.go as oversized / god module"},
+    {"text": "Calls out http.go fan-in or central hub role"},
+    {"text": "Provides a refactor shortlist (4 or fewer headline items)"},
+    {"text": "Identifies or flags the false-positive errors.go cycle (basename-collision artefact)"},
+    {"text": "States caveats about resolver limitations"}
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "architectural-analysis",
+  "description": "Static-analysis skills that surface architectural problems in a codebase — hotspot detection, coupling and cohesion signals, refactor-target ranking.",
+  "version": "0.1.0",
+  "author": {
+    "name": "MCS"
+  },
+  "repository": "https://github.com/Stoica-Mihai/claude-skills",
+  "license": "MIT",
+  "keywords": ["architecture", "hotspots", "coupling", "refactoring", "static-analysis", "code-quality"]
+}

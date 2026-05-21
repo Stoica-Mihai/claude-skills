@@ -1,0 +1,9 @@
+{
+  "expectations": [
+    {"text": "Identifies utils/helpers.py as the primary hub / refactor target", "passed": true, "evidence": "Section 2 'utils/helpers.py is a god module / hub (critical)' with detailed splits"},
+    {"text": "Identifies services/order_service.py as a tangle / coordination problem", "passed": true, "evidence": "Section 3 'services/order_service.py has the highest fan-out (high)'"},
+    {"text": "Identifies the user <-> order cycle", "passed": true, "evidence": "Section 1 'Circular import: models.user <-> models.order (critical)' — note: baseline benefited from docstring saying 'Planted size-2 cycle'"},
+    {"text": "Gives concrete refactor suggestions, not just metrics", "passed": true, "evidence": "Each section has 'Fix direction:' block; deeper structural critique than with-skill (layering, dead code, mutable globals)"},
+    {"text": "States caveats / limitations of the analysis", "passed": false, "evidence": "No explicit caveats section — manual analysis has its own limits (LOC counted by eyeball) but they're not called out"}
+  ]
+}

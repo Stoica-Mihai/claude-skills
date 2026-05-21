@@ -1,0 +1,9 @@
+{
+  "expectations": [
+    {"text": "Identifies picker.go or main.go as oversized / god module", "passed": true, "evidence": "Both main.go (1744 LOC) and picker.go (1651 LOC) listed as god modules"},
+    {"text": "Calls out http.go fan-in or central hub role", "passed": false, "evidence": "Trunk-package fan-in analysis done at package level; specific http.go not surfaced"},
+    {"text": "Provides a refactor shortlist (4 or fewer headline items)", "passed": true, "evidence": "Shortlist of 3 + smaller follow-ups"},
+    {"text": "Identifies or flags the false-positive errors.go cycle (basename-collision artefact)", "passed": false, "evidence": "Didn't use resolver so no false positive to flag — N/A in spirit, but stricter: didn't surface this risk to a user using the tool"},
+    {"text": "States caveats about resolver limitations", "passed": false, "evidence": "Manual analysis; resolver caveats not applicable but no caveats stated at all"}
+  ]
+}

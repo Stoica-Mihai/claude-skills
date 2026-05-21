@@ -1,0 +1,12 @@
+{
+  "eval_id": 3,
+  "eval_name": "implicit-trigger",
+  "prompt": "Looking at the C shell repo at /home/mcs/Documents/git/mcshell — which modules feel like they're doing too much and tangling the rest of the codebase? Trying to figure out what to break apart.",
+  "assertions": [
+    {"text": "Skill triggers from implicit phrasing ('doing too much', 'tangling') without the word 'hotspot'"},
+    {"text": "Recognizes the repo is QML, not C"},
+    {"text": "Either recommends adding QML support to the analyzer OR delivers analysis despite the gap"},
+    {"text": "Identifies a real refactor target (StatusBar.qml, Launcher, or similar god component)"},
+    {"text": "States caveats about analysis limitations"}
+  ]
+}
