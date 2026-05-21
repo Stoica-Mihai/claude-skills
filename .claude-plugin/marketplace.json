@@ -35,6 +35,12 @@
       "source": "./plugins/engineering-principles",
       "description": "Meta-skills that shape how Claude approaches code — DRY thinking on every edit, and evidence-based investigation for every bug and code change.",
       "keywords": ["dry", "fact-check", "code-quality", "debugging", "engineering", "principles"]
+    },
+    {
+      "name": "architectural-analysis",
+      "source": "./plugins/architectural-analysis",
+      "description": "Static-analysis skills that surface architectural problems in a codebase — hotspot detection, coupling and cohesion signals, refactor-target ranking.",
+      "keywords": ["architecture", "hotspots", "coupling", "refactoring", "static-analysis", "code-quality"]
     }
   ]
 }
