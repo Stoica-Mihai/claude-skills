@@ -1,0 +1,86 @@
+{
+  "eval_id": 3,
+  "eval_name": "audit-plan-rs",
+  "prompt": "Review /home/mcs/Documents/git/recast/crates/recast-core/src/plan.rs for me \u2014 it's the orchestrator that ties walking, pattern compilation, per-file rewrite, and the convergence check together. Looking for memory shape issues (anything held in memory longer or larger than it needs to be) and any redundant work being done across passes.",
+  "assertions": [
+    {
+      "text": "Covers \u22654 of 7 ground-truth plan.rs findings",
+      "type": "coverage",
+      "min_hits": 4,
+      "findings": [
+        {
+          "name": "FileChange holds both after-text and rendered diff",
+          "patterns": [
+            "FileChange.{0,80}(after|diff)",
+            "both `?after`? and `?diff`?",
+            "2x.{0,20}(memory|footprint)",
+            "doubl.{0,20}(memory|footprint)"
+          ]
+        },
+        {
+          "name": "diff rendered for apply/check modes that never read it",
+          "patterns": [
+            "diff.{0,40}(apply|check|unread|never read|always)",
+            "unified_diff.{0,40}(unread|wasted|always)",
+            "rendered.{0,30}(unconditional|always|wasted)"
+          ]
+        },
+        {
+          "name": "convergence probe uses count() not is_match",
+          "patterns": [
+            "find_iter.{0,30}count",
+            "is_match",
+            "convergence.{0,40}(count|short[- ]circuit)",
+            "extra.{0,30}(count|only)"
+          ]
+        },
+        {
+          "name": "scripted convergence re-runs full Rhai",
+          "patterns": [
+            "[Rr]hai.{0,40}(re-?run|re-?eval|full|post)",
+            "scripted convergence",
+            "rhai.{0,40}per match"
+          ]
+        },
+        {
+          "name": "par_iter materializes Vec<Result<Option<>>>",
+          "patterns": [
+            "par_iter.{0,40}collect",
+            "Vec<Result",
+            "blocks fail-?fast",
+            "try.?collect",
+            "transpose"
+          ]
+        },
+        {
+          "name": "FileChange.permissions Option always Some",
+          "patterns": [
+            "Option<Permissions>",
+            "permissions.{0,40}always.{0,20}Some",
+            "drop.{0,20}Option.{0,30}Permissions"
+          ]
+        },
+        {
+          "name": "replace_all into_owned clones pre-image for zero-match",
+          "patterns": [
+            "into_owned",
+            "deep[- ]clone",
+            "zero[- ]?match.{0,40}(alloc|clone)",
+            "replace_all.{0,40}clone"
+          ]
+        }
+      ]
+    },
+    {
+      "text": "Output contains a 'Top targets' summary section",
+      "type": "contains",
+      "substring": "Top targets"
+    },
+    {
+      "text": "Each finding includes a fix sketch",
+      "type": "regex",
+      "pattern": "Fix:",
+      "min_matches": 3
+    }
+  ]
+}

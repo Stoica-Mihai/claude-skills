@@ -1,0 +1,27 @@
+{
+  "eval_id": 1,
+  "eval_name": "audit-commit-rs",
+  "run_path": "/home/mcs/Documents/git/claude-skills/plugins/architectural-analysis/code-audit-deep-workspace/iteration-1/eval-1-audit-commit-rs/without_skill/run-1",
+  "expectations": [
+    {
+      "text": "Covers \u22655 of 8 ground-truth commit.rs findings",
+      "passed": true,
+      "evidence": "hit 8/8 (need \u22655). HIT: ['NonceGen clock-per-nonce perf', 'recover_sweep FS-probe per backup', 'stage_all first-err-wins aggregation', 'rollback_committed silent rename failures', 'fsync_parents silent on open err', 'delete-backups-before-fsync durability bug', '--threads not honored in apply phase', 'remove_file-before-rename redundant unlink']. MISS: []"
+    },
+    {
+      "text": "Output contains a 'Top targets' summary section",
+      "passed": false,
+      "evidence": "substring 'Top targets' NOT found in output"
+    },
+    {
+      "text": "Each finding includes a fix sketch (output contains 'Fix:')",
+      "passed": false,
+      "evidence": "found 2 match(es) of /Fix:/ (need \u22653); sample: ['Fix:', 'Fix:']"
+    }
+  ],
+  "summary": {
+    "passed": 1,
+    "total": 3,
+    "pass_rate": 0.3333333333333333
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "total_tokens": 62659,
+  "duration_ms": 251440,
+  "total_duration_seconds": 251.4,
+  "status": "completed",
+  "note": "First attempt failed with API socket close (411 tokens, 114s); these numbers are from the successful retry that produced audit.md."
+}

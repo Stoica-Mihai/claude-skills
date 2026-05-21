@@ -1,0 +1,83 @@
+{
+  "skill_name": "code-audit-deep",
+  "evals": [
+    {
+      "id": 1,
+      "name": "audit-commit-rs",
+      "prompt": "Doing a perf + correctness pass on /home/mcs/Documents/git/recast/crates/recast-core/src/commit.rs — it's the two-phase atomic-commit module for the recast CLI. Anything sketchy in the apply path? I'm especially worried about syscalls happening per-file in a parallel loop, and any error-handling spots where failures might disappear silently (the rollback / recover paths in particular).",
+      "files": ["/home/mcs/Documents/git/recast/crates/recast-core/src/commit.rs"],
+      "expected_output": "Categorized findings hitting most of the 8 known commit.rs issues with line numbers and fix sketches.",
+      "assertions": [
+        {
+          "text": "Covers ≥5 of 8 ground-truth commit.rs findings",
+          "type": "coverage",
+          "min_hits": 5,
+          "findings": [
+            {"name": "NonceGen clock-per-nonce perf", "patterns": ["NonceGen", "SystemTime", "per[- ]nonce", "clock.{0,40}nonce"]},
+            {"name": "recover_sweep FS-probe per backup", "patterns": ["recover_sweep", "exists\\(\\)[^.]{0,80}backup", "per[- ]backup"]},
+            {"name": "stage_all first-err-wins aggregation", "patterns": ["stage_all", "first[- ]?error", "only.{0,15}first.{0,15}err", "drops other err"]},
+            {"name": "rollback_committed silent rename failures", "patterns": ["rollback_committed", "rollback.{0,40}(silent|swallow|hide|ignore)", "rename.{0,30}(silent|swallow|hide)"]},
+            {"name": "fsync_parents silent on open err", "patterns": ["fsync_parents", "best_effort_fsync", "fsync.{0,40}(silent|swallow|ignore|hide)"]},
+            {"name": "delete-backups-before-fsync durability bug", "patterns": ["(delete|remove|unlink).{0,40}(before|prior to).{0,40}fsync", "backup.{0,40}before.{0,40}fsync", "durability ordering", "ordering.{0,30}(bug|wrong|incorrect)"]},
+            {"name": "--threads not honored in apply phase", "patterns": ["--threads", "thread.?pool.{0,40}(scope|install)", "global (rayon )?pool", "pool.{0,40}apply_changes", "scoped.{0,30}pool", "apply.{0,30}global pool"]},
+            {"name": "remove_file-before-rename redundant unlink", "patterns": ["remove_file.{0,30}rename", "unlink.{0,30}rename", "redundant.{0,20}(unlink|remove_file)", "rename overwrites"]}
+          ]
+        },
+        {"text": "Output contains a 'Top targets' summary section", "type": "contains", "substring": "Top targets"},
+        {"text": "Each finding includes a fix sketch (output contains 'Fix:')", "type": "regex", "pattern": "Fix:", "min_matches": 3}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "audit-structural-rs",
+      "prompt": "Audit /home/mcs/Documents/git/recast/crates/recast-core/src/structural.rs for me. It's the tree-sitter pipeline for the recast CLI and has grown to 650 lines. I want a deep review focused on function-level complexity and any unbounded recursion risk on parser input. Also call out if there are obvious coupling problems vs the other orchestrator file plan.rs.",
+      "files": [
+        "/home/mcs/Documents/git/recast/crates/recast-core/src/structural.rs",
+        "/home/mcs/Documents/git/recast/crates/recast-core/src/plan.rs"
+      ],
+      "expected_output": "Findings covering recursive emit_node without depth cap, the field_name_for_child index-vs-id correctness bug, UTF-8 corruption in byte walkers, dual-orchestrator coupling with plan.rs, and at least one complexity smell.",
+      "assertions": [
+        {
+          "text": "Covers ≥4 of 6 ground-truth structural.rs findings",
+          "type": "coverage",
+          "min_hits": 4,
+          "findings": [
+            {"name": "emit_node recursive no depth cap", "patterns": ["emit_node", "depth (cap|bound|limit)", "unbounded recursion", "stack[- ]overflow", "recurs"]},
+            {"name": "field_name_for_child index-vs-id bug", "patterns": ["field_name_for_child", "node id.{0,30}index", "id\\(\\).{0,30}(as u32|index)", "child index", "field.{0,30}lost", "field.{0,30}silently"]},
+            {"name": "UTF-8 byte walker corruption", "patterns": ["UTF-?8.{0,30}(corrupt|mangle|drop|lose)", "push\\(b as char\\)", "Latin-?1", "multibyte"]},
+            {"name": "dual-orchestrator coupling with plan.rs", "patterns": ["plan\\.rs", "dual orchestrator", "re-?implement.{0,30}(scan|collect|finalize)", "scan.{0,15}collect.{0,15}finalize", "orchestrat"]},
+            {"name": "silent literal-to-wildcard fallthrough", "patterns": ["literal.{0,30}wildcard", "if let.{0,40}fallthrough", "bare \\(kind\\)", "non-?UTF-?8.{0,30}(text|literal)", "#eq\\?"]},
+            {"name": "non-deterministic primary-capture pick", "patterns": ["non-?deterministic", "max\\(capture", "iteration order", "@root.{0,30}absent"]}
+          ]
+        },
+        {"text": "Output contains a 'Top targets' summary section", "type": "contains", "substring": "Top targets"},
+        {"text": "Each finding includes a fix sketch", "type": "regex", "pattern": "Fix:", "min_matches": 3}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "audit-plan-rs",
+      "prompt": "Review /home/mcs/Documents/git/recast/crates/recast-core/src/plan.rs for me — it's the orchestrator that ties walking, pattern compilation, per-file rewrite, and the convergence check together. Looking for memory shape issues (anything held in memory longer or larger than it needs to be) and any redundant work being done across passes.",
+      "files": ["/home/mcs/Documents/git/recast/crates/recast-core/src/plan.rs"],
+      "expected_output": "Findings covering FileChange dual-payload memory waste, diff rendered for non-diff modes, redundant convergence scans, full Rhai re-eval, and the always-Some Permissions optional.",
+      "assertions": [
+        {
+          "text": "Covers ≥4 of 7 ground-truth plan.rs findings",
+          "type": "coverage",
+          "min_hits": 4,
+          "findings": [
+            {"name": "FileChange holds both after-text and rendered diff", "patterns": ["FileChange.{0,80}(after|diff)", "both `?after`? and `?diff`?", "2x.{0,20}(memory|footprint)", "doubl.{0,20}(memory|footprint)"]},
+            {"name": "diff rendered for apply/check modes that never read it", "patterns": ["diff.{0,40}(apply|check|unread|never read|always)", "unified_diff.{0,40}(unread|wasted|always)", "rendered.{0,30}(unconditional|always|wasted)"]},
+            {"name": "convergence probe uses count() not is_match", "patterns": ["find_iter.{0,30}count", "is_match", "convergence.{0,40}(count|short[- ]circuit)", "extra.{0,30}(count|only)"]},
+            {"name": "scripted convergence re-runs full Rhai", "patterns": ["[Rr]hai.{0,40}(re-?run|re-?eval|full|post)", "scripted convergence", "rhai.{0,40}per match"]},
+            {"name": "par_iter materializes Vec<Result<Option<>>>", "patterns": ["par_iter.{0,40}collect", "Vec<Result", "blocks fail-?fast", "try.?collect", "transpose"]},
+            {"name": "FileChange.permissions Option always Some", "patterns": ["Option<Permissions>", "permissions.{0,40}always.{0,20}Some", "drop.{0,20}Option.{0,30}Permissions"]},
+            {"name": "replace_all into_owned clones pre-image for zero-match", "patterns": ["into_owned", "deep[- ]clone", "zero[- ]?match.{0,40}(alloc|clone)", "replace_all.{0,40}clone"]}
+          ]
+        },
+        {"text": "Output contains a 'Top targets' summary section", "type": "contains", "substring": "Top targets"},
+        {"text": "Each finding includes a fix sketch", "type": "regex", "pattern": "Fix:", "min_matches": 3}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,313 @@
+{
+  "metadata": {
+    "skill_name": "code-audit-deep",
+    "skill_path": "<path/to/skill>",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-05-21T18:56:39Z",
+    "evals_run": [
+      1,
+      2,
+      3
+    ],
+    "runs_per_configuration": 3
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 171.2,
+        "tokens": 52320,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Output contains at least 3 'commit.rs:<digits>' line references",
+          "passed": true,
+          "evidence": "found 17 match(es) of /commit\\.rs:\\d+/ (need \u22653); sample: ['commit.rs:425', 'commit.rs:328', 'commit.rs:114']"
+        },
+        {
+          "text": "Output uses categorized section headers (Perf / Correctness / Memory / Complexity)",
+          "passed": true,
+          "evidence": "found 3 match(es) of /\\*\\*(Perf|Correctness|Memory|Complexity)/ (need \u22652); sample: ['Perf', 'Correctness', 'Complexity']"
+        },
+        {
+          "text": "Surfaces NonceGen / SystemTime::now per-nonce perf issue",
+          "passed": true,
+          "evidence": "matched /NonceGen/ \u00d72 (first: 'NonceGen')"
+        },
+        {
+          "text": "Surfaces an error-aggregation / silent-error finding (stage_all, rollback, fsync, or swallowed err)",
+          "passed": true,
+          "evidence": "matched /stage_all/ \u00d71 (first: 'stage_all')"
+        },
+        {
+          "text": "Ends with 'Top targets' summary listing highest-leverage fixes",
+          "passed": true,
+          "evidence": "substring 'Top targets' found in output"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 285.0,
+        "tokens": 63980,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Output contains at least 3 'structural.rs:<digits>' line references",
+          "passed": true,
+          "evidence": "found 18 match(es) of /structural\\.rs:\\d+/ (need \u22653); sample: ['structural.rs:182', 'structural.rs:354', 'structural.rs:552']"
+        },
+        {
+          "text": "Output uses categorized section headers",
+          "passed": true,
+          "evidence": "found 4 match(es) of /\\*\\*(Perf|Correctness|Memory|Complexity|Coupling)/ (need \u22652); sample: ['Perf', 'Correctness', 'Complexity']"
+        },
+        {
+          "text": "Surfaces unbounded-recursion / emit_node finding",
+          "passed": true,
+          "evidence": "matched /emit_node/ \u00d73 (first: 'emit_node')"
+        },
+        {
+          "text": "Mentions plan.rs in coupling context, or notes dual-orchestrator relationship",
+          "passed": true,
+          "evidence": "matched /plan\\.rs/ \u00d710 (first: 'plan.rs')"
+        },
+        {
+          "text": "Ends with 'Top targets' summary",
+          "passed": true,
+          "evidence": "substring 'Top targets' found in output"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 247.2,
+        "tokens": 55900,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Output contains at least 2 'plan.rs:<digits>' line references",
+          "passed": true,
+          "evidence": "found 15 match(es) of /plan\\.rs:\\d+/ (need \u22652); sample: ['plan.rs:264', 'plan.rs:278', 'plan.rs:139']"
+        },
+        {
+          "text": "Output uses categorized section headers",
+          "passed": true,
+          "evidence": "found 3 match(es) of /\\*\\*(Perf|Correctness|Memory|Complexity)/ (need \u22652); sample: ['Perf', 'Memory', 'Complexity']"
+        },
+        {
+          "text": "Surfaces FileChange memory-duplication OR convergence redundant work",
+          "passed": true,
+          "evidence": "matched /FileChange/ \u00d74 (first: 'FileChange')"
+        },
+        {
+          "text": "Ends with 'Top targets' summary",
+          "passed": true,
+          "evidence": "substring 'Top targets' found in output"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.4,
+        "passed": 2,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 251.4,
+        "tokens": 62659,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Output contains at least 3 'commit.rs:<digits>' line references",
+          "passed": false,
+          "evidence": "found 0 match(es) of /commit\\.rs:\\d+/ (need \u22653); sample: []"
+        },
+        {
+          "text": "Output uses categorized section headers (Perf / Correctness / Memory / Complexity)",
+          "passed": false,
+          "evidence": "found 0 match(es) of /\\*\\*(Perf|Correctness|Memory|Complexity)/ (need \u22652); sample: []"
+        },
+        {
+          "text": "Surfaces NonceGen / SystemTime::now per-nonce perf issue",
+          "passed": true,
+          "evidence": "matched /NonceGen/ \u00d76 (first: 'NonceGen')"
+        },
+        {
+          "text": "Surfaces an error-aggregation / silent-error finding (stage_all, rollback, fsync, or swallowed err)",
+          "passed": true,
+          "evidence": "matched /stage_all/ \u00d74 (first: 'stage_all')"
+        },
+        {
+          "text": "Ends with 'Top targets' summary listing highest-leverage fixes",
+          "passed": false,
+          "evidence": "substring 'Top targets' NOT found in output"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.4,
+        "passed": 2,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 203.4,
+        "tokens": 68638,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Output contains at least 3 'structural.rs:<digits>' line references",
+          "passed": false,
+          "evidence": "found 0 match(es) of /structural\\.rs:\\d+/ (need \u22653); sample: []"
+        },
+        {
+          "text": "Output uses categorized section headers",
+          "passed": false,
+          "evidence": "found 0 match(es) of /\\*\\*(Perf|Correctness|Memory|Complexity|Coupling)/ (need \u22652); sample: []"
+        },
+        {
+          "text": "Surfaces unbounded-recursion / emit_node finding",
+          "passed": true,
+          "evidence": "matched /emit_node/ \u00d713 (first: 'emit_node')"
+        },
+        {
+          "text": "Mentions plan.rs in coupling context, or notes dual-orchestrator relationship",
+          "passed": true,
+          "evidence": "matched /plan\\.rs/ \u00d719 (first: 'plan.rs')"
+        },
+        {
+          "text": "Ends with 'Top targets' summary",
+          "passed": false,
+          "evidence": "substring 'Top targets' NOT found in output"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.5,
+        "passed": 2,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 197.0,
+        "tokens": 78976,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Output contains at least 2 'plan.rs:<digits>' line references",
+          "passed": true,
+          "evidence": "found 5 match(es) of /plan\\.rs:\\d+/ (need \u22652); sample: ['plan.rs:277', 'plan.rs:76', 'plan.rs:62']"
+        },
+        {
+          "text": "Output uses categorized section headers",
+          "passed": false,
+          "evidence": "found 1 match(es) of /\\*\\*(Perf|Correctness|Memory|Complexity)/ (need \u22652); sample: ['Memory']"
+        },
+        {
+          "text": "Surfaces FileChange memory-duplication OR convergence redundant work",
+          "passed": true,
+          "evidence": "matched /FileChange/ \u00d715 (first: 'FileChange')"
+        },
+        {
+          "text": "Ends with 'Top targets' summary",
+          "passed": false,
+          "evidence": "substring 'Top targets' NOT found in output"
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 234.4667,
+        "stddev": 57.9587,
+        "min": 171.2,
+        "max": 285.0
+      },
+      "tokens": {
+        "mean": 57400.0,
+        "stddev": 5972.9725,
+        "min": 52320,
+        "max": 63980
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.4333,
+        "stddev": 0.0577,
+        "min": 0.4,
+        "max": 0.5
+      },
+      "time_seconds": {
+        "mean": 217.2667,
+        "stddev": 29.733,
+        "min": 197.0,
+        "max": 251.4
+      },
+      "tokens": {
+        "mean": 70091.0,
+        "stddev": 8254.97,
+        "min": 62659,
+        "max": 78976
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.57",
+      "time_seconds": "+17.2",
+      "tokens": "-12691"
+    }
+  },
+  "notes": []
+}

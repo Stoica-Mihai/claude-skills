@@ -1,0 +1,50 @@
+[
+  {
+    "eval": "eval-1-audit-commit-rs",
+    "config": "with_skill",
+    "run": "run-1",
+    "passed": 3,
+    "total": 3,
+    "pass_rate": 1.0
+  },
+  {
+    "eval": "eval-1-audit-commit-rs",
+    "config": "without_skill",
+    "run": "run-1",
+    "passed": 1,
+    "total": 3,
+    "pass_rate": 0.3333333333333333
+  },
+  {
+    "eval": "eval-2-audit-structural-rs",
+    "config": "with_skill",
+    "run": "run-1",
+    "passed": 3,
+    "total": 3,
+    "pass_rate": 1.0
+  },
+  {
+    "eval": "eval-2-audit-structural-rs",
+    "config": "without_skill",
+    "run": "run-1",
+    "passed": 1,
+    "total": 3,
+    "pass_rate": 0.3333333333333333
+  },
+  {
+    "eval": "eval-3-audit-plan-rs",
+    "config": "with_skill",
+    "run": "run-1",
+    "passed": 3,
+    "total": 3,
+    "pass_rate": 1.0
+  },
+  {
+    "eval": "eval-3-audit-plan-rs",
+    "config": "without_skill",
+    "run": "run-1",
+    "passed": 1,
+    "total": 3,
+    "pass_rate": 0.3333333333333333
+  }
+]

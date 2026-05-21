@@ -1,0 +1,27 @@
+{
+  "eval_id": 3,
+  "eval_name": "audit-plan-rs",
+  "run_path": "/home/mcs/Documents/git/claude-skills/plugins/architectural-analysis/code-audit-deep-workspace/iteration-1/eval-3-audit-plan-rs/without_skill/run-1",
+  "expectations": [
+    {
+      "text": "Covers \u22654 of 7 ground-truth plan.rs findings",
+      "passed": true,
+      "evidence": "hit 6/7 (need \u22654). HIT: ['FileChange holds both after-text and rendered diff', 'diff rendered for apply/check modes that never read it', 'convergence probe uses count() not is_match', 'scripted convergence re-runs full Rhai', 'par_iter materializes Vec<Result<Option<>>>', 'FileChange.permissions Option always Some']. MISS: ['replace_all into_owned clones pre-image for zero-match']"
+    },
+    {
+      "text": "Output contains a 'Top targets' summary section",
+      "passed": false,
+      "evidence": "substring 'Top targets' NOT found in output"
+    },
+    {
+      "text": "Each finding includes a fix sketch",
+      "passed": false,
+      "evidence": "found 0 match(es) of /Fix:/ (need \u22653); sample: []"
+    }
+  ],
+  "summary": {
+    "passed": 1,
+    "total": 3,
+    "pass_rate": 0.3333333333333333
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "eval_id": 2,
+  "eval_name": "audit-structural-rs",
+  "run_path": "/home/mcs/Documents/git/claude-skills/plugins/architectural-analysis/code-audit-deep-workspace/iteration-1/eval-2-audit-structural-rs/with_skill/run-1",
+  "expectations": [
+    {
+      "text": "Covers \u22654 of 7 ground-truth structural.rs findings",
+      "passed": true,
+      "evidence": "hit 6/7 (need \u22654). HIT: ['emit_node recursive no depth cap', 'field_name_for_child index-vs-id bug', 'UTF-8 byte walker corruption', 'dual-orchestrator coupling with plan.rs', 'silent literal-to-wildcard fallthrough', 'source_file hard-coded root unwrap (non-Rust grammars)']. MISS: ['non-deterministic primary-capture pick']"
+    },
+    {
+      "text": "Output contains a 'Top targets' summary section",
+      "passed": true,
+      "evidence": "substring 'Top targets' found in output"
+    },
+    {
+      "text": "Each finding includes a fix sketch",
+      "passed": true,
+      "evidence": "found 14 match(es) of /Fix:/ (need \u22653); sample: ['Fix:', 'Fix:', 'Fix:']"
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "total": 3,
+    "pass_rate": 1.0
+  }
+}

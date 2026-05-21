@@ -1,0 +1,263 @@
+{
+  "metadata": {
+    "skill_name": "code-audit-deep",
+    "skill_path": "<path/to/skill>",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-05-21T19:18:29Z",
+    "evals_run": [
+      1,
+      2,
+      3
+    ],
+    "runs_per_configuration": 3
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "configuration": "new_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 301.6,
+        "tokens": 65575,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Covers \u22655 of 8 ground-truth commit.rs findings",
+          "passed": true,
+          "evidence": "hit 8/8 (need \u22655). HIT: ['NonceGen clock-per-nonce perf', 'recover_sweep FS-probe per backup', 'stage_all first-err-wins aggregation', 'rollback_committed silent rename failures', 'fsync_parents silent on open err', 'delete-backups-before-fsync durability bug', '--threads not honored in apply phase', 'remove_file-before-rename redundant unlink']. MISS: []"
+        },
+        {
+          "text": "Output contains a 'Top targets' summary section",
+          "passed": true,
+          "evidence": "substring 'Top targets' found in output"
+        },
+        {
+          "text": "Each finding includes a fix sketch (output contains 'Fix:')",
+          "passed": true,
+          "evidence": "found 13 match(es) of /Fix:/ (need \u22653); sample: ['Fix:', 'Fix:', 'Fix:']"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "new_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.6666666666666666,
+        "passed": 2,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 218.5,
+        "tokens": 69694,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Covers \u22654 of 6 ground-truth structural.rs findings",
+          "passed": false,
+          "evidence": "hit 2/6 (need \u22654). HIT: ['emit_node recursive no depth cap', 'dual-orchestrator coupling with plan.rs']. MISS: ['field_name_for_child index-vs-id bug', 'UTF-8 byte walker corruption', 'silent literal-to-wildcard fallthrough', 'non-deterministic primary-capture pick']"
+        },
+        {
+          "text": "Output contains a 'Top targets' summary section",
+          "passed": true,
+          "evidence": "substring 'Top targets' found in output"
+        },
+        {
+          "text": "Each finding includes a fix sketch",
+          "passed": true,
+          "evidence": "found 12 match(es) of /Fix:/ (need \u22653); sample: ['Fix:', 'Fix:', 'Fix:']"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "new_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 168.4,
+        "tokens": 64714,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Covers \u22654 of 7 ground-truth plan.rs findings",
+          "passed": true,
+          "evidence": "hit 5/7 (need \u22654). HIT: ['FileChange holds both after-text and rendered diff', 'convergence probe uses count() not is_match', 'scripted convergence re-runs full Rhai', 'par_iter materializes Vec<Result<Option<>>>', 'FileChange.permissions Option always Some']. MISS: ['diff rendered for apply/check modes that never read it', 'replace_all into_owned clones pre-image for zero-match']"
+        },
+        {
+          "text": "Output contains a 'Top targets' summary section",
+          "passed": true,
+          "evidence": "substring 'Top targets' found in output"
+        },
+        {
+          "text": "Each finding includes a fix sketch",
+          "passed": true,
+          "evidence": "found 15 match(es) of /Fix:/ (need \u22653); sample: ['Fix:', 'Fix:', 'Fix:']"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "old_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 161.9,
+        "tokens": 52190,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Covers \u22655 of 8 ground-truth commit.rs findings",
+          "passed": true,
+          "evidence": "hit 6/8 (need \u22655). HIT: ['NonceGen clock-per-nonce perf', 'recover_sweep FS-probe per backup', 'stage_all first-err-wins aggregation', 'rollback_committed silent rename failures', 'fsync_parents silent on open err', 'remove_file-before-rename redundant unlink']. MISS: ['delete-backups-before-fsync durability bug', '--threads not honored in apply phase']"
+        },
+        {
+          "text": "Output contains a 'Top targets' summary section",
+          "passed": true,
+          "evidence": "substring 'Top targets' found in output"
+        },
+        {
+          "text": "Each finding includes a fix sketch (output contains 'Fix:')",
+          "passed": true,
+          "evidence": "found 16 match(es) of /Fix:/ (need \u22653); sample: ['Fix:', 'Fix:', 'Fix:']"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "old_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 284.2,
+        "tokens": 69694,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Covers \u22654 of 6 ground-truth structural.rs findings",
+          "passed": true,
+          "evidence": "hit 4/6 (need \u22654). HIT: ['emit_node recursive no depth cap', 'field_name_for_child index-vs-id bug', 'UTF-8 byte walker corruption', 'dual-orchestrator coupling with plan.rs']. MISS: ['silent literal-to-wildcard fallthrough', 'non-deterministic primary-capture pick']"
+        },
+        {
+          "text": "Output contains a 'Top targets' summary section",
+          "passed": true,
+          "evidence": "substring 'Top targets' found in output"
+        },
+        {
+          "text": "Each finding includes a fix sketch",
+          "passed": true,
+          "evidence": "found 12 match(es) of /Fix:/ (need \u22653); sample: ['Fix:', 'Fix:', 'Fix:']"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "old_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 160.9,
+        "tokens": 53907,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Covers \u22654 of 7 ground-truth plan.rs findings",
+          "passed": true,
+          "evidence": "hit 7/7 (need \u22654). HIT: ['FileChange holds both after-text and rendered diff', 'diff rendered for apply/check modes that never read it', 'convergence probe uses count() not is_match', 'scripted convergence re-runs full Rhai', 'par_iter materializes Vec<Result<Option<>>>', 'FileChange.permissions Option always Some', 'replace_all into_owned clones pre-image for zero-match']. MISS: []"
+        },
+        {
+          "text": "Output contains a 'Top targets' summary section",
+          "passed": true,
+          "evidence": "substring 'Top targets' found in output"
+        },
+        {
+          "text": "Each finding includes a fix sketch",
+          "passed": true,
+          "evidence": "found 15 match(es) of /Fix:/ (need \u22653); sample: ['Fix:', 'Fix:', 'Fix:']"
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "new_skill": {
+      "pass_rate": {
+        "mean": 0.8889,
+        "stddev": 0.1925,
+        "min": 0.6667,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 229.5,
+        "stddev": 67.2779,
+        "min": 168.4,
+        "max": 301.6
+      },
+      "tokens": {
+        "mean": 66661.0,
+        "stddev": 2661.7,
+        "min": 64714,
+        "max": 69694
+      }
+    },
+    "old_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 202.3333,
+        "stddev": 70.9004,
+        "min": 160.9,
+        "max": 284.2
+      },
+      "tokens": {
+        "mean": 58597.0,
+        "stddev": 9648.5532,
+        "min": 52190,
+        "max": 69694
+      }
+    },
+    "delta": {
+      "pass_rate": "-0.11",
+      "time_seconds": "+27.2",
+      "tokens": "+8064"
+    }
+  },
+  "notes": []
+}

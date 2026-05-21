@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eval Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #faf9f5;
+      --surface: #ffffff;
+      --border: #e8e6dc;
+      --text: #141413;
+      --text-muted: #b0aea5;
+      --accent: #d97757;
+      --accent-hover: #c4613f;
+      --green: #788c5d;
+      --green-bg: #eef2e8;
+      --red: #c44;
+      --red-bg: #fceaea;
+      --header-bg: #141413;
+      --header-text: #faf9f5;
+      --radius: 6px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lora', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .header .instructions {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-top: 0.25rem;
+    }
+    .header .progress {
+      font-size: 0.875rem;
+      opacity: 0.8;
+      text-align: right;
+    }
+
+    /* ---- Main content ---- */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ---- Sections ---- */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      flex-shrink: 0;
+    }
+    .section-header {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .section-body {
+      padding: 1rem;
+    }
+
+    /* ---- Config badge ---- */
+    .config-badge {
+      display: inline-block;
+      padding: 0.2rem 0.625rem;
+      border-radius: 9999px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-left: 0.75rem;
+      vertical-align: middle;
+    }
+    .config-badge.config-primary {
+      background: rgba(33, 150, 243, 0.12);
+      color: #1976d2;
+    }
+    .config-badge.config-baseline {
+      background: rgba(255, 193, 7, 0.15);
+      color: #f57f17;
+    }
+
+    /* ---- Prompt ---- */
+    .prompt-text {
+      white-space: pre-wrap;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+    }
+
+    /* ---- Outputs ---- */
+    .output-file {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .output-file + .output-file {
+      margin-top: 1rem;
+    }
+    .output-file-header {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .output-file-header .dl-btn {
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-decoration: none;
+      cursor: pointer;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+    .output-file-header .dl-btn:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+    .output-file-content {
+      padding: 0.75rem;
+      overflow-x: auto;
+    }
+    .output-file-content pre {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    }
+    .output-file-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+    .output-file-content iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+    }
+    .output-file-content table {
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+      width: 100%;
+    }
+    .output-file-content table td,
+    .output-file-content table th {
+      border: 1px solid var(--border);
+      padding: 0.375rem 0.5rem;
+      text-align: left;
+    }
+    .output-file-content table th {
+      background: var(--bg);
+      font-weight: 600;
+    }
+    .output-file-content .download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+    .output-file-content .download-link:hover {
+      background: var(--border);
+    }
+    .empty-state {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    /* ---- Feedback ---- */
+    .prev-feedback {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.625rem 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .prev-feedback-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.25rem;
+      color: var(--text-muted);
+    }
+    .feedback-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      resize: vertical;
+      color: var(--text);
+    }
+    .feedback-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .feedback-status {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      min-height: 1.1em;
+    }
+
+    /* ---- Grades (collapsible) ---- */
+    .grades-toggle {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .grades-toggle:hover {
+      color: var(--accent);
+    }
+    .grades-toggle .arrow {
+      margin-right: 0.5rem;
+      transition: transform 0.15s;
+      font-size: 0.75rem;
+    }
+    .grades-toggle .arrow.open {
+      transform: rotate(90deg);
+    }
+    .grades-content {
+      display: none;
+      margin-top: 0.75rem;
+    }
+    .grades-content.open {
+      display: block;
+    }
+    .grades-summary {
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .grade-badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .grade-pass { background: var(--green-bg); color: var(--green); }
+    .grade-fail { background: var(--red-bg); color: var(--red); }
+    .assertion-list {
+      list-style: none;
+    }
+    .assertion-item {
+      padding: 0.625rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem;
+    }
+    .assertion-item:last-child { border-bottom: none; }
+    .assertion-status {
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+    .assertion-status.pass { color: var(--green); }
+    .assertion-status.fail { color: var(--red); }
+    .assertion-evidence {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      padding-left: 1.5rem;
+    }
+
+    /* ---- View tabs ---- */
+    .view-tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 2rem;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .view-tab {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .view-tab:hover { color: var(--text); }
+    .view-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .view-panel { display: none; }
+    .view-panel.active { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    /* ---- Benchmark view ---- */
+    .benchmark-view {
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .benchmark-table {
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.8125rem;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+    .benchmark-table th, .benchmark-table td {
+      padding: 0.625rem 0.75rem;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+    .benchmark-table th {
+      font-family: 'Poppins', sans-serif;
+      background: var(--header-bg);
+      color: var(--header-text);
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .benchmark-table tr:hover { background: var(--bg); }
+    .benchmark-table tr.benchmark-row-with { background: rgba(33, 150, 243, 0.06); }
+    .benchmark-table tr.benchmark-row-without { background: rgba(255, 193, 7, 0.06); }
+    .benchmark-table tr.benchmark-row-with:hover { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-without:hover { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-table tr.benchmark-row-avg { font-weight: 600; border-top: 2px solid var(--border); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-with { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-without { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-delta-positive { color: var(--green); font-weight: 600; }
+    .benchmark-delta-negative { color: var(--red); font-weight: 600; }
+    .benchmark-notes {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+    .benchmark-notes h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+    .benchmark-notes ul {
+      list-style: disc;
+      padding-left: 1.25rem;
+    }
+    .benchmark-notes li {
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      margin-bottom: 0.375rem;
+    }
+    .benchmark-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 3rem;
+    }
+
+    /* ---- Navigation ---- */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .nav-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: all 0.15s;
+    }
+    .nav-btn:hover:not(:disabled) {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .done-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .done-btn:hover {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .done-btn.ready {
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+    }
+    .done-btn.ready:hover {
+      background: var(--accent-hover);
+    }
+    /* ---- Done overlay ---- */
+    .done-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    .done-overlay.visible {
+      display: flex;
+    }
+    .done-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 2rem 3rem;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+    }
+    .done-card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .done-card p {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .done-card .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .done-card button {
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .done-card button:hover {
+      background: var(--bg);
+    }
+    /* ---- Toast ---- */
+    .toast {
+      position: fixed;
+      bottom: 5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 0.625rem 1.25rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 200;
+    }
+    .toast.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" style="height:100vh; display:flex; flex-direction:column;">
+    <div class="header">
+      <div>
+        <h1>Eval Review: <span id="skill-name"></span></h1>
+        <div class="instructions">Review each output and leave feedback below. Navigate with arrow keys or buttons. When done, copy feedback and paste into Claude Code.</div>
+      </div>
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <!-- View tabs (only shown when benchmark data exists) -->
+    <div class="view-tabs" id="view-tabs" style="display:none;">
+      <button class="view-tab active" onclick="switchView('outputs')">Outputs</button>
+      <button class="view-tab" onclick="switchView('benchmark')">Benchmark</button>
+    </div>
+
+    <!-- Outputs panel (qualitative review) -->
+    <div class="view-panel active" id="panel-outputs">
+    <div class="main">
+      <!-- Prompt -->
+      <div class="section">
+        <div class="section-header">Prompt <span class="config-badge" id="config-badge" style="display:none;"></span></div>
+        <div class="section-body">
+          <div class="prompt-text" id="prompt-text"></div>
+        </div>
+      </div>
+
+      <!-- Outputs -->
+      <div class="section">
+        <div class="section-header">Output</div>
+        <div class="section-body" id="outputs-body">
+          <div class="empty-state">No output files found</div>
+        </div>
+      </div>
+
+      <!-- Previous Output (collapsible) -->
+      <div class="section" id="prev-outputs-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="togglePrevOutputs()">
+            <span class="arrow" id="prev-outputs-arrow">&#9654;</span>
+            Previous Output
+          </div>
+        </div>
+        <div class="grades-content" id="prev-outputs-content"></div>
+      </div>
+
+      <!-- Grades (collapsible) -->
+      <div class="section" id="grades-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="toggleGrades()">
+            <span class="arrow" id="grades-arrow">&#9654;</span>
+            Formal Grades
+          </div>
+        </div>
+        <div class="grades-content" id="grades-content"></div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="section">
+        <div class="section-header">Your Feedback</div>
+        <div class="section-body">
+          <textarea
+            class="feedback-textarea"
+            id="feedback"
+            placeholder="What do you think of this output? Any issues, suggestions, or things that look great?"
+          ></textarea>
+          <div class="feedback-status" id="feedback-status"></div>
+          <div class="prev-feedback" id="prev-feedback" style="display:none;">
+            <div class="prev-feedback-label">Previous feedback</div>
+            <div id="prev-feedback-text"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav" id="outputs-nav">
+      <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">&#8592; Previous</button>
+      <button class="done-btn" id="done-btn" onclick="showDoneDialog()">Submit All Reviews</button>
+      <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next &#8594;</button>
+    </div>
+    </div><!-- end panel-outputs -->
+
+    <!-- Benchmark panel (quantitative stats) -->
+    <div class="view-panel" id="panel-benchmark">
+      <div class="benchmark-view" id="benchmark-content">
+        <div class="benchmark-empty">No benchmark data available. Run a benchmark to see quantitative results here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Done overlay -->
+  <div class="done-overlay" id="done-overlay">
+    <div class="done-card">
+      <h2>Review Complete</h2>
+      <p>Your feedback has been saved. Go back to your Claude Code session and tell Claude you're done reviewing.</p>
+      <div class="btn-row">
+        <button onclick="closeDoneDialog()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ---- Embedded data (injected by generate_review.py) ----
+    const EMBEDDED_DATA = {"skill_name": "code-audit-deep", "runs": [{"id": "eval-1-audit-commit-rs-with_skill-run-1", "prompt": "(No prompt found)", "eval_id": null, "outputs": [{"name": "audit.md", "type": "text", "content": "**Perf (3)**\n- `commit.rs:425-426` \u2014 `SystemTime::now()` called per nonce. Fix: capture once in `NonceGen::new()`, mix counter only in `next()`.\n- `commit.rs:328` \u2014 `target.exists()` stat per recovery group. Fix: record live targets in a `HashSet` during the walk and probe that.\n- `commit.rs:114` \u2014 `par_iter().map(...).collect()` materializes a `Vec<Result<Staged>>` only to fold it. Fix: stream-fold with `try_fold` + `reduce`, or use `Mutex<Vec<Staged>>` so failures short-circuit without allocating the intermediate vec.\n\n**Correctness (6)**\n- `commit.rs:226` \u2014 restore rename in `commit_one` failure path uses `let _ =`. Fix: log at warn and surface a richer error wrapping both the temp-rename and restore failures.\n- `commit.rs:233-237` \u2014 `rollback_committed` swallows every `remove_file` / `rename` failure with `let _ =`. Fix: collect failures and attach them to the returned error (or at minimum `warn!` each).\n- `commit.rs:260` \u2014 `let _ = dir.sync_all()` defeats the durability claim in the module doc. Fix: `warn!` on failure so silent data loss is observable in logs.\n- `commit.rs:117-127` \u2014 `stage_all` keeps only `first_error`; other parallel stage errors are dropped without trace. Fix: log each dropped error at debug/warn before discarding.\n- `commit.rs:130` \u2014 `let _ = fs::remove_file(&s.temp_path)` in stage-error cleanup. Fix: `trace!`/`warn!` failures so leaked temps that bypass `recover_sweep` are diagnosable.\n- `commit.rs:333-334` \u2014 `group.backups.pop()` + `rename` restores the newest backup, but `parse_sibling_name` accepts arbitrary attacker-controlled `.recast.bak.N` siblings; recover may resurrect a file the user never wrote. Fix: only act on backup groups where the target was missing AND the parent dir was emitted by the walk under a `--recover` root the user explicitly asked for (and gate restoration behind a `--yes`-style flag, or restrict to a recast-owned marker).\n\n**Complexity (3)**\n- `commit.rs:178-216` \u2014 `commit_all` and `commit_all_with_hook` are near-duplicates differing only by the test hook. Fix: collapse to one function taking `Option<&dyn Fn(usize) -> Result<()>>` (or `()` no-op default), drop the cfg(test) twin.\n- `commit.rs:52-108` \u2014 `apply_changes` and `apply_inner` duplicate the empty-plan check and stage pipeline. Fix: have `apply_changes` delegate to `apply_inner` with a no-op hook.\n- `commit.rs:283-341` \u2014 `recover_sweep` does walker config + parse + grouping + restore + cleanup in one 60-line body. Fix: split into `collect_recovery_groups` and `reconcile_group` so each step is unit-testable in isolation.\n\n**Coupling (1)**\n- `commit.rs:143 + plan.rs:80` \u2014 `commit::stage_one` reads `FileChange.permissions` while `plan::process_one` writes them solely to feed the commit phase; the field exists only to ferry data between the two modules. Fix: keep as-is but document the contract on `FileChange.permissions`, or introduce a thin `StagedInput` type owned by `commit.rs` so the coupling is explicit instead of implicit through a shared struct.\n\n**Top targets**\n1. `commit.rs:425-426` \u2014 hoist `SystemTime::now()` out of `NonceGen::next`; capture once in `new()`, increment counter only.\n2. `commit.rs:226 + 233-237` \u2014 stop swallowing rollback / restore-rename errors; aggregate or `warn!` so partial-state failures are observable instead of silent.\n3. `commit.rs:260` \u2014 make `best_effort_fsync_parents` log on failure so the module doc's \"durable\" claim is enforceable.\n4. `commit.rs:178-216 + 98-108` \u2014 collapse the `commit_all` / `commit_all_with_hook` and `apply_changes` / `apply_inner` duplications behind an optional hook parameter.\n"}], "grading": {"eval_id": 1, "eval_name": "audit-commit-rs", "run_path": "/home/mcs/Documents/git/claude-skills/plugins/architectural-analysis/code-audit-deep-workspace/iteration-1/eval-1-audit-commit-rs/with_skill", "expectations": [{"text": "Output contains at least 3 'commit.rs:<digits>' line references", "passed": true, "evidence": "found 17 match(es) of /commit\\.rs:\\d+/ (need \u22653); sample: ['commit.rs:425', 'commit.rs:328', 'commit.rs:114']"}, {"text": "Output uses categorized section headers (Perf / Correctness / Memory / Complexity)", "passed": true, "evidence": "found 3 match(es) of /\\*\\*(Perf|Correctness|Memory|Complexity)/ (need \u22652); sample: ['Perf', 'Correctness', 'Complexity']"}, {"text": "Surfaces NonceGen / SystemTime::now per-nonce perf issue", "passed": true, "evidence": "matched /NonceGen/ \u00d72 (first: 'NonceGen')"}, {"text": "Surfaces an error-aggregation / silent-error finding (stage_all, rollback, fsync, or swallowed err)", "passed": true, "evidence": "matched /stage_all/ \u00d71 (first: 'stage_all')"}, {"text": "Ends with 'Top targets' summary listing highest-leverage fixes", "passed": true, "evidence": "substring 'Top targets' found in output"}], "summary": {"passed": 5, "total": 5, "pass_rate": 1.0}}}, {"id": "eval-1-audit-commit-rs-without_skill-run-1", "prompt": "(No prompt found)", "eval_id": null, "outputs": [{"name": "audit.md", "type": "text", "content": "# Audit: `crates/recast-core/src/commit.rs`\n\nScope: correctness and perf of the two-phase atomic-commit path, with extra attention to per-file syscalls in the parallel stage loop and silent failure modes on the rollback / recover paths.\n\nFindings are ordered roughly by severity. Line numbers refer to `commit.rs` at `f9fc5d8`.\n\n---\n\n## H1. Durability ordering bug \u2014 backups deleted before parent dir is fsynced\n\n`apply_changes` finalises a successful commit at `finalize_apply` (lines 71\u201380):\n\n```rust\nOk(committed) => {\n    debug!(files = committed.len(), \"apply: commit phase complete\");\n    best_effort_cleanup_backups(&committed);   // deletes *.recast.bak.*\n    best_effort_fsync_parents(&committed);     // fsync(parent)\n    Ok(ApplyOutcome { ... })\n}\n```\n\nThe intended durability story (per the module-level docstring, lines 1\u20138) is: \"On success, backups are removed and parent dirs are fsynced so the rename batch is durable.\" That ordering is the wrong way round.\n\nWhat actually lands on disk:\n\n1. `rename(original \u2192 backup)` and `rename(temp \u2192 original)` \u2014 durable only after a parent-dir fsync.\n2. `unlink(backup)` \u2014 also only durable after a parent-dir fsync.\n3. `fsync(parent)` \u2014 flushes the directory entry changes from steps 1 and 2 together.\n\nIf the process or machine crashes between step 2 and step 3, the kernel can replay the unlink of the backup without replaying the rename pair that put new content into place. Result: the new content is gone, the backup is gone, the original is gone \u2014 pure data loss on a successful-looking commit.\n\nFix:\n\n```rust\nbest_effort_fsync_parents(&committed);     // make the rename pair durable first\nbest_effort_cleanup_backups(&committed);   // then we can safely retire the backups\nbest_effort_fsync_parents(&committed);     // (optional) make the unlinks durable too\n```\n\nThe first fsync is the load-bearing one. The second is nice-to-have so the directory doesn't contain ghost `.recast.bak.*` entries after a crash; `recover_sweep` will tidy those on the next run regardless.\n\nSeverity: high. This is the canonical mistake atomic-rename code makes and the one the docstring explicitly claims to avoid.\n\n---\n\n## H2. `commit_one` rollback can silently lose a file\n\n`commit_one` (lines 218\u2013231):\n\n```rust\nfs::rename(&staged.target, &backup_path).io_ctx(&staged.target)?;\n\nif let Err(e) = fs::rename(&staged.temp_path, &staged.target) {\n    let _ = fs::rename(&backup_path, &staged.target);\n    return Err(Error::Io { path: staged.target.clone(), source: e });\n}\n```\n\nIf the second rename (temp \u2192 target) fails after the first one moved the original aside, the code attempts to restore the backup with `let _ = \u2026`. If *that* rename also fails (full disk, EACCES on a now-different inode owner after a permission race, EXDEV across a bind-mount boundary, NFS hiccup), then:\n\n- the original file is gone from `target`,\n- the temp is still sitting at `staged.temp_path`,\n- the `Committed` record for this file is never pushed, so the outer `rollback_committed` will not touch it,\n- the only signal returned to the caller is the *original* error from the temp\u2192target rename \u2014 the rollback failure is silently discarded.\n\n`recover_sweep` will fix the next run because the backup is still on disk. But the per-invocation contract (\"either fully rewritten or bit-identical to the pre-image\") is violated and the user is not told about it.\n\nMinimum fix: chain the recovery error onto the primary error, or at minimum emit a `tracing::error!` so it isn't completely silent. Better: bubble a distinct `RollbackFailed { primary, secondary }` variant so the binary can exit with a louder code and tell the user to run `--recover`.\n\nSeverity: high (in the rare failure path) \u2014 silent data-loss-shaped behaviour in the disaster path.\n\n---\n\n## H3. `rollback_committed` performs an unnecessary unlink that widens the loss window\n\n`rollback_committed` (lines 233\u2013238):\n\n```rust\nfor c in committed.iter().rev() {\n    let _ = fs::remove_file(&c.target);\n    let _ = fs::rename(&c.backup_path, &c.target);\n}\n```\n\nOn Unix, `rename(src, dst)` is atomic and overwrites `dst` unconditionally. The `remove_file` is therefore redundant. It is also actively harmful:\n\n- Between the `remove_file` and the `rename`, `target` does not exist. A concurrent reader (another tool, an editor, an indexer) will see EEXIST \u2192 ENOENT \u2192 present-with-old-content, which is a flicker the atomic-rename idiom is supposed to make impossible.\n- If `remove_file` succeeds but `rename` then fails, the file is gone and the backup is still sitting at `c.backup_path`. The user only sees the original Phase B error; the rename failure during rollback is `let _ =`-discarded (same problem as H2).\n\nFix: drop the `remove_file`. Rely on `fs::rename` to overwrite. If a rename-back fails, surface it.\n\nSeverity: medium-high. Today it papers over a non-issue (`rename` already overwrites), but the asymmetry creates the very failure window the module is designed to eliminate.\n\n---\n\n## M1. Stage phase silently drops all errors after the first\n\n`stage_all` (lines 110\u2013134):\n\n```rust\nlet results: Vec<Result<Staged>> = changes.par_iter().map(...).collect();\n\nlet mut staged: Vec<Staged> = Vec::with_capacity(results.len());\nlet mut first_error: Option<Error> = None;\nfor r in results {\n    match r {\n        Ok(s) => staged.push(s),\n        Err(e) => {\n            if first_error.is_none() {\n                first_error = Some(e);\n            }\n        }\n    }\n}\n```\n\nIf three workers fail simultaneously, the user sees one of them (whichever sorted first in `changes` order). The other two are dropped on the floor with no trace. For a debug `RUST_LOG=debug` user trying to diagnose a permissions misconfiguration spanning multiple paths, this is unhelpful.\n\nSuggestion: at minimum `tracing::warn!` each additional error before discarding. Or aggregate into a single `Error::StageFailed { first, others: Vec<Error> }` \u2014 but that's a bigger change and probably not worth it given the binary surfaces only the first.\n\nSeverity: medium. Information leak from the failure path, not a correctness bug.\n\n---\n\n## M2. Module docstring claims a stage-phase parent-dir fsync that doesn't happen\n\nLines 42\u201345:\n\n> Phase A (stage): for every change, write the new content to a sibling temp file, fsync the temp, copy the original's permissions across, **and fsync the parent directory so the entry is durable**.\n\n`stage_one` (lines 137\u2013163) does not fsync the parent directory. The only parent-dir fsync is `best_effort_fsync_parents`, run after a successful commit phase.\n\nThat has two consequences:\n\n1. If the process crashes between the end of stage and the start of commit, the `.recast.tmp.*` directory entries may not yet be on disk. `recover_sweep` handles missing temps gracefully (`target exists, no temps \u2192 no-op`), so this is not a *correctness* bug, but it does mean the on-disk state can diverge from what the code thinks it staged.\n2. The docstring overstates what the code guarantees. Either implement the staged parent-dir fsync (one fsync per unique parent at the end of `stage_all`, deduped exactly like `best_effort_fsync_parents`) or correct the doc.\n\nIf you implement it, dedupe like H1's fsync \u2014 there's no point fsyncing the same parent N times for N files in one directory.\n\nSeverity: medium. Doc/code drift in a module whose entire job is durability semantics.\n\n---\n\n## M3. `apply_changes` ignores the user-configured rayon pool\n\n`stage_all` does `changes.par_iter()` (line 114) on whatever ambient pool is active. In `crates/recast/src/main.rs` the `--threads N` pool is only installed around `plan_rewrite` (line 343):\n\n```rust\nlet pool = build_pool(cli.threads).context(...)?;\npool.install(|| plan_rewrite(pattern, replacement, &paths, &opts))\n```\n\n`apply_changes(plan)` is called later, *outside* `pool.install` (line 362). So `--threads 1` will still parallelise the stage phase on `num_cpus()` workers. This is at minimum a surprise for users intentionally serialising for diagnosis (or for filesystem types \u2014 NFS, FUSE \u2014 where fanned-out fsync hurts).\n\nFix is in `main.rs`, not `commit.rs`: build the pool once and `pool.install(|| { plan; apply })` over both. But `commit.rs` could defend itself by accepting a `&ThreadPool` (or doing the work synchronously when `changes.len() == 1`).\n\nSeverity: medium. Bug in the binary, surfaced by the library's design.\n\n---\n\n## L1. Per-call `SystemTime::now()` in `NonceGen::next`\n\n`NonceGen::next` (lines 422\u2013429) calls `SystemTime::now()` on every nonce. The hot path stages one nonce per file (plus one per file in the commit phase, plus one per `recover_sweep` group). For a 10k-file run that's 20k clock-reads. `clock_gettime(CLOCK_REALTIME)` is a vDSO call on Linux so it's cheap (~20ns), but it's pointless work \u2014 the timestamp only needs to be sampled once per `NonceGen` to guarantee non-collision across runs.\n\nSuggestion:\n\n```rust\nstruct NonceGen {\n    base: u64,           // sampled once at ::new\n    counter: AtomicU64,\n}\n\nfn next(&self) -> u64 {\n    let n = self.counter.fetch_add(1, Ordering::Relaxed);\n    self.base.wrapping_add(n)\n}\n```\n\nSeverity: low. Perf-only, and the win is small.\n\n---\n\n## L2. Redundant `flush()` before `sync_all()`\n\n`stage_one` (lines 150\u2013152):\n\n```rust\nfile.write_all(change.after.as_bytes()).io_ctx(&temp_path)?;\nfile.flush().io_ctx(&temp_path)?;\nfile.sync_all().io_ctx(&temp_path)?;\n```\n\n`std::fs::File::flush` is a no-op (the impl is `Ok(())`); `sync_all` calls `fsync(2)` which inherently flushes any kernel-side buffers. The `flush` line can go.\n\nSeverity: trivial. One syscall-free call per file.\n\n---\n\n## L3. `best_effort_cleanup_backups` and `best_effort_fsync_parents` log nothing on failure\n\nLines 247\u2013263 discard every `Result` with `let _ =`. The names are honest about it being best-effort, but the only operator-visible signal that a backup couldn't be cleaned up (or a directory couldn't be fsynced) is that `recover_sweep` will list \"removed N stale backup(s)\" on the next run. Adding `tracing::debug!` (or `warn!`) lines makes those silent failures investigable.\n\nSeverity: low. Diagnostic.\n\n---\n\n## L4. `recover_sweep` is brittle against attacker-controlled filenames\n\n`parse_sibling_name` (lines 383\u2013396) trusts any file matching `.{stem}.recast.{bak|tmp}.{u64}` as a recast sibling. The `recover_sweep` walker is configured with `hidden(false).ignore(false).git_ignore(false).git_global(false).git_exclude(false)` (line 294), so it will pick up *any* file in the tree with that shape \u2014 including a planted file. In the target-missing case (line 333):\n\n```rust\nif let Some((_, newest)) = group.backups.pop() {\n    fs::rename(&newest, &target).io_ctx(&newest)?;\n    ...\n}\n```\n\nA user with write access to the tree could plant `.foo.recast.bak.999` to make `recover_sweep` materialise `foo` from arbitrary content on the next sweep. This is mitigated in practice by the workspace lock around `--apply` / `--recover`, and the user could just create `foo` directly anyway, so the impact is mostly \"surprising recovery behaviour\" rather than a real escalation.\n\nSeverity: low. Worth a one-line note in the recover docstring.\n\n---\n\n## L5. `cleanup_remaining_staged` slicing is correct but unobvious\n\n```rust\nfn cleanup_remaining_staged(staged: &[Staged], remaining_count: usize) {\n    let start = staged.len().saturating_sub(remaining_count);\n    for s in &staged[start..] {\n        let _ = fs::remove_file(&s.temp_path);\n    }\n}\n```\n\nThe `saturating_sub` defends against the obvious off-by-one, and `commit_all` only ever sets `remaining_staged = staged.len() - i` (with `i \u2208 0..staged.len()`), so the saturation is dead. But the relationship is implicit. Passing the index of the failed file directly (instead of the remaining count) would make this self-evident and remove the saturating math. Style nit only.\n\nSeverity: trivial.\n\n---\n\n## L6. `Option<Permissions>` is dead in production\n\n`stage_one` (line 155) handles `permissions: None` by skipping `set_permissions`. The planner (`plan.rs::process_one`, line 284) always sets `Some(permissions)`. So in any real run, the None branch never fires \u2014 and if it ever did fire, the temp would silently inherit the umask-default mode instead of the original's. Two options:\n\n- Tighten the type to `Permissions` (not `Option<Permissions>`) in `FileChange` to make the invariant compile-checked.\n- Or leave the type but `Error::Io { \u2026 \"no permissions captured\" }` in the None branch so a future bug surfaces instead of silently corrupting modes.\n\nSeverity: low. Latent.\n\n---\n\n## Perf summary (parallel stage hot path)\n\nPer file, `stage_one` performs:\n\n1. `parent_dir` \u2014 pure pointer arithmetic on the path.\n2. `OpenOptions::open(create_new)` \u2014 1 syscall (`openat` with `O_CREAT|O_EXCL`).\n3. `write_all` \u2014 1 syscall for small files, multiple for large; bounded by file size.\n4. `flush` \u2014 0 syscalls (no-op, see L2).\n5. `sync_all` \u2014 1 syscall (`fsync`), the dominant cost.\n6. `drop(file)` \u2014 1 syscall (`close`).\n7. `set_permissions` \u2014 1 syscall (`fchmodat`), only if `Some(perm)`.\n\nThat's roughly 4 syscalls + the fsync on the common path, per file, per worker. The kernel can overlap fsyncs across workers, so wall time scales with disk queue depth, not file count. Nothing pathological here. The biggest wins from the perf angle are not in `commit.rs` at all \u2014 they are:\n\n- letting `--threads N` actually constrain the stage pool (M3),\n- and (much smaller) the `flush`/`now()` micro-cleanups (L1, L2).\n\nThe commit phase is intentionally serial (line 113 comment), which is fine: rename is cheap and the determinism buys you the simple `rollback_committed` walk.\n\n---\n\n## Quick wins, ranked\n\n1. **H1**: swap the order of `best_effort_cleanup_backups` and `best_effort_fsync_parents`. One-line fix that closes the worst correctness gap.\n2. **H3**: drop the `fs::remove_file` in `rollback_committed`. Lets the atomic `rename` do its job.\n3. **H2**: don't silently swallow the rollback `rename` failures in `commit_one` and `rollback_committed`. At minimum `tracing::error!`; better, a typed error.\n4. **M2**: implement the stage-phase parent-dir fsync the docstring already promises, or correct the doc.\n5. **M3**: `pool.install` around `apply_changes` in `crates/recast/src/main.rs` so `--threads` is honoured end-to-end.\n6. **M1** + L3: log dropped errors in `stage_all` and the best-effort helpers.\n7. **L1** + L2: micro-cleanups in `NonceGen::next` and `stage_one`.\n\n---\n\n## Things I checked and that look fine\n\n- Nonce uniqueness across parallel stage workers: `AtomicU64::fetch_add` + monotonic counter is collision-free per `NonceGen`; cross-process collisions are made effectively impossible by mixing the start-of-apply nanosecond timestamp.\n- `commit_all` is single-threaded; rollback ordering is deterministic by construction.\n- `HashSet<&Path>` in `best_effort_fsync_parents` borrows from the committed entries' `target.parent()`, which lives as long as the `committed` slice \u2014 no lifetime hazard.\n- `recover_sweep` is invoked from `crates/recast/src/main.rs` *after* `acquire_workspace_lock_for(&cli)`, so concurrent `--recover` is fenced by the same lockfile that fences `--apply`.\n- `RecoverySummary::backups_restored` is incremented after the rename succeeds (line 335), so a mid-recovery error doesn't over-count. Counters are non-atomic because `recover_sweep` itself is serial.\n- `parse_sibling_name` correctly handles edge cases: empty target name \u2192 None, missing `.recast.` separator \u2192 None, non-numeric nonce \u2192 None, missing leading `.` \u2192 None.\n"}], "grading": {"eval_id": 1, "eval_name": "audit-commit-rs", "run_path": "/home/mcs/Documents/git/claude-skills/plugins/architectural-analysis/code-audit-deep-workspace/iteration-1/eval-1-audit-commit-rs/without_skill", "expectations": [{"text": "Output contains at least 3 'commit.rs:<digits>' line references", "passed": false, "evidence": "found 0 match(es) of /commit\\.rs:\\d+/ (need \u22653); sample: []"}, {"text": "Output uses categorized section headers (Perf / Correctness / Memory / Complexity)", "passed": false, "evidence": "found 0 match(es) of /\\*\\*(Perf|Correctness|Memory|Complexity)/ (need \u22652); sample: []"}, {"text": "Surfaces NonceGen / SystemTime::now per-nonce perf issue", "passed": true, "evidence": "matched /NonceGen/ \u00d76 (first: 'NonceGen')"}, {"text": "Surfaces an error-aggregation / silent-error finding (stage_all, rollback, fsync, or swallowed err)", "passed": true, "evidence": "matched /stage_all/ \u00d74 (first: 'stage_all')"}, {"text": "Ends with 'Top targets' summary listing highest-leverage fixes", "passed": false, "evidence": "substring 'Top targets' NOT found in output"}], "summary": {"passed": 2, "total": 5, "pass_rate": 0.4}}}, {"id": "eval-2-audit-structural-rs-with_skill-run-1", "prompt": "(No prompt found)", "eval_id": null, "outputs": [{"name": "audit.md", "type": "text", "content": "**Perf (2)**\n- `structural.rs:182,184,189` \u2014 three linear scans over `m.captures` per match (max + find primary + render). Fix: capture the primary `&QueryCapture` in one pass, drop the separate `find`.\n- `structural.rs:354` \u2014 `CompiledStructural::compile` invoked even when `files.len()` may later fail the `max_files` guard at line 349 (compile is post-guard, but the language probe at line 145 still runs unconditionally for every invocation). Fix: minor \u2014 fine as-is since walk already happened; only worth noting if compile cost ever grows.\n\n**Correctness (4)**\n- `structural.rs:552` \u2014 `node.field_name_for_child(child.id() as u32)` passes a node-identity pointer where a 0-based positional child index is required. Field names will almost always come back `None`, so generated queries omit `field:` constraints they should carry. Fix: track an index counter while iterating `named_children` and pass that.\n- `structural.rs:536-547` \u2014 `if named_child_count() == 0 && let Ok(text) = utf8_text(src)` short-circuits to the named-children loop when `utf8_text` errors; for a 0-child node that emits bare `(kind)` with no `#eq?` predicate \u2014 a literal silently becomes a wildcard. Fix: split into nested `if`, return an error on the `utf8_text` failure path.\n- `structural.rs:164` \u2014 `let _ = parser.set_language(&self.ts_lang)` in `new_parser` is documented as relying on a successful probe in `compile`, but a future caller that constructs `CompiledStructural` without going through `compile` would silently get an unconfigured parser. Fix: make `new_parser` return `Result<Parser>` and surface the error, or keep `compile` as the only constructor and mark the struct fields `pub(crate)`-only.\n- `structural.rs:588-599` \u2014 `escape_query_string` handles `\"`, `\\\\`, `\\n` only; tab, CR, and NUL pass through and break the synthesized Query string. Fix: extend the match arms (`\\t` \u2192 `\\\\t`, `\\r` \u2192 `\\\\r`, control \u2192 `\\\\xNN`).\n\n**Complexity (4)**\n- `structural.rs:513-561` \u2014 `emit_node` recurses on the user-supplied `--ast` pattern AST with no depth bound. Per-file source is safe (tree-sitter parses iteratively, matches stream), but a pathologically nested CLI pattern can stack-overflow. Note `subtree_ellipsis_capture` (line 619) already uses an explicit `Vec` stack \u2014 same shape, in this same file. Fix: convert `emit_node` to the iterative-stack form used by `subtree_ellipsis_capture`.\n- `structural.rs:168-216` \u2014 `CompiledStructural::apply` is ~50 lines doing parse + iterate-and-hit + sort + splice + capacity calc + dedup. Fix: extract `collect_hits` and `splice_hits` so each method does one thing.\n- `structural.rs:248-286` \u2014 `parse_template` is a hand-rolled byte walker with three branches per iteration (`$$`, `${name}`, `$name`) plus a tail flush; nearly identical in shape to `substitute_metavars` (482-511). Fix: collapse to one scanner that returns an event stream the two callers each fold differently \u2014 or at minimum share a single \"scan placeholder at i\" helper.\n- `structural.rs:440-480` \u2014 `compile_friendly_query` is doing five distinct things (substitute \u2192 parse \u2192 check ABI \u2192 unwrap `source_file` \u2192 emit query + predicates). Fix: split the unwrap-and-emit half into its own function; the `Result` rejoining stays in this one.\n\n**Coupling (3)**\n- `structural.rs:341-382 + plan.rs:112-137,183-224` \u2014 `plan_structural_rewrite` re-implements three helpers that already live in `plan.rs`: the `walk_paths` + `max_files` guard (struct.rs:348-351 \u2194 plan.rs:183-190 `scan`), the `Result<Option<FileChange>>` fold (struct.rs:364-369 \u2194 plan.rs:192-200 `collect_changes`), and the `total_matches` \u2192 `AlreadyApplied` / guard branch (struct.rs:371-382 \u2194 plan.rs:202-224 `finalize_plan`). Dual orchestrators. Fix: promote `scan`, `collect_changes`, `finalize_plan` to `pub(crate)` and call them from `plan_structural_rewrite`; pass `convergent_or_scripted = true` since structural never re-probes.\n- `structural.rs:384-408 + plan.rs:248-286` \u2014 `plan_one` parallels `process_one` minus the convergence-check branch. Fix: parameterize `process_one` with an `Option<C>` convergence-check, or extract the \"read + rewrite + diff + assemble FileChange\" tail as a shared `build_file_change` helper consumed by both.\n- `structural.rs:14-16 + plan.rs:293` \u2014 `structural.rs` already reaches into `plan.rs` for `read_text_or_skip_binary` and `check_match_counts`, but stops short of reusing the orchestration. The protocol (\"scan \u2192 parallel per-file \u2192 fold \u2192 guard\") is implicit across both files. Fix: making one orchestrator delegate to the other (per the two findings above) erases the implicit-protocol smell.\n\n**Minor (1)**\n- `structural.rs:578-579` \u2014 `caret_col = err.column.min(line.len())` mixes byte (`err.column`) with `line.len()` byte length, then `\" \".repeat(caret_col)` uses codepoint-count spaces; on multi-byte input the caret lands off the intended column. Fix: compute display width via `unicode-width` or count chars up to the byte offset.\n\n**Top targets**\n1. `structural.rs:552` \u2014 `field_name_for_child(child.id() as u32)` passes the wrong value; generated queries lose all field-position constraints. Highest-impact correctness bug in the file.\n2. `structural.rs:341-382` (vs `plan.rs:183-224`) \u2014 collapse the dual orchestrator: have `plan_structural_rewrite` reuse `scan` / `collect_changes` / `finalize_plan` from `plan.rs`. Removes ~40 lines and the implicit cross-file protocol.\n3. `structural.rs:513-561` \u2014 convert `emit_node` to the iterative-stack pattern already present at `subtree_ellipsis_capture:619`. Closes the only unbounded-recursion vector on user input.\n4. `structural.rs:536-547` \u2014 split the `&& let Ok(text)` short-circuit so a `utf8_text` failure on a 0-child node errors instead of silently emitting a wildcard literal.\n"}], "grading": {"eval_id": 2, "eval_name": "audit-structural-rs", "run_path": "/home/mcs/Documents/git/claude-skills/plugins/architectural-analysis/code-audit-deep-workspace/iteration-1/eval-2-audit-structural-rs/with_skill", "expectations": [{"text": "Output contains at least 3 'structural.rs:<digits>' line references", "passed": true, "evidence": "found 18 match(es) of /structural\\.rs:\\d+/ (need \u22653); sample: ['structural.rs:182', 'structural.rs:354', 'structural.rs:552']"}, {"text": "Output uses categorized section headers", "passed": true, "evidence": "found 4 match(es) of /\\*\\*(Perf|Correctness|Memory|Complexity|Coupling)/ (need \u22652); sample: ['Perf', 'Correctness', 'Complexity']"}, {"text": "Surfaces unbounded-recursion / emit_node finding", "passed": true, "evidence": "matched /emit_node/ \u00d73 (first: 'emit_node')"}, {"text": "Mentions plan.rs in coupling context, or notes dual-orchestrator relationship", "passed": true, "evidence": "matched /plan\\.rs/ \u00d710 (first: 'plan.rs')"}, {"text": "Ends with 'Top targets' summary", "passed": true, "evidence": "substring 'Top targets' found in output"}], "summary": {"passed": 5, "total": 5, "pass_rate": 1.0}}}, {"id": "eval-2-audit-structural-rs-without_skill-run-1", "prompt": "(No prompt found)", "eval_id": null, "outputs": [{"name": "audit.md", "type": "text", "content": "# Audit: `crates/recast-core/src/structural.rs`\n\nScope: file-internal complexity, unbounded-recursion risk on parser input, and coupling against `plan.rs`. Grounded in the source at the time of audit (commit `f9fc5d8`).\n\n---\n\n## 1. At-a-glance\n\n`structural.rs` is ~650 lines covering five distinct concerns wedged into one module:\n\n| Concern | Functions / types | Approx. lines |\n|---|---|---|\n| Language registry | `Language` + `ts_language` | 30\u2013100 |\n| Compiled job + per-file apply | `CompiledStructural`, `Hit`, `TemplatePart` | 100\u2013250 |\n| Template parser (`$NAME`, `${NAME}`) | `parse_template`, `push_capture`, `flush_literal` | 248\u2013311 |\n| Multi-file pipeline | `structural_rewrite`, `plan_structural_rewrite`, `plan_one` | 313\u2013408 |\n| `--ast` friendly-pattern compiler | `structural_rewrite_friendly`, `compile_friendly_query`, `substitute_metavars`, `emit_node`, `metavar_at`, `subtree_ellipsis_capture`, `escape_query_string`, `format_query_error` | 410\u2013648 |\n\nThe first four concerns mirror `plan.rs` cleanly. The fifth (the `--ast` friendly compiler) is a meaningful chunk of new logic with its own recursion, its own tree-sitter parser instance, and its own metavar conventions. That is where the bulk of the complexity and risk lives.\n\n---\n\n## 2. Function-level complexity\n\n### 2.1 `CompiledStructural::apply` (168\u2013216)\n- Two passes over `hits` (sort + size-hint sum + splice). Reasonable.\n- Two awkward parts:\n  - Lines 180\u2013188: picking the \"primary\" capture. When `@root` is absent, it picks the **highest-numbered capture index that any iter call produced** \u2014 *not* a stable named capture and *not* the outermost node. With queries like `((identifier) @id (#eq? @id \"x\"))` the only capture is `@id` so the behavior is fine, but with a multi-capture query the choice is order-dependent and surprising. This deserves either an explicit doc note or a deterministic \"first declared\" / \"outermost node\" rule. The match-on-failure error message (\"match did not bind primary capture index N\") would also be useless to a CLI user \u2014 they want a capture *name*, not an index.\n  - Lines 200\u2013202: `saturating_sub` for the capacity hint is correct in spirit but `replacement.len() - (end - start)` can be negative when the rewrite *shrinks* text; the saturating arm hides the over-allocation but the capacity is still a best-effort hint and that's fine.\n- Cyclomatic complexity is moderate (~6 branches). Splitting into `collect_hits` and `splice_hits` would let each fit on a screen and would let `plan_one` reuse hit collection if a future caller wants raw hits without splicing.\n\n### 2.2 `compile_friendly_query` (440\u2013480)\n- Five concerns in one function: substitute metavars, build a parser, parse, error-format, unwrap `source_file`, walk + format query.\n- Magic string `\"source_file\"` is grammar-dependent. Most tree-sitter grammars use that name, but not all \u2014 `tree-sitter-md`, for example, exposes `document`. Today the code would fail-open (skip the unwrap and emit a `(document \u2026)` pattern that probably won't match anything useful) rather than misbehave, but the silent disagreement is a future foot-gun. Worth a per-language root-kind table.\n- The \"no predicates \u2192 bare pattern, predicates \u2192 wrap in extra parens\" branching at the end (475\u2013479) produces subtly different surface syntax. If the inner pattern is a leaf that ends up rendered as e.g. `(identifier) @__lit0 @root`, the wrapping in `({trimmed} @root \u2026)` produces `((identifier) @__lit0 @root @root \u2026)` \u2014 note the duplicate `@root`. Worth a snapshot test for the predicate path with a single-leaf pattern (no current test seems to cover it; `friendly_pattern_renames_function` uses `fn old_one() {}` which has children).\n\n### 2.3 `emit_node` (513\u2013561) \u2014 **recursion site, see \u00a73**\n- Mixed responsibility: kind dispatch (ellipsis / metavar / leaf-with-literal / interior), buffer mutation, predicate accumulation, counter mutation. Five parameters threaded through every recursive call.\n- The leaf-as-literal branch hard-codes `(#eq? @__litN \"\u2026\")`. That is fine for identifiers/integers; for any leaf whose text contains arbitrary user content it relies on `escape_query_string`, which only escapes `\"`, `\\\\`, `\\n`. A literal containing a CR, tab, or any other control byte will produce a query string that's technically valid but may be re-parsed differently by tree-sitter's query parser depending on grammar \u2014 low likelihood, but worth at least a test for `\\t` and `\\r`.\n\n### 2.4 `subtree_ellipsis_capture` (619\u2013648) \u2014 **recursion-free via explicit stack, good**\n- The function name suggests \"walk *the* ellipsis\". The actual semantics are: *if the subtree contains exactly one ellipsis identifier and nothing else of substance, collapse to one wildcard*. The \"nothing else of substance\" rule means `other_leaves > 0` aborts. Consider renaming to `subtree_collapses_to_ellipsis` or `ellipsis_dominates_subtree` for the call site at line 523 to read true.\n- The `?` on `n.utf8_text(src).ok()?` (line 628) silently propagates `None` from a UTF-8 failure on a leaf. Tree-sitter never emits non-UTF-8 spans for source we just verified parses, so this is safe in practice, but the early return swallows a *partial* traversal \u2014 if the offending leaf is the third of ten siblings, the seven remaining siblings are never inspected. Behaviorally fine (we abort to \"no ellipsis\"), but worth a `debug_assert!` or a comment.\n\n### 2.5 `parse_template`, `substitute_metavars`\n- Near-mirror byte walkers. Both use `template_scan` helpers, both fall through to `out.push(b as char)` on the no-match path. The two could share a single \"scan token\" helper if you wanted (`tokenize_metavars(bytes, on_meta, on_ellipsis, on_braced)`), though at ~30 lines apiece they're already short.\n- `parse_template` at 281: `literal.push(b as char)` is a **latent UTF-8 bug**. Casting a raw `u8` to `char` produces the Latin-1 codepoint, which is wrong for any multi-byte UTF-8 sequence: `\"\u00e9\"` (bytes `c3 a9`) becomes `\"\u00c3\u00a9\"` in the output literal. This will silently corrupt non-ASCII template literals. Same bug in `substitute_metavars` at line 507. Fix: iterate with `template.chars()` over a `(byte_idx, char)` cursor (e.g. `char_indices`), or push the slice between scan boundaries with `out.push_str(&template[lit_start..i])` and a `lit_start` cursor.\n\n### 2.6 `plan_structural_rewrite` (341\u2013382)\n- 99% mechanical duplication of `plan_rewrite` in `plan.rs` (see \u00a74). The non-mechanical differences are:\n  - No convergence check (correct \u2014 tree-sitter rewrites aren't probed against their own output).\n  - `Plan` short-circuit at `total_matches == 0` returns `AlreadyApplied` **without consulting `opts.at_least`** (line 372). `plan.rs::finalize_plan` does the same thing but only when `convergent_or_scripted` is true. Behaviorally aligned, but the duplicated short-circuit logic guarantees these two paths will drift.\n- The compiled query is built before the file walk runs. Fine, but reorder so a `TooManyFiles` error surfaces before tree-sitter is invoked at all \u2014 saves grammar startup cost on accidental scans of a huge tree.\n\n### 2.7 `format_query_error` (567\u2013586)\n- Self-contained, well-tested (lines 55\u201371 of the tests). One thing: `caret_col` is computed in *byte* columns from tree-sitter, but a `\" \".repeat(caret_col)` assumes one column = one display cell. With non-ASCII source the caret will land too far left. Low priority \u2014 error messages \u2014 but worth a comment.\n\n---\n\n## 3. Unbounded recursion on parser input\n\nThis is the audit's most consequential finding.\n\n### 3.1 `emit_node` is the only true recursion site\n\n```rust\nfn emit_node(buf, predicates, lit_counter, node, src) {\n    \u2026\n    for child in node.named_children(&mut cursor) {\n        emit_node(buf, predicates, lit_counter, child, src);   // line 558\n    }\n    \u2026\n}\n```\n\n`emit_node` recurses once per named child, with no depth budget. Tree-sitter does not impose a depth limit on parse trees; you can construct a syntactically valid source whose AST has arbitrary depth. Two realistic inputs that defeat this:\n\n1. **Deeply nested expressions.** A pattern like `((((((((((x))))))))))` with thousands of parens parses into a chain of `parenthesized_expression` nodes. Each adds one stack frame.\n2. **Deeply nested blocks / function calls.** `{ { { { \u2026 } } } }` or `f(f(f(f(...))))` \u2014 same shape.\n\nStack-frame size for `emit_node` is dominated by:\n- 5 function args\n- a local `tree_sitter::TreeCursor` (`node.walk()`, ~24 bytes plus the FFI-managed cursor)\n- the for-loop's iterator state\n\nConservatively ~200 bytes per frame. Rust's default thread stack is 8 MiB on Linux (and `rayon` workers default to 2 MiB or smaller depending on version). A pattern with ~10k nested parens \u2014 easily within a normal source file's character budget \u2014 would overflow a rayon worker. The result is a process abort, not a recoverable error: the planner short-circuits and the user sees a SIGABRT/SIGSEGV with no diagnostic.\n\nThe risk vector here is **pattern input**, not source input \u2014 `emit_node` walks the *parsed pattern*, which comes from `--ast` on the CLI. So the practical attacker is whoever supplies the pattern: an LLM agent or a CI job feeding a generated pattern. The same input through `--query` skips `emit_node` entirely.\n\n**Recommendation.** Either:\n\n- Convert `emit_node` to an explicit stack/work-queue (same shape as `subtree_ellipsis_capture` already uses), OR\n- Add a depth-cap guard at the top of `emit_node` (e.g. `MAX_PATTERN_DEPTH = 256`) and surface a typed `StructuralQuery` error when exceeded.\n\nThe explicit-stack rewrite is preferable because it removes the failure mode entirely and matches the codebase's existing pattern at line 622.\n\n### 3.2 `subtree_ellipsis_capture` is already iterative \u2014 good\n\nUses an explicit `Vec<Node>` stack. No recursion. Memory is bounded by the subtree's node count, which is bounded by the pattern's parsed-tree size.\n\n### 3.3 The tree-sitter parser itself\n\nTree-sitter is a GLR-style parser implemented in C, with its own stack management. `parser.parse(source, None)` can return `None` on extreme inputs but does not stack-overflow the host process in normal use. Not a `recast` concern, but worth noting: tree-sitter's C-side recursion is independent of Rust's stack.\n\n### 3.4 `apply` and `render` \u2014 no recursion\n\nBoth are loops over `Vec`s. Capacity is bounded by `Query` match count, which is bounded by parsed-tree size, which is bounded by `source.len()`. Memory growth is `O(source.len() + \u03a3 replacement.len())` \u2014 fine.\n\n### 3.5 `--max-bytes` does not gate the stdin path\n\n`run_structural` in `crates/recast/src/main.rs` at line 386 reads stdin into a `String` with no length cap, then calls `structural_rewrite` on the entire buffer. The `--max-bytes` knob in `PlanOptions` only applies to walk-discovered files. An LLM agent piping multi-GB content into `recast --lang rust --ast '\u2026' --apply` via stdin will be OOM'd by the read, not by `recast`. Worth either applying `max_bytes` to the stdin read or documenting that stdin mode is unbounded.\n\n---\n\n## 4. Coupling vs. `plan.rs`\n\nBoth files are \"orchestrator\" files in the same crate, and they pull in the same primitives:\n\n| Shared primitive | Used by `plan.rs` | Used by `structural.rs` |\n|---|---|---|\n| `walk_paths` | yes (via `scan`) | yes (inline, line 348) |\n| `read_text_or_skip_binary` | yes | yes (line 391) |\n| `unified_diff` / `label_for_path` | yes | yes (line 400) |\n| `check_match_counts` | yes (in `finalize_plan`) | yes (line 380) |\n| `rayon::par_iter().map_init` | yes (scripted path) | yes (line 358) |\n| `FileChange` / `Plan` / `PlanOutcome` | defined here | imported from plan |\n\n### 4.1 The clear coupling problem: `plan_structural_rewrite` duplicates the pipeline shape\n\nCompare `plan.rs::plan_rewrite_scripted` (151\u2013181) and `structural.rs::plan_structural_rewrite` (341\u2013382). Modulo the rewriter type, they are the same six steps:\n\n1. compile (`CompiledPattern` vs `CompiledStructural`)\n2. `scan(roots, opts)` (inlined in structural \u2014 see \u00a74.3)\n3. `par_iter().map_init` worker spin-up\n4. `collect_changes`\n5. `total_matches` fold + zero-match short-circuit\n6. `check_match_counts` + final `Plan` assembly\n\nSteps 4, 5, and 6 are factored into helpers (`collect_changes`, `finalize_plan`) in `plan.rs`. `structural.rs` re-implements all three inline. That's the actual smell: not the duplication of the worker harness (which is parametric over `Pattern`/`Rewriter` and reasonably hard to unify cleanly with rayon's trait bounds), but the duplication of the **post-processing** that's already factored.\n\nConcrete refactor:\n\n- Re-export `collect_changes` and `finalize_plan` from `plan.rs` (currently private), or move them to a `plan::pipeline` submodule with `pub(crate)` visibility.\n- Have `plan_structural_rewrite` call `collect_changes(results)?` and `finalize_plan(changes, /* convergent_or_scripted: */ true, files_scanned, opts)`. The \"structural is always treated as convergent\" intent then lives in one call site instead of two duplicated branches.\n- Replace the inlined `if files.len() > opts.max_files` with a `scan` call (currently `pub(crate)` would suffice; it's `fn scan` private to `plan.rs`).\n\n### 4.2 The `read_text_or_skip_binary` story is healthy\n\n`plan.rs` already exposes `read_text_or_skip_binary` as `pub(crate)` (line 293) precisely so `structural.rs` can reuse it. That pattern \u2014 exposing exactly what's needed across the orchestrators and nothing more \u2014 is the model the post-processing helpers above should follow.\n\n### 4.3 `scan` should also be `pub(crate)`\n\n`plan.rs::scan` (183\u2013190) is identical to `structural.rs::plan_structural_rewrite` lines 348\u2013351. Lifting it to `pub(crate)` and using it from `structural.rs` removes nine lines and centralizes the `TooManyFiles` error wording.\n\n### 4.4 Wrong-direction coupling concern\n\n`structural.rs` imports from `plan.rs` (line 14): `FileChange`, `Plan`, `PlanOptions`, `PlanOutcome`, `check_match_counts`, `read_text_or_skip_binary`. Six items. That's a lot, but every one of them is genuinely shared domain \u2014 the cleaner fix is to extract a `pipeline` module with these types and shared helpers, then have both `plan.rs` and `structural.rs` consume *that* module:\n\n```\ncrates/recast-core/src/\n  pipeline/\n    mod.rs            # PlanOptions, Plan, PlanOutcome, FileChange, check_match_counts\n    io.rs             # read_text_or_skip_binary\n    finalize.rs       # collect_changes, finalize_plan, scan\n  plan.rs             # regex/scripted-specific entry points\n  structural.rs       # tree-sitter-specific entry points\n```\n\nThis makes the dependency graph `plan \u2190 pipeline \u2192 structural` instead of `plan \u2190 structural`. The current arrangement is fine for now (recast is alpha), but the moment you add a third pipeline mode the duplication doubles.\n\n### 4.5 `PlanOptions` has fields that don't apply to structural\n\n`allow_non_convergent`, `pattern_options` are meaningless in structural mode. `plan_structural_rewrite` silently ignores them. That's a category of \"agent foot-gun\" \u2014 the kind `recast` is explicitly designed to avoid. Two options:\n\n- Split into `PlanOptions { common, mode: ModeOpts }` where `ModeOpts` is `Regex { \u2026 } | Structural`.\n- Or, accept the simplicity tax and document the ignored fields on `PlanOptions::pattern_options` / `allow_non_convergent` with `// ignored in structural mode`.\n\nThe first option is the right one before a 1.0; the project's AGENTS.md explicitly says no backwards-compat shims pre-1.0, so the cost is just the refactor itself.\n\n---\n\n## 5. Smaller findings\n\n- **Line 164**: `let _ = parser.set_language(&self.ts_lang);` discards a `Result` whose failure was promised infallible by the `compile()`-time probe. The comment correctly explains why, and `parser.parse(...)` returning `None` on an unset parser is mapped to `Error::StructuralParse` at line 174 \u2014 defensible. Consider tightening to `parser.set_language(&self.ts_lang).expect(\"ABI validated in compile()\")` only if you trust the invariant; the silent-ignore is actually the safer choice here.\n\n- **Line 281 / 507 \u2014 UTF-8 corruption** (already noted in \u00a72.5): `literal.push(b as char)` lossily reinterprets multibyte UTF-8 sequences as Latin-1 codepoints. Existing tests don't exercise non-ASCII template literals. Add a regression test like:\n  ```rust\n  let out = structural_rewrite_friendly(Language::Rust, \"fn \u03b1() {}\", \"fn $NAME() {}\", \"// \u03b1: $NAME\\nfn $NAME() {}\").unwrap();\n  ```\n  and watch it fail on the comment line.\n\n- **Line 467**: `root.named_child(0).ok_or_else(...)` after `root.named_child_count() >= 1` \u2014 the precondition makes this unreachable, but the error message (\"empty pattern\") would mislead if reachable. Either drop the bound check on `named_child_count` and rely on `ok_or_else`, or downgrade to `unreachable!()` with an invariant comment.\n\n- **Line 542 / 544**: the `let _ = write!(...)` pattern correctly silences the `Result` from `Write` impl for `String` (which never errors). Idiomatic. But the format-string assembly via `write!` into a fresh `String` for each predicate (line 543) is mildly wasteful \u2014 push into a shared scratch buffer or use `format!` directly. Micro.\n\n- **`Hit` struct (121\u2013125)**: `replacement: String` per hit means each match allocates a fresh `String`. For huge files with thousands of matches, an arena or `&str` slicing into a shared bump would win. Not urgent.\n\n- **No fuzzing surface**: `parse_template`, `substitute_metavars`, and `compile_friendly_query` are pure string-in/string-out transforms with no panics on the happy path but a meaningful surface for malformed input. `proptests.rs` exists in the crate; adding `proptest!` cases over these three would be cheap insurance.\n\n- **`Language::ts_language` panics if the feature flag set produces an empty enum** \u2014 impossible today because `lib.rs:21-27` only compiles the module when at least one `lang-*` feature is enabled. Worth a `#[allow(dead_code)]` comment or matching `#[cfg]` on the impl block, but not a real bug.\n\n---\n\n## 6. Priority queue (what to fix first)\n\n1. **Bound recursion in `emit_node`** (\u00a73.1). Either explicit stack or depth cap. Without this, `--ast` is a process-stability risk under adversarial or LLM-generated patterns.\n2. **Fix UTF-8 corruption** in `parse_template` (line 281) and `substitute_metavars` (line 507). One-line fix per site (use `char_indices` or slice-based literal accumulation), plus a regression test.\n3. **Apply `max_bytes` to the stdin path** in `run_structural` (caller side), or document the unbounded read. Two-line fix.\n4. **Lift `scan`, `collect_changes`, `finalize_plan`** to `pub(crate)` in `plan.rs` and use them from `structural.rs`. Removes ~25 lines of duplication and centralizes the zero-match / `at_least` / `TooManyFiles` semantics.\n5. **Replace `primary_idx = max(index)`** in `apply` (line 182) with a deterministic rule (first declared capture, or outermost-node by start byte), and improve the error message to use the capture *name*.\n6. **Split `PlanOptions`** along regex / structural lines, or annotate the ignored fields. Pre-1.0 is the cheap moment.\n7. **Snapshot test for the friendly-pattern `predicates.is_empty() == false` branch** (line 478) to lock down query-string shape.\n\nItems 1\u20133 are correctness/safety; 4\u20137 are maintainability and ergonomics.\n\n---\n\n## 7. What the file gets right\n\n- Clear separation of \"compile once / apply per-file\" \u2014 `CompiledStructural` is the right abstraction.\n- Per-thread `Parser` + `QueryCursor` via `map_init` matches what `plan.rs` does for scripted rewrites; the rayon shape is consistent.\n- `format_query_error` (\u00a72.7) is genuinely user-friendly, and it's tested.\n- `subtree_ellipsis_capture` uses an explicit stack \u2014 the pattern to apply to `emit_node`.\n- `read_text_or_skip_binary` is correctly shared from `plan.rs` rather than re-implemented. That's exactly the coupling discipline the rest of the file should follow.\n- The feature-flag matrix on `Language` variants is mechanical but correct, and the `from_name` mapping covers the common aliases (`rs`, `py`, `sh`, `golang`, `md`).\n\n---\n\n## Files referenced\n\n- `/home/mcs/Documents/git/recast/crates/recast-core/src/structural.rs`\n- `/home/mcs/Documents/git/recast/crates/recast-core/src/plan.rs`\n- `/home/mcs/Documents/git/recast/crates/recast-core/src/template_scan.rs`\n- `/home/mcs/Documents/git/recast/crates/recast-core/src/rewrite.rs`\n- `/home/mcs/Documents/git/recast/crates/recast-core/src/error.rs`\n- `/home/mcs/Documents/git/recast/crates/recast-core/src/lib.rs`\n- `/home/mcs/Documents/git/recast/crates/recast-core/src/structural_tests.rs`\n- `/home/mcs/Documents/git/recast/crates/recast/src/main.rs` (stdin path for `run_structural`)\n"}], "grading": {"eval_id": 2, "eval_name": "audit-structural-rs", "run_path": "/home/mcs/Documents/git/claude-skills/plugins/architectural-analysis/code-audit-deep-workspace/iteration-1/eval-2-audit-structural-rs/without_skill", "expectations": [{"text": "Output contains at least 3 'structural.rs:<digits>' line references", "passed": false, "evidence": "found 0 match(es) of /structural\\.rs:\\d+/ (need \u22653); sample: []"}, {"text": "Output uses categorized section headers", "passed": false, "evidence": "found 0 match(es) of /\\*\\*(Perf|Correctness|Memory|Complexity|Coupling)/ (need \u22652); sample: []"}, {"text": "Surfaces unbounded-recursion / emit_node finding", "passed": true, "evidence": "matched /emit_node/ \u00d713 (first: 'emit_node')"}, {"text": "Mentions plan.rs in coupling context, or notes dual-orchestrator relationship", "passed": true, "evidence": "matched /plan\\.rs/ \u00d719 (first: 'plan.rs')"}, {"text": "Ends with 'Top targets' summary", "passed": false, "evidence": "substring 'Top targets' NOT found in output"}], "summary": {"passed": 2, "total": 5, "pass_rate": 0.4}}}, {"id": "eval-3-audit-plan-rs-with_skill-run-1", "prompt": "(No prompt found)", "eval_id": null, "outputs": [{"name": "audit.md", "type": "text", "content": "**Perf (5)**\n- `plan.rs:264` (calls `rewrite.rs:43`) \u2014 `replace_all(...).into_owned()` deep-clones every file even on zero matches. Fix: match the `Cow` and only own on `Cow::Owned`, or `regex.find(before).is_none()` short-circuit in `process_one`.\n- `plan.rs:278` \u2014 `unified_diff` rendered for every changed file in `--apply` and `--check` modes that never read it (see `main.rs:459` / `main.rs:369`). Fix: defer diff rendering behind a `DiffMode` flag on `PlanOptions`, render lazily in `emit_diff`.\n- `plan.rs:139-141` \u2014 `regex_convergence_check` does a full second regex scan over each post-image even when `compiled.is_convergent()` and the replacement has no `$N`/`${name}`. Fix: skip per-file rescan when static convergence holds and template carries no capture refs.\n- `plan.rs:168-170` \u2014 scripted convergence re-runs the entire Rhai-driven rewrite over the post-image (one Rhai call per match). Fix: probe with `regex.find(after).is_none()` first; only rerun script when a residual regex match exists.\n- `plan.rs:297, 306` \u2014 `read_text_or_skip_binary` issues `fs::metadata` then `fs::read_to_string`: two stat-class syscalls per file. Fix: `File::open` once, `f.metadata()` on the fd, then `read_to_string(&mut f)`.\n\n**Memory (3)**\n- `plan.rs:73-81` \u2014 `FileChange` holds full `after` and rendered `diff` simultaneously for the whole plan. `--diff` never reads `after`; `--apply` never reads `diff`. Fix: enum `Payload::Apply(String) | Payload::Diff(String)`, picked by `PlanOptions::mode`.\n- `plan.rs:80` \u2014 `permissions: Option<Permissions>` is unconditionally `Some(...)` in both production producers (`plan.rs:284`, `structural.rs:406`); only tests use `None`. Fix: store `Permissions` directly, construct test fixtures with the real default.\n- `plan.rs:123-134` \u2014 `par_iter().map(...).collect::<Vec<Result<Option<FileChange>>>>()` materializes the full result vector including every `None` skip slot before filtering. Fix: `filter_map` into the parallel reduction (`fold`/`reduce` on `Result<Vec<FileChange>>`).\n\n**Complexity (1)**\n- `plan.rs:112-181` \u2014 `plan_rewrite` and `plan_rewrite_scripted` differ only by the rewrite/converge closures and the `convergent_or_scripted` flag. Fix: collapse to one private `plan_with(...)` taking the two closures + flag; the two `pub` entries become thin wrappers.\n\n**Coupling (1)**\n- `plan.rs:73 + main.rs:446 + commit.rs:150` \u2014 `FileChange` is one struct serving two disjoint downstream consumers (diff renderer reads `diff`, commit writer reads `after`), with each consumer ignoring the other's field. Fix: split per planner mode (see memory finding above) so the planner produces only what the chosen mode consumes.\n\n**Top targets**\n1. `plan.rs:278` \u2014 kill unconditional `unified_diff` rendering in `--apply` / `--check`. Biggest wall-clock win on large rewrites; touches one call site.\n2. `rewrite.rs:43` via `plan.rs:264` \u2014 stop deep-cloning the whole pre-image for zero-match files. Dominant alloc cost in scan-heavy `--diff` runs.\n3. `plan.rs:73-81` \u2014 collapse `after`+`diff` coexistence; both fields are alive together but never both read. Halves planner peak memory in the common case.\n4. `plan.rs:168-170` \u2014 scripted convergence rerun is the worst hidden cost in the script path; one-line probe with the regex first avoids re-invoking Rhai over the whole file.\n"}], "grading": {"eval_id": 3, "eval_name": "audit-plan-rs", "run_path": "/home/mcs/Documents/git/claude-skills/plugins/architectural-analysis/code-audit-deep-workspace/iteration-1/eval-3-audit-plan-rs/with_skill", "expectations": [{"text": "Output contains at least 2 'plan.rs:<digits>' line references", "passed": true, "evidence": "found 15 match(es) of /plan\\.rs:\\d+/ (need \u22652); sample: ['plan.rs:264', 'plan.rs:278', 'plan.rs:139']"}, {"text": "Output uses categorized section headers", "passed": true, "evidence": "found 3 match(es) of /\\*\\*(Perf|Correctness|Memory|Complexity)/ (need \u22652); sample: ['Perf', 'Memory', 'Complexity']"}, {"text": "Surfaces FileChange memory-duplication OR convergence redundant work", "passed": true, "evidence": "matched /FileChange/ \u00d74 (first: 'FileChange')"}, {"text": "Ends with 'Top targets' summary", "passed": true, "evidence": "substring 'Top targets' found in output"}], "summary": {"passed": 4, "total": 4, "pass_rate": 1.0}}}, {"id": "eval-3-audit-plan-rs-without_skill-run-1", "prompt": "(No prompt found)", "eval_id": null, "outputs": [{"name": "audit.md", "type": "text", "content": "# Audit: `crates/recast-core/src/plan.rs`\n\nScope: memory shape (what is held in RAM, and for how long, vs. what the data\nflow strictly requires) and redundant work across passes. Cross-checked\nagainst `rewrite.rs`, `pattern.rs`, `walker.rs`, `commit.rs`, `structural.rs`,\nand the binary consumers in `crates/recast/src/main.rs`.\n\nThe file is small and the contracts are clean. The findings below are real,\nbut ranked: the first three are worth acting on; the rest are notes for when\nthe file is touched again.\n\n---\n\n## Findings (memory shape)\n\n### M1. Unified diffs are rendered for every change regardless of consumer. (high impact)\n\n`process_one` always calls `unified_diff(&label, &before, &outcome.after)` and\nstuffs the result into `FileChange.diff` (plan.rs:277-285). Looking at the\nbinary side, the diff string is only ever read in two places:\n\n- `emit_diff` (`main.rs:445-446`) \u2014 `--diff` mode (the default), writes\n  `change.diff` to stdout.\n- `emit_apply` does **not** read `diff`; even with `--verbose` it only prints\n  `change.path` and `change.matches` (`main.rs:469-475`).\n- `--check` (`main.rs:369-377`) only reads `plan.changes.len()`.\n- `--apply` (`main.rs:359-367`) discards the plan after handing it to\n  `apply_changes`, which reads `path`, `after`, `matches`, `permissions` \u2014\n  never `diff` (`commit.rs:137-163`).\n- JSON `from_plan` emits `{path, matches}` per change, no diff\n  (`json.rs:78-88`).\n- JSON `from_apply` / `from_check` likewise ignore `diff` (`json.rs:90-103`).\n\nSo in `--apply`, `--check`, and `--json`-modes that aren't `Plan`-with-text,\n`FileChange.diff` is dead weight. For a heavily-modified file the diff\nstring is `O(before.len() + after.len())` \u2014 roughly the same size as `after`\nitself for whole-file rewrites. That doubles peak planner memory for a\nworkload that never looks at the diffs.\n\nThe `serde` skip on `after` already acknowledges that the post-image is\ninternal-only state (plan.rs:76-77); `diff` deserves symmetric treatment in\nthe *compute* dimension, not just the wire dimension.\n\n**Fix sketch:** make `diff` lazy. Two reasonable shapes:\n\n1. Push diff rendering down to `emit_diff` (and the JSON-with-diff caller, if\n   one is added). `FileChange` carries `before: String` (or just the\n   pre/post pair on demand) only when the caller asked for diffs. The\n   \"drop pre-image after diff\" comment in plan.rs:62-70 is fine reasoning\n   for the *current* design but assumes the diff will always be consumed.\n2. Or: thread a `want_diff: bool` (or `OutputFormat`) into `PlanOptions`,\n   skip the `unified_diff` call when false, and store `String::new()` (or\n   make the field `Option<String>`). This is the smaller change.\n\nEither way you avoid the `similar::TextDiff` allocation + the diff string for\nevery `--apply` invocation. On a tree of, say, 500 changed files at 50 KiB\neach, this is ~25 MiB the planner currently pins for no reason.\n\n### M2. Regex convergence check does a full `find_iter().count()` when `is_match` would do. (medium impact)\n\n`regex_convergence_check`:\n\n```rust\nfn regex_convergence_check(pattern: &CompiledPattern, after: &str) -> Result<usize> {\n    Ok(pattern.regex().find_iter(after).count())\n}\n```\n\nIt is consumed by `process_one` as:\n\n```rust\nlet extra = convergence_check(pattern, &outcome.after)?;\nif extra > 0 {\n    return Err(Error::NonConvergent { path: ..., extra });\n}\n```\n\nThe exact count is plumbed into `Error::NonConvergent { extra }`\n(`error.rs:31-34`), so it has *some* observable value. But for the common\ncase where the rewrite is convergent (zero extra matches \u2014 the happy path\non every well-formed rewrite), `find_iter().count()` still walks the entire\npost-image looking for additional hits past the first. `regex::Regex::is_match`\nshort-circuits on the first hit and skips the rest, which is the only signal\n`process_one` needs to *decide* whether to error.\n\n**Fix sketch:** check existence with `is_match` first (cheap, allocation-free,\nshort-circuits); only when it returns true does the more expensive\n`find_iter().count()` need to run to populate the error message. For\nconvergent rewrites (the dominant case) this turns an O(file) probe into a\nnear-O(1) probe once Aho-Corasick / DFA seeks past the end.\n\nSame idea applies inside `process_one` regardless of pipeline:\n\n```rust\nif !opts.allow_non_convergent {\n    if !regex.is_match(&outcome.after) {\n        // convergent \u2014 skip the count entirely\n    } else {\n        let extra = regex.find_iter(&outcome.after).count();\n        return Err(Error::NonConvergent { ... });\n    }\n}\n```\n\n### M3. Scripted convergence check re-runs the full Rhai rewrite on the post-image, only to compare strings. (medium impact, scripted-only)\n\n```rust\nlet converge = |p: &CompiledPattern, s: &str| -> Result<usize> {\n    let outcome = rewrite_text_scripted(p, worker, s)?;\n    Ok(if outcome.after != s { outcome.matches } else { 0 })\n};\n```\n\nThis does the regex scan over `s`, allocates a `Captures` per hit, builds a\n`Vec<&str>` of captures per hit, evaluates the Rhai AST per hit, builds the\npost-post-image string, then throws all of that away except a bool-shaped\nreturn. For a file with N matches, that is N Rhai evaluations purely to\ndetect \"would the script change anything?\".\n\nThere's no fully general cheap version \u2014 scripts are opaque. But the cost can\nbe capped by bailing on first divergence. A drop-in upgrade:\n\n```rust\nlet converge = |p: &CompiledPattern, s: &str| -> Result<usize> {\n    use std::cell::Cell;\n    let diverged = Cell::new(false);\n    let mut count = 0usize;\n    for caps in p.regex().captures_iter(s) {\n        let caps_vec: Vec<&str> = caps.iter()\n            .map(|m| m.map(|m| m.as_str()).unwrap_or(\"\")).collect();\n        let replacement = worker.replace(&caps_vec)?;\n        let matched = &caps.get(0).unwrap().as_str();\n        if replacement != *matched {\n            diverged.set(true);\n            count = 1;\n            break;\n        }\n    }\n    Ok(if diverged.get() { count } else { 0 })\n};\n```\n\n(There's no `extra > 1` reporting requirement for scripted, so a single\n\"yes/no\" suffices. The error message would lose granularity but the scripted\npath is rare and the savings are large on big files.)\n\nIf you want to keep the exact count, at minimum avoid building the\npost-image string: use `captures_iter` directly so the `replace_all`\nstring-building cost goes away.\n\n### M4. `par_iter().collect::<Vec<Result<Option<FileChange>>>>()` materializes every per-file result before any consolidation. (low impact at current limits)\n\n```rust\nlet results: Vec<Result<Option<FileChange>>> = files.par_iter().map(...).collect();\nlet changes = collect_changes(results)?;\n```\n\nThe two-stage shape costs:\n\n- An intermediate vec of `Result<Option<FileChange>>` (one entry per scanned\n  file, including skipped binaries and no-match files \u2014 i.e. `Vec<Result<None>>`\n  for the majority of typical workloads).\n- A second walk in `collect_changes` that moves each `Some(change)` into a\n  fresh `Vec<FileChange>` and drops the rest.\n\nWith `max_files = 1000` default this is microscopic. But:\n\n- **Fail-fast is lost.** A single non-convergent file triggers `Err`, yet\n  rayon has already paid the rewrite cost for *every* file in the walk\n  because `collect` waits for all workers. On a 10k-file tree (raised\n  `max_files`) with a non-convergent pattern, the planner does ~10k full\n  reads + regex passes before reporting the first failure.\n- **Memory peak** holds both the `results` vec *and* the in-progress\n  `changes` vec for the duration of `collect_changes`, plus all the\n  `FileChange` payload strings (`after`, `diff`).\n\n**Fix sketch:** use `try_fold` + `try_reduce` to combine and fail fast, or at\nminimum `try_for_each_init` for non-error termination:\n\n```rust\nlet changes: Vec<FileChange> = files.par_iter()\n    .map(|p| process_one(...))\n    .filter_map(|r| r.transpose()) // Result<Option<T>> -> Option<Result<T>>\n    .collect::<Result<Vec<_>>>()?;\n```\n\nThis still doesn't cancel in-flight tasks (rayon doesn't support that), but\nit removes the intermediate `results` vec and the second pass. The same\napplies to the scripted variant and to `plan_structural_rewrite` in\n`structural.rs:356-369`, which has the same shape \u2014 worth lifting into a\nhelper given the DRY rule in AGENTS.md.\n\n### M5. `FileChange.permissions` is `Option<Permissions>` but is always `Some(permissions)` at construction site. (low impact, type-shape)\n\n`process_one` does `permissions: Some(permissions)` (plan.rs:284) and\n`structural::plan_one` does the same (`structural.rs:406`). The only places\nin the workspace that ever set it to `None` would be hand-constructed\n`FileChange`s in tests; production code is always `Some`.\n\n`commit::stage_one` then does `change.permissions.clone()` and matches on\nthe `Option`. The `Option` discriminant is useless given current call\nsites \u2014 it just costs one branch per file in commit.\n\n**Fix sketch:** make it `Permissions` directly. Saves the `Option` tag (1 word\non most platforms) per `FileChange` and removes the `if let Some(perm) = ...`\nin `stage_one`. Pre-1.0, AGENTS.md \u00a711 says break freely.\n\n### M6. `permissions` is cloned twice per file. (negligible)\n\n`read_text_or_skip_binary` returns the `Permissions`, `process_one` moves it\ninto `FileChange`, then `stage_one` clones it (`commit.rs:143`) only to\nhand it to `fs::set_permissions(...)`. On unix `Permissions` is a thin\n`u32` wrapper, so the cost is real-but-rounding-error; flagging only because\nthe comment block at plan.rs:62-70 explicitly trumpets the \"one stat per\nfile\" optimization, and a future maintainer who reads it will assume\npermissions are equally tight throughout.\n\nIf you're already touching commit.rs, `stage_one` can move out of `&change.permissions`\nvia a borrow rather than `.clone()`.\n\n---\n\n## Findings (redundant work / passes)\n\n### R1. Two convergence concepts running side-by-side. (clarification, not a bug)\n\nThe regex pipeline runs *two* convergence checks:\n\n1. `CompiledPattern::is_convergent()` \u2014 once per invocation, pure analytical\n   probe on the replacement template (`pattern.rs:62-65`). Result is fed to\n   `finalize_plan` only to decide whether a zero-match scan is\n   `AlreadyApplied` vs. a normal `Changes` (with empty changes \u2014 which\n   reduces to \"no changes\" either way).\n2. `regex_convergence_check` \u2014 per-file, applied to the post-image of every\n   changed file inside `process_one`. This is what actually rejects\n   `a \u2192 aa`.\n\nFor non-script regex rewrites, when `is_convergent()` is `true`, the per-file\ncheck is *almost* guaranteed to find zero extra matches \u2014 *almost* because\nthe replacement can interact with adjacent source bytes to form a new match\nthat the static probe couldn't see (`X` \u2192 `Y` where the surrounding text is\n`X` and the file contains `XX`, etc.). So both are load-bearing.\n\nBut the `is_convergent` result is currently *only* used to decide a\nnear-tautological branch in `finalize_plan` (zero matches + convergent \u2192\n`AlreadyApplied`). Since `process_one` already filters out files with zero\nmatches and `total_matches == 0` implies `changes.is_empty()` (see N1\nbelow), the `convergent_or_scripted` flag in `finalize_plan` only differs\nbehaviorally when the *whole tree* matched zero times \u2014 i.e. exactly the\n\"already applied\" classification. That's fine and correct, but the\nrelationship is non-obvious and worth a sentence in the docs of\n`finalize_plan` so a future reader doesn't think the per-file check is\nredundant when `is_convergent()` is true.\n\n### R2. `read_text_or_skip_binary` issues two syscalls per file (metadata + read). (acknowledged, probably right)\n\n`fs::metadata` then `fs::read_to_string`. The metadata call is used for:\n\n- `max_bytes` pre-check (avoid reading a 4 GiB binary into RAM)\n- capturing `permissions` so commit doesn't stat again\n\nBoth are real reasons. `fs::read_to_string` would itself return\n`InvalidData` for non-UTF8 and would happily over-read past `max_bytes`\nbefore discovering the problem. So the dual-syscall is the right shape;\nleave it.\n\nThe only micro-optimization is `File::open` + `metadata()` on the handle\nto keep things FD-local, but that's noise.\n\n---\n\n## Findings (small/cosmetic)\n\n### N1. `finalize_plan` defensively replaces `changes` with `Vec::new()` when `total_matches == 0`.\n\n```rust\nif total_matches == 0 && convergent_or_scripted {\n    return Ok(Plan {\n        changes: Vec::new(),\n        ...\n    });\n}\n```\n\n`process_one` returns `Ok(None)` whenever `outcome.matches == 0 || outcome.after == before`,\nso `total_matches == 0` strictly implies `changes.is_empty()` already. The\n`Vec::new()` is defensive belt-and-braces. Either drop it (pass `changes`\nthrough) or keep it with a one-line `// invariant: changes is empty here`\ncomment to forestall a future maintainer's \"why?\". Negligible perf\ndifference (an empty Vec doesn't allocate), purely a clarity issue.\n\n### N2. `label_for_path` reallocates per change.\n\n`rewrite::label_for_path` builds a `PathBuf` then converts to `String`\n(`rewrite.rs:87-98`). Called once per `FileChange`, only used as the diff\nheader. Not a hot path, but it's a `PathBuf` allocation just to drop leading\n`./`. A direct `String` builder over `path.components()` would avoid the\nintermediate `PathBuf`. Touch only if you're already in `rewrite.rs`.\n\n### N3. Two near-identical `plan_*` functions and a copy in `structural.rs`.\n\n`plan_rewrite`, `plan_rewrite_scripted`, and\n`plan_structural_rewrite` (in `structural.rs`) all follow the same shape:\nwalk \u2192 enforce `max_files` \u2192 compile \u2192 `par_iter.map(process_one)` \u2192\n`collect_changes` \u2192 `finalize_plan`. AGENTS.md \u00a711 calls out DRY explicitly.\n\nThe three differ in:\n\n- which compiler runs (regex / regex+script-engine / tree-sitter)\n- what `map_init` initializer the workers need (none / `script.fresh()` /\n  `(parser, cursor)`)\n- whether a convergence check applies\n\nA shared `plan_pipeline<C, R, W>(walker_input, opts, init_worker, process_file)`\nhelper would consolidate the three, and the fail-fast `try`-collect from M4\nabove would land in one place. This is a refactor not strictly demanded by\nthe audit prompt, but the duplication will rot the worst the next time\n`PlanOptions` grows a field that needs handling in all three call sites.\n\n### N4. Trace noise in tight loops.\n\n`trace!(path = %path.display(), ...)` inside `process_one` formats the path\ninto the event even when the `trace` level is disabled. `tracing` macros do\ngate at level, but `path.display()` is a wrapper, not a string allocation,\nso this is fine. Mentioning only to confirm I checked it.\n\n---\n\n## Summary\n\nHighest-leverage fixes, in order:\n\n1. **Don't render diffs when no consumer will read them** (M1). Biggest peak\n   memory win; trivial to gate via `PlanOptions` or by deferring rendering\n   to the caller.\n2. **Short-circuit the convergence probe via `is_match`** (M2). Cheap edit,\n   measurable in benchmarks for the common convergent case on large files.\n3. **Bail the scripted convergence check on first divergence** (M3). Bounded\n   savings but they grow with N (matches per file) for the script-heavy\n   path that's already the slowest.\n4. **Use a fail-fast `try`-collect and lift the shared pipeline** (M4, N3).\n   Improves error latency on large trees and removes the duplicated control\n   flow.\n5. **Drop the `Option` wrapper on `FileChange.permissions`** (M5). Pre-1.0,\n   no compat cost.\n\nEverything else (R1, N1, N2, N4, M6) is taste-level or doc-only.\n\nKey files cited:\n\n- `/home/mcs/Documents/git/recast/crates/recast-core/src/plan.rs`\n- `/home/mcs/Documents/git/recast/crates/recast-core/src/rewrite.rs`\n- `/home/mcs/Documents/git/recast/crates/recast-core/src/pattern.rs`\n- `/home/mcs/Documents/git/recast/crates/recast-core/src/commit.rs`\n- `/home/mcs/Documents/git/recast/crates/recast-core/src/structural.rs`\n- `/home/mcs/Documents/git/recast/crates/recast-core/src/json.rs`\n- `/home/mcs/Documents/git/recast/crates/recast/src/main.rs`\n"}], "grading": {"eval_id": 3, "eval_name": "audit-plan-rs", "run_path": "/home/mcs/Documents/git/claude-skills/plugins/architectural-analysis/code-audit-deep-workspace/iteration-1/eval-3-audit-plan-rs/without_skill", "expectations": [{"text": "Output contains at least 2 'plan.rs:<digits>' line references", "passed": true, "evidence": "found 5 match(es) of /plan\\.rs:\\d+/ (need \u22652); sample: ['plan.rs:277', 'plan.rs:76', 'plan.rs:62']"}, {"text": "Output uses categorized section headers", "passed": false, "evidence": "found 1 match(es) of /\\*\\*(Perf|Correctness|Memory|Complexity)/ (need \u22652); sample: ['Memory']"}, {"text": "Surfaces FileChange memory-duplication OR convergence redundant work", "passed": true, "evidence": "matched /FileChange/ \u00d715 (first: 'FileChange')"}, {"text": "Ends with 'Top targets' summary", "passed": false, "evidence": "substring 'Top targets' NOT found in output"}], "summary": {"passed": 2, "total": 4, "pass_rate": 0.5}}}], "previous_feedback": {}, "previous_outputs": {}, "benchmark": {"metadata": {"skill_name": "code-audit-deep", "skill_path": "<path/to/skill>", "executor_model": "<model-name>", "analyzer_model": "<model-name>", "timestamp": "2026-05-21T18:56:39Z", "evals_run": [1, 2, 3], "runs_per_configuration": 3}, "runs": [{"eval_id": 1, "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 5, "failed": 0, "total": 5, "time_seconds": 171.2, "tokens": 52320, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Output contains at least 3 'commit.rs:<digits>' line references", "passed": true, "evidence": "found 17 match(es) of /commit\\.rs:\\d+/ (need \u22653); sample: ['commit.rs:425', 'commit.rs:328', 'commit.rs:114']"}, {"text": "Output uses categorized section headers (Perf / Correctness / Memory / Complexity)", "passed": true, "evidence": "found 3 match(es) of /\\*\\*(Perf|Correctness|Memory|Complexity)/ (need \u22652); sample: ['Perf', 'Correctness', 'Complexity']"}, {"text": "Surfaces NonceGen / SystemTime::now per-nonce perf issue", "passed": true, "evidence": "matched /NonceGen/ \u00d72 (first: 'NonceGen')"}, {"text": "Surfaces an error-aggregation / silent-error finding (stage_all, rollback, fsync, or swallowed err)", "passed": true, "evidence": "matched /stage_all/ \u00d71 (first: 'stage_all')"}, {"text": "Ends with 'Top targets' summary listing highest-leverage fixes", "passed": true, "evidence": "substring 'Top targets' found in output"}], "notes": []}, {"eval_id": 2, "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 5, "failed": 0, "total": 5, "time_seconds": 285.0, "tokens": 63980, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Output contains at least 3 'structural.rs:<digits>' line references", "passed": true, "evidence": "found 18 match(es) of /structural\\.rs:\\d+/ (need \u22653); sample: ['structural.rs:182', 'structural.rs:354', 'structural.rs:552']"}, {"text": "Output uses categorized section headers", "passed": true, "evidence": "found 4 match(es) of /\\*\\*(Perf|Correctness|Memory|Complexity|Coupling)/ (need \u22652); sample: ['Perf', 'Correctness', 'Complexity']"}, {"text": "Surfaces unbounded-recursion / emit_node finding", "passed": true, "evidence": "matched /emit_node/ \u00d73 (first: 'emit_node')"}, {"text": "Mentions plan.rs in coupling context, or notes dual-orchestrator relationship", "passed": true, "evidence": "matched /plan\\.rs/ \u00d710 (first: 'plan.rs')"}, {"text": "Ends with 'Top targets' summary", "passed": true, "evidence": "substring 'Top targets' found in output"}], "notes": []}, {"eval_id": 3, "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 4, "failed": 0, "total": 4, "time_seconds": 247.2, "tokens": 55900, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Output contains at least 2 'plan.rs:<digits>' line references", "passed": true, "evidence": "found 15 match(es) of /plan\\.rs:\\d+/ (need \u22652); sample: ['plan.rs:264', 'plan.rs:278', 'plan.rs:139']"}, {"text": "Output uses categorized section headers", "passed": true, "evidence": "found 3 match(es) of /\\*\\*(Perf|Correctness|Memory|Complexity)/ (need \u22652); sample: ['Perf', 'Memory', 'Complexity']"}, {"text": "Surfaces FileChange memory-duplication OR convergence redundant work", "passed": true, "evidence": "matched /FileChange/ \u00d74 (first: 'FileChange')"}, {"text": "Ends with 'Top targets' summary", "passed": true, "evidence": "substring 'Top targets' found in output"}], "notes": []}, {"eval_id": 1, "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 0.4, "passed": 2, "failed": 0, "total": 5, "time_seconds": 251.4, "tokens": 62659, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Output contains at least 3 'commit.rs:<digits>' line references", "passed": false, "evidence": "found 0 match(es) of /commit\\.rs:\\d+/ (need \u22653); sample: []"}, {"text": "Output uses categorized section headers (Perf / Correctness / Memory / Complexity)", "passed": false, "evidence": "found 0 match(es) of /\\*\\*(Perf|Correctness|Memory|Complexity)/ (need \u22652); sample: []"}, {"text": "Surfaces NonceGen / SystemTime::now per-nonce perf issue", "passed": true, "evidence": "matched /NonceGen/ \u00d76 (first: 'NonceGen')"}, {"text": "Surfaces an error-aggregation / silent-error finding (stage_all, rollback, fsync, or swallowed err)", "passed": true, "evidence": "matched /stage_all/ \u00d74 (first: 'stage_all')"}, {"text": "Ends with 'Top targets' summary listing highest-leverage fixes", "passed": false, "evidence": "substring 'Top targets' NOT found in output"}], "notes": []}, {"eval_id": 2, "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 0.4, "passed": 2, "failed": 0, "total": 5, "time_seconds": 203.4, "tokens": 68638, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Output contains at least 3 'structural.rs:<digits>' line references", "passed": false, "evidence": "found 0 match(es) of /structural\\.rs:\\d+/ (need \u22653); sample: []"}, {"text": "Output uses categorized section headers", "passed": false, "evidence": "found 0 match(es) of /\\*\\*(Perf|Correctness|Memory|Complexity|Coupling)/ (need \u22652); sample: []"}, {"text": "Surfaces unbounded-recursion / emit_node finding", "passed": true, "evidence": "matched /emit_node/ \u00d713 (first: 'emit_node')"}, {"text": "Mentions plan.rs in coupling context, or notes dual-orchestrator relationship", "passed": true, "evidence": "matched /plan\\.rs/ \u00d719 (first: 'plan.rs')"}, {"text": "Ends with 'Top targets' summary", "passed": false, "evidence": "substring 'Top targets' NOT found in output"}], "notes": []}, {"eval_id": 3, "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 0.5, "passed": 2, "failed": 0, "total": 4, "time_seconds": 197.0, "tokens": 78976, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Output contains at least 2 'plan.rs:<digits>' line references", "passed": true, "evidence": "found 5 match(es) of /plan\\.rs:\\d+/ (need \u22652); sample: ['plan.rs:277', 'plan.rs:76', 'plan.rs:62']"}, {"text": "Output uses categorized section headers", "passed": false, "evidence": "found 1 match(es) of /\\*\\*(Perf|Correctness|Memory|Complexity)/ (need \u22652); sample: ['Memory']"}, {"text": "Surfaces FileChange memory-duplication OR convergence redundant work", "passed": true, "evidence": "matched /FileChange/ \u00d715 (first: 'FileChange')"}, {"text": "Ends with 'Top targets' summary", "passed": false, "evidence": "substring 'Top targets' NOT found in output"}], "notes": []}], "run_summary": {"with_skill": {"pass_rate": {"mean": 1.0, "stddev": 0.0, "min": 1.0, "max": 1.0}, "time_seconds": {"mean": 234.4667, "stddev": 57.9587, "min": 171.2, "max": 285.0}, "tokens": {"mean": 57400.0, "stddev": 5972.9725, "min": 52320, "max": 63980}}, "without_skill": {"pass_rate": {"mean": 0.4333, "stddev": 0.0577, "min": 0.4, "max": 0.5}, "time_seconds": {"mean": 217.2667, "stddev": 29.733, "min": 197.0, "max": 251.4}, "tokens": {"mean": 70091.0, "stddev": 8254.97, "min": 62659, "max": 78976}}, "delta": {"pass_rate": "+0.57", "time_seconds": "+17.2", "tokens": "-12691"}}, "notes": []}};
+
+    // ---- State ----
+    let feedbackMap = {};  // run_id -> feedback text
+    let currentIndex = 0;
+    let visitedRuns = new Set();
+
+    // ---- Init ----
+    async function init() {
+      // Load saved feedback from server — but only if this isn't a fresh
+      // iteration (indicated by previous_feedback being present). When
+      // previous feedback exists, the feedback.json on disk is stale from
+      // the prior iteration and should not pre-fill the textareas.
+      const hasPrevious = Object.keys(EMBEDDED_DATA.previous_feedback || {}).length > 0
+        || Object.keys(EMBEDDED_DATA.previous_outputs || {}).length > 0;
+      if (!hasPrevious) {
+        try {
+          const resp = await fetch("/api/feedback");
+          const data = await resp.json();
+          if (data.reviews) {
+            for (const r of data.reviews) feedbackMap[r.run_id] = r.feedback;
+          }
+        } catch { /* first run, no feedback yet */ }
+      }
+
+      document.getElementById("skill-name").textContent = EMBEDDED_DATA.skill_name;
+      showRun(0);
+
+      // Wire up feedback auto-save
+      const textarea = document.getElementById("feedback");
+      let saveTimeout = null;
+      textarea.addEventListener("input", () => {
+        clearTimeout(saveTimeout);
+        document.getElementById("feedback-status").textContent = "";
+        saveTimeout = setTimeout(() => saveCurrentFeedback(), 800);
+      });
+    }
+
+    // ---- Navigation ----
+    function navigate(delta) {
+      const newIndex = currentIndex + delta;
+      if (newIndex >= 0 && newIndex < EMBEDDED_DATA.runs.length) {
+        saveCurrentFeedback();
+        showRun(newIndex);
+      }
+    }
+
+    function updateNavButtons() {
+      document.getElementById("prev-btn").disabled = currentIndex === 0;
+      document.getElementById("next-btn").disabled =
+        currentIndex === EMBEDDED_DATA.runs.length - 1;
+    }
+
+    // ---- Show a run ----
+    function showRun(index) {
+      currentIndex = index;
+      const run = EMBEDDED_DATA.runs[index];
+
+      // Progress
+      document.getElementById("progress").textContent =
+        `${index + 1} of ${EMBEDDED_DATA.runs.length}`;
+
+      // Prompt
+      document.getElementById("prompt-text").textContent = run.prompt;
+
+      // Config badge
+      const badge = document.getElementById("config-badge");
+      const configMatch = run.id.match(/(with_skill|without_skill|new_skill|old_skill)/);
+      if (configMatch) {
+        const config = configMatch[1];
+        const isBaseline = config === "without_skill" || config === "old_skill";
+        badge.textContent = config.replace(/_/g, " ");
+        badge.className = "config-badge " + (isBaseline ? "config-baseline" : "config-primary");
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
+      }
+
+      // Outputs
+      renderOutputs(run);
+
+      // Previous outputs
+      renderPrevOutputs(run);
+
+      // Grades
+      renderGrades(run);
+
+      // Previous feedback
+      const prevFb = (EMBEDDED_DATA.previous_feedback || {})[run.id];
+      const prevEl = document.getElementById("prev-feedback");
+      if (prevFb) {
+        document.getElementById("prev-feedback-text").textContent = prevFb;
+        prevEl.style.display = "block";
+      } else {
+        prevEl.style.display = "none";
+      }
+
+      // Feedback
+      document.getElementById("feedback").value = feedbackMap[run.id] || "";
+      document.getElementById("feedback-status").textContent = "";
+
+      updateNavButtons();
+
+      // Track visited runs and promote done button when all visited
+      visitedRuns.add(index);
+      const doneBtn = document.getElementById("done-btn");
+      if (visitedRuns.size >= EMBEDDED_DATA.runs.length) {
+        doneBtn.classList.add("ready");
+      }
+
+      // Scroll main content to top
+      document.querySelector(".main").scrollTop = 0;
+    }
+
+    // ---- Render outputs ----
+    function renderOutputs(run) {
+      const container = document.getElementById("outputs-body");
+      container.innerHTML = "";
+
+      const outputs = run.outputs || [];
+      if (outputs.length === 0) {
+        container.innerHTML = '<div class="empty-state">No output files</div>';
+        return;
+      }
+
+      for (const file of outputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        // Always show file header with download link
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const content = document.createElement("div");
+        content.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          content.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          content.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          content.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(content, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          content.appendChild(a);
+        } else if (file.type === "error") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          pre.style.color = "var(--red)";
+          content.appendChild(pre);
+        }
+
+        fileDiv.appendChild(content);
+        container.appendChild(fileDiv);
+      }
+    }
+
+    // ---- XLSX rendering via SheetJS ----
+    function renderXlsx(container, b64Data) {
+      try {
+        const raw = Uint8Array.from(atob(b64Data), c => c.charCodeAt(0));
+        const wb = XLSX.read(raw, { type: "array" });
+
+        for (let i = 0; i < wb.SheetNames.length; i++) {
+          const sheetName = wb.SheetNames[i];
+          const ws = wb.Sheets[sheetName];
+
+          if (wb.SheetNames.length > 1) {
+            const sheetLabel = document.createElement("div");
+            sheetLabel.style.cssText =
+              "font-weight:600; font-size:0.8rem; color:#b0aea5; margin-top:0.5rem; margin-bottom:0.25rem;";
+            sheetLabel.textContent = "Sheet: " + sheetName;
+            container.appendChild(sheetLabel);
+          }
+
+          const htmlStr = XLSX.utils.sheet_to_html(ws, { editable: false });
+          const wrapper = document.createElement("div");
+          wrapper.innerHTML = htmlStr;
+          container.appendChild(wrapper);
+        }
+      } catch (err) {
+        container.textContent = "Error rendering spreadsheet: " + err.message;
+      }
+    }
+
+    // ---- Grades ----
+    function renderGrades(run) {
+      const section = document.getElementById("grades-section");
+      const content = document.getElementById("grades-content");
+
+      if (!run.grading) {
+        section.style.display = "none";
+        return;
+      }
+
+      const grading = run.grading;
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("grades-arrow").classList.remove("open");
+
+      const summary = grading.summary || {};
+      const expectations = grading.expectations || [];
+
+      let html = '<div style="padding: 1rem;">';
+
+      // Summary line
+      const passRate = summary.pass_rate != null
+        ? Math.round(summary.pass_rate * 100) + "%"
+        : "?";
+      const badgeClass = summary.pass_rate >= 0.8 ? "grade-pass" : summary.pass_rate >= 0.5 ? "" : "grade-fail";
+      html += '<div class="grades-summary">';
+      html += '<span class="grade-badge ' + badgeClass + '">' + passRate + '</span>';
+      html += '<span>' + (summary.passed || 0) + ' passed, ' + (summary.failed || 0) + ' failed of ' + (summary.total || 0) + '</span>';
+      html += '</div>';
+
+      // Assertions list
+      html += '<ul class="assertion-list">';
+      for (const exp of expectations) {
+        const statusClass = exp.passed ? "pass" : "fail";
+        const statusIcon = exp.passed ? "\u2713" : "\u2717";
+        html += '<li class="assertion-item">';
+        html += '<span class="assertion-status ' + statusClass + '">' + statusIcon + '</span>';
+        html += '<span>' + escapeHtml(exp.text) + '</span>';
+        if (exp.evidence) {
+          html += '<div class="assertion-evidence">' + escapeHtml(exp.evidence) + '</div>';
+        }
+        html += '</li>';
+      }
+      html += '</ul>';
+
+      html += '</div>';
+      content.innerHTML = html;
+    }
+
+    function toggleGrades() {
+      const content = document.getElementById("grades-content");
+      const arrow = document.getElementById("grades-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Previous outputs (collapsible) ----
+    function renderPrevOutputs(run) {
+      const section = document.getElementById("prev-outputs-section");
+      const content = document.getElementById("prev-outputs-content");
+      const prevOutputs = (EMBEDDED_DATA.previous_outputs || {})[run.id];
+
+      if (!prevOutputs || prevOutputs.length === 0) {
+        section.style.display = "none";
+        return;
+      }
+
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("prev-outputs-arrow").classList.remove("open");
+
+      // Render the files into the content area
+      content.innerHTML = "";
+      const wrapper = document.createElement("div");
+      wrapper.style.padding = "1rem";
+
+      for (const file of prevOutputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const fc = document.createElement("div");
+        fc.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          fc.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          fc.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          fc.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(fc, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          fc.appendChild(a);
+        }
+
+        fileDiv.appendChild(fc);
+        wrapper.appendChild(fileDiv);
+      }
+
+      content.appendChild(wrapper);
+    }
+
+    function togglePrevOutputs() {
+      const content = document.getElementById("prev-outputs-content");
+      const arrow = document.getElementById("prev-outputs-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Feedback (saved to server -> feedback.json) ----
+    function saveCurrentFeedback() {
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // Build reviews array from map
+      const reviews = [];
+      for (const [run_id, feedback] of Object.entries(feedbackMap)) {
+        if (feedback.trim()) {
+          reviews.push({ run_id, feedback, timestamp: new Date().toISOString() });
+        }
+      }
+
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviews, status: "in_progress" }),
+      }).then(() => {
+        document.getElementById("feedback-status").textContent = "Saved";
+      }).catch(() => {
+        // Static mode or server unavailable — no-op on auto-save,
+        // feedback will be downloaded on final submit
+        document.getElementById("feedback-status").textContent = "Will download on submit";
+      });
+    }
+
+    // ---- Done ----
+    function showDoneDialog() {
+      // Save current textarea to feedbackMap (but don't POST yet)
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // POST once with status: complete — include ALL runs so the model
+      // can distinguish "no feedback" (looks good) from "not reviewed"
+      const reviews = [];
+      const ts = new Date().toISOString();
+      for (const r of EMBEDDED_DATA.runs) {
+        reviews.push({ run_id: r.id, feedback: feedbackMap[r.id] || "", timestamp: ts });
+      }
+      const payload = JSON.stringify({ reviews, status: "complete" }, null, 2);
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+      }).then(() => {
+        document.getElementById("done-overlay").classList.add("visible");
+      }).catch(() => {
+        // Server not available (static mode) — download as file
+        const blob = new Blob([payload], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "feedback.json";
+        a.click();
+        URL.revokeObjectURL(url);
+        document.getElementById("done-overlay").classList.add("visible");
+      });
+    }
+
+    function closeDoneDialog() {
+      // Reset status back to in_progress
+      saveCurrentFeedback();
+      document.getElementById("done-overlay").classList.remove("visible");
+    }
+
+    // ---- Toast ----
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("visible");
+      setTimeout(() => toast.classList.remove("visible"), 2000);
+    }
+
+    // ---- Keyboard nav ----
+    document.addEventListener("keydown", (e) => {
+      // Don't capture when typing in textarea
+      if (e.target.tagName === "TEXTAREA") return;
+
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        navigate(-1);
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        navigate(1);
+      }
+    });
+
+    // ---- Util ----
+    function getDownloadUri(file) {
+      if (file.data_uri) return file.data_uri;
+      if (file.data_b64) return "data:application/octet-stream;base64," + file.data_b64;
+      if (file.type === "text") return "data:text/plain;charset=utf-8," + encodeURIComponent(file.content);
+      return "#";
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ---- View switching ----
+    function switchView(view) {
+      document.querySelectorAll(".view-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".view-panel").forEach(p => p.classList.remove("active"));
+      document.querySelector(`[onclick="switchView('${view}')"]`).classList.add("active");
+      document.getElementById("panel-" + view).classList.add("active");
+    }
+
+    // ---- Benchmark rendering ----
+    function renderBenchmark() {
+      const data = EMBEDDED_DATA.benchmark;
+      if (!data) return;
+
+      // Show the tabs
+      document.getElementById("view-tabs").style.display = "flex";
+
+      const container = document.getElementById("benchmark-content");
+      const summary = data.run_summary || {};
+      const metadata = data.metadata || {};
+      const notes = data.notes || [];
+
+      let html = "";
+
+      // Header
+      html += "<h2 style='font-family: Poppins, sans-serif; margin-bottom: 0.5rem;'>Benchmark Results</h2>";
+      html += "<p style='color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;'>";
+      if (metadata.skill_name) html += "<strong>" + escapeHtml(metadata.skill_name) + "</strong> &mdash; ";
+      if (metadata.timestamp) html += metadata.timestamp + " &mdash; ";
+      if (metadata.evals_run) html += "Evals: " + metadata.evals_run.join(", ") + " &mdash; ";
+      html += (metadata.runs_per_configuration || "?") + " runs per configuration";
+      html += "</p>";
+
+      // Summary table
+      html += '<table class="benchmark-table">';
+
+      function fmtStat(stat, pct) {
+        if (!stat) return "—";
+        const suffix = pct ? "%" : "";
+        const m = pct ? (stat.mean * 100).toFixed(0) : stat.mean.toFixed(1);
+        const s = pct ? (stat.stddev * 100).toFixed(0) : stat.stddev.toFixed(1);
+        return m + suffix + " ± " + s + suffix;
+      }
+
+      function deltaClass(val) {
+        if (!val) return "";
+        const n = parseFloat(val);
+        if (n > 0) return "benchmark-delta-positive";
+        if (n < 0) return "benchmark-delta-negative";
+        return "";
+      }
+
+      // Discover config names dynamically (everything except "delta")
+      const configs = Object.keys(summary).filter(k => k !== "delta");
+      const configA = configs[0] || "config_a";
+      const configB = configs[1] || "config_b";
+      const labelA = configA.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const labelB = configB.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const a = summary[configA] || {};
+      const b = summary[configB] || {};
+      const delta = summary.delta || {};
+
+      html += "<thead><tr><th>Metric</th><th>" + escapeHtml(labelA) + "</th><th>" + escapeHtml(labelB) + "</th><th>Delta</th></tr></thead>";
+      html += "<tbody>";
+
+      html += "<tr><td><strong>Pass Rate</strong></td>";
+      html += "<td>" + fmtStat(a.pass_rate, true) + "</td>";
+      html += "<td>" + fmtStat(b.pass_rate, true) + "</td>";
+      html += '<td class="' + deltaClass(delta.pass_rate) + '">' + (delta.pass_rate || "—") + "</td></tr>";
+
+      // Time (only show row if data exists)
+      if (a.time_seconds || b.time_seconds) {
+        html += "<tr><td><strong>Time (s)</strong></td>";
+        html += "<td>" + fmtStat(a.time_seconds, false) + "</td>";
+        html += "<td>" + fmtStat(b.time_seconds, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.time_seconds) + '">' + (delta.time_seconds ? delta.time_seconds + "s" : "—") + "</td></tr>";
+      }
+
+      // Tokens (only show row if data exists)
+      if (a.tokens || b.tokens) {
+        html += "<tr><td><strong>Tokens</strong></td>";
+        html += "<td>" + fmtStat(a.tokens, false) + "</td>";
+        html += "<td>" + fmtStat(b.tokens, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.tokens) + '">' + (delta.tokens || "—") + "</td></tr>";
+      }
+
+      html += "</tbody></table>";
+
+      // Per-eval breakdown (if runs data available)
+      const runs = data.runs || [];
+      if (runs.length > 0) {
+        const evalIds = [...new Set(runs.map(r => r.eval_id))].sort((a, b) => a - b);
+
+        html += "<h3 style='font-family: Poppins, sans-serif; margin-bottom: 0.75rem;'>Per-Eval Breakdown</h3>";
+
+        const hasTime = runs.some(r => r.result && r.result.time_seconds != null);
+        const hasErrors = runs.some(r => r.result && r.result.errors > 0);
+
+        for (const evalId of evalIds) {
+          const evalRuns = runs.filter(r => r.eval_id === evalId);
+          const evalName = evalRuns[0] && evalRuns[0].eval_name ? evalRuns[0].eval_name : "Eval " + evalId;
+
+          html += "<h4 style='font-family: Poppins, sans-serif; margin: 1rem 0 0.5rem; color: var(--text);'>" + escapeHtml(evalName) + "</h4>";
+          html += '<table class="benchmark-table">';
+          html += "<thead><tr><th>Config</th><th>Run</th><th>Pass Rate</th>";
+          if (hasTime) html += "<th>Time (s)</th>";
+          if (hasErrors) html += "<th>Crashes During Execution</th>";
+          html += "</tr></thead>";
+          html += "<tbody>";
+
+          // Group by config and render with average rows
+          const configGroups = [...new Set(evalRuns.map(r => r.configuration))];
+          for (let ci = 0; ci < configGroups.length; ci++) {
+            const config = configGroups[ci];
+            const configRuns = evalRuns.filter(r => r.configuration === config);
+            if (configRuns.length === 0) continue;
+
+            const rowClass = ci === 0 ? "benchmark-row-with" : "benchmark-row-without";
+            const configLabel = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+            for (const run of configRuns) {
+              const r = run.result || {};
+              const prClass = r.pass_rate >= 0.8 ? "benchmark-delta-positive" : r.pass_rate < 0.5 ? "benchmark-delta-negative" : "";
+              html += '<tr class="' + rowClass + '">';
+              html += "<td>" + configLabel + "</td>";
+              html += "<td>" + run.run_number + "</td>";
+              html += '<td class="' + prClass + '">' + ((r.pass_rate || 0) * 100).toFixed(0) + "% (" + (r.passed || 0) + "/" + (r.total || 0) + ")</td>";
+              if (hasTime) html += "<td>" + (r.time_seconds != null ? r.time_seconds.toFixed(1) : "—") + "</td>";
+              if (hasErrors) html += "<td>" + (r.errors || 0) + "</td>";
+              html += "</tr>";
+            }
+
+            // Average row
+            const rates = configRuns.map(r => (r.result || {}).pass_rate || 0);
+            const avgRate = rates.reduce((a, b) => a + b, 0) / rates.length;
+            const avgPrClass = avgRate >= 0.8 ? "benchmark-delta-positive" : avgRate < 0.5 ? "benchmark-delta-negative" : "";
+            html += '<tr class="benchmark-row-avg ' + rowClass + '">';
+            html += "<td>" + configLabel + "</td>";
+            html += "<td>Avg</td>";
+            html += '<td class="' + avgPrClass + '">' + (avgRate * 100).toFixed(0) + "%</td>";
+            if (hasTime) {
+              const times = configRuns.map(r => (r.result || {}).time_seconds).filter(t => t != null);
+              html += "<td>" + (times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : "—") + "</td>";
+            }
+            if (hasErrors) html += "<td></td>";
+            html += "</tr>";
+          }
+          html += "</tbody></table>";
+
+          // Per-assertion detail for this eval
+          const runsWithExpectations = {};
+          for (const config of configGroups) {
+            runsWithExpectations[config] = evalRuns.filter(r => r.configuration === config && r.expectations && r.expectations.length > 0);
+          }
+          const hasAnyExpectations = Object.values(runsWithExpectations).some(runs => runs.length > 0);
+          if (hasAnyExpectations) {
+            // Collect all unique assertion texts across all configs
+            const allAssertions = [];
+            const seen = new Set();
+            for (const config of configGroups) {
+              for (const run of runsWithExpectations[config]) {
+                for (const exp of (run.expectations || [])) {
+                  if (!seen.has(exp.text)) {
+                    seen.add(exp.text);
+                    allAssertions.push(exp.text);
+                  }
+                }
+              }
+            }
+
+            html += '<table class="benchmark-table" style="margin-top: 0.5rem;">';
+            html += "<thead><tr><th>Assertion</th>";
+            for (const config of configGroups) {
+              const label = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+              html += "<th>" + escapeHtml(label) + "</th>";
+            }
+            html += "</tr></thead><tbody>";
+
+            for (const assertionText of allAssertions) {
+              html += "<tr><td>" + escapeHtml(assertionText) + "</td>";
+
+              for (const config of configGroups) {
+                html += "<td>";
+                for (const run of runsWithExpectations[config]) {
+                  const exp = (run.expectations || []).find(e => e.text === assertionText);
+                  if (exp) {
+                    const cls = exp.passed ? "benchmark-delta-positive" : "benchmark-delta-negative";
+                    const icon = exp.passed ? "\u2713" : "\u2717";
+                    html += '<span class="' + cls + '" title="Run ' + run.run_number + ': ' + escapeHtml(exp.evidence || "") + '">' + icon + "</span> ";
+                  } else {
+                    html += "— ";
+                  }
+                }
+                html += "</td>";
+              }
+              html += "</tr>";
+            }
+            html += "</tbody></table>";
+          }
+        }
+      }
+
+      // Notes
+      if (notes.length > 0) {
+        html += '<div class="benchmark-notes">';
+        html += "<h3>Analysis Notes</h3>";
+        html += "<ul>";
+        for (const note of notes) {
+          html += "<li>" + escapeHtml(note) + "</li>";
+        }
+        html += "</ul></div>";
+      }
+
+      container.innerHTML = html;
+    }
+
+    // ---- Start ----
+    init();
+    renderBenchmark();
+  </script>
+</body>
+</html>

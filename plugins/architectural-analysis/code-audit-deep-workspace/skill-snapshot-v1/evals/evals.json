@@ -1,0 +1,49 @@
+{
+  "skill_name": "code-audit-deep",
+  "evals": [
+    {
+      "id": 1,
+      "name": "audit-commit-rs",
+      "prompt": "Doing a perf + correctness pass on /home/mcs/Documents/git/recast/crates/recast-core/src/commit.rs — it's the two-phase atomic-commit module for the recast CLI. Anything sketchy in the apply path? I'm especially worried about syscalls happening per-file in a parallel loop, and any error-handling spots where failures might disappear silently (the rollback / recover paths in particular).",
+      "files": ["/home/mcs/Documents/git/recast/crates/recast-core/src/commit.rs"],
+      "expected_output": "Categorized findings (Perf / Correctness / Memory / Complexity) with specific file:line references for issues like NonceGen calling SystemTime::now() per nonce, recover_sweep's exists() syscall per backup, stage_all keeping only first error, rollback_committed swallowing rename errors, per-parent fsync silently skipping on open error.",
+      "assertions": [
+        {"text": "Output contains at least 3 'commit.rs:<digits>' line references", "type": "regex", "pattern": "commit\\.rs:\\d+", "min_matches": 3},
+        {"text": "Output uses categorized section headers (Perf / Correctness / Memory / Complexity)", "type": "regex", "pattern": "\\*\\*(Perf|Correctness|Memory|Complexity)", "min_matches": 2},
+        {"text": "Surfaces NonceGen / SystemTime::now per-nonce perf issue", "type": "regex_or", "patterns": ["NonceGen", "SystemTime::now"]},
+        {"text": "Surfaces an error-aggregation / silent-error finding (stage_all, rollback, fsync, or swallowed err)", "type": "regex_or", "patterns": ["stage_all", "rollback", "swallow", "fsync"]},
+        {"text": "Ends with 'Top targets' summary listing highest-leverage fixes", "type": "contains", "substring": "Top targets"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "audit-structural-rs",
+      "prompt": "Audit /home/mcs/Documents/git/recast/crates/recast-core/src/structural.rs for me. It's the tree-sitter pipeline for the recast CLI and has grown to 650 lines. I want a deep review focused on function-level complexity and any unbounded recursion risk on parser input. Also call out if there are obvious coupling problems vs the other orchestrator file plan.rs.",
+      "files": [
+        "/home/mcs/Documents/git/recast/crates/recast-core/src/structural.rs",
+        "/home/mcs/Documents/git/recast/crates/recast-core/src/plan.rs"
+      ],
+      "expected_output": "Findings with line numbers calling out things like recursive emit_node having no depth cap (stack-overflow risk on malformed tree), god-module concerns broken into specific over-long functions, possible dual-orchestrator coupling between structural.rs and plan.rs.",
+      "assertions": [
+        {"text": "Output contains at least 3 'structural.rs:<digits>' line references", "type": "regex", "pattern": "structural\\.rs:\\d+", "min_matches": 3},
+        {"text": "Output uses categorized section headers", "type": "regex", "pattern": "\\*\\*(Perf|Correctness|Memory|Complexity|Coupling)", "min_matches": 2},
+        {"text": "Surfaces unbounded-recursion / emit_node finding", "type": "regex_or", "patterns": ["emit_node", "depth (cap|bound|limit)", "recurs"]},
+        {"text": "Mentions plan.rs in coupling context, or notes dual-orchestrator relationship", "type": "regex_or", "patterns": ["plan\\.rs", "orchestrat"]},
+        {"text": "Ends with 'Top targets' summary", "type": "contains", "substring": "Top targets"}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "audit-plan-rs",
+      "prompt": "Review /home/mcs/Documents/git/recast/crates/recast-core/src/plan.rs for me — it's the orchestrator that ties walking, pattern compilation, per-file rewrite, and the convergence check together. Looking for memory shape issues (anything held in memory longer or larger than it needs to be) and any redundant work being done across passes.",
+      "files": ["/home/mcs/Documents/git/recast/crates/recast-core/src/plan.rs"],
+      "expected_output": "Findings calling out things like FileChange struct holding both full-after text AND rendered diff (~2x footprint per changed file), convergence check re-scanning the full post-image when it could check only changed files, etc.",
+      "assertions": [
+        {"text": "Output contains at least 2 'plan.rs:<digits>' line references", "type": "regex", "pattern": "plan\\.rs:\\d+", "min_matches": 2},
+        {"text": "Output uses categorized section headers", "type": "regex", "pattern": "\\*\\*(Perf|Correctness|Memory|Complexity)", "min_matches": 2},
+        {"text": "Surfaces FileChange memory-duplication OR convergence redundant work", "type": "regex_or", "patterns": ["FileChange", "convergence", "re-?scan", "post-image"]},
+        {"text": "Ends with 'Top targets' summary", "type": "contains", "substring": "Top targets"}
+      ]
+    }
+  ]
+}

@@ -7,9 +7,18 @@ description: >
   architecturally problematic, which modules are most tightly coupled, where
   the tech debt is concentrated, what should be split up, or how the
   dependency structure of a project looks. Also trigger on phrases like
-  "find hotspots", "coupling problems", "god classes", "circular dependencies",
-  "refactor candidates", or "which files do too much" — even if the user
-  does not say the word "architecture".
+  "find hotspots in this repo", "coupling problems", "god classes",
+  "circular dependencies", "refactor candidates", or "which files do too
+  much" — even if the user does not say the word "architecture". This skill
+  is **scope: whole repository**. If the user is pointing at a specific file
+  or asking what is wrong *inside* a file ("hotspots in commit.rs", "audit
+  this file", "what's wrong with X"), defer to the companion
+  `code-audit-deep` skill — that one produces line-level findings, this one
+  produces file rankings. When the user asks the broad "what are the
+  hotspots?" without naming a file, run this skill first to pick targets,
+  then invoke `code-audit-deep` on the top 3-5 files for line-level
+  findings — see the "Chain to code-audit-deep" section of this skill's
+  body.
 ---
 
 # Architectural Hotspots
@@ -219,6 +228,41 @@ Always include:
 Do not dump the entire table unless the user asks for it. The script writes
 markdown that *can* be shown verbatim — but lead with the human-readable
 summary first.
+
+## Chain to code-audit-deep
+
+File rankings are *evidence of where to look*, not findings the user can act
+on directly. "Refactor `commit.rs`" is not actionable; "`commit.rs:426` —
+`SystemTime::now()` called per nonce, hoist to constructor" is.
+
+After producing the file-level summary above, **if the user asked the broad
+"what are the hotspots?" question (or any equivalent open-ended hotspots
+question that didn't name a specific file), do not stop at the ranking**.
+Continue:
+
+1. Pick the **top 3-5 files** by combined signal (god + hub, god + tangle,
+   files in cycles, generic-named hubs).
+2. Invoke the `code-audit-deep` skill on those files. That skill reads the
+   files end-to-end and emits categorized line-level findings (perf,
+   correctness, durability, memory, complexity, coupling).
+3. Present both layers in the final response — rankings first ("here is the
+   shape of the problem"), then line-level findings per top file ("here is
+   what is wrong inside them, with line numbers and fix sketches").
+
+Skip the chain step **only** when:
+- The user explicitly asked for rankings only ("just the file list", "no
+  details, just rank them").
+- The repo is too small for hotspots to be meaningful (< ~30 files) — in
+  that case run `code-audit-deep` directly on the whole tree's source
+  files instead of going through this skill.
+- The user named specific files up front. Then `code-audit-deep` should
+  have been picked instead of this skill from the start.
+
+The reason for chaining: this skill's iter-0 failure mode (observed by the
+author) was producing only file rankings when the user actually wanted the
+line-level findings. The user's natural phrasing for *what's broken in
+this codebase* is "what are the hotspots?" — and that question is answered
+properly only when both layers are presented together.
 
 ## When the analyzer disagrees with the user
 

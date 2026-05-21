@@ -1,0 +1,29 @@
+**Perf (2)**
+- `structural.rs:182,184,189` — three linear scans over `m.captures` per match (max + find primary + render). Fix: capture the primary `&QueryCapture` in one pass, drop the separate `find`.
+- `structural.rs:354` — `CompiledStructural::compile` invoked even when `files.len()` may later fail the `max_files` guard at line 349 (compile is post-guard, but the language probe at line 145 still runs unconditionally for every invocation). Fix: minor — fine as-is since walk already happened; only worth noting if compile cost ever grows.
+
+**Correctness (4)**
+- `structural.rs:552` — `node.field_name_for_child(child.id() as u32)` passes a node-identity pointer where a 0-based positional child index is required. Field names will almost always come back `None`, so generated queries omit `field:` constraints they should carry. Fix: track an index counter while iterating `named_children` and pass that.
+- `structural.rs:536-547` — `if named_child_count() == 0 && let Ok(text) = utf8_text(src)` short-circuits to the named-children loop when `utf8_text` errors; for a 0-child node that emits bare `(kind)` with no `#eq?` predicate — a literal silently becomes a wildcard. Fix: split into nested `if`, return an error on the `utf8_text` failure path.
+- `structural.rs:164` — `let _ = parser.set_language(&self.ts_lang)` in `new_parser` is documented as relying on a successful probe in `compile`, but a future caller that constructs `CompiledStructural` without going through `compile` would silently get an unconfigured parser. Fix: make `new_parser` return `Result<Parser>` and surface the error, or keep `compile` as the only constructor and mark the struct fields `pub(crate)`-only.
+- `structural.rs:588-599` — `escape_query_string` handles `"`, `\\`, `\n` only; tab, CR, and NUL pass through and break the synthesized Query string. Fix: extend the match arms (`\t` → `\\t`, `\r` → `\\r`, control → `\\xNN`).
+
+**Complexity (4)**
+- `structural.rs:513-561` — `emit_node` recurses on the user-supplied `--ast` pattern AST with no depth bound. Per-file source is safe (tree-sitter parses iteratively, matches stream), but a pathologically nested CLI pattern can stack-overflow. Note `subtree_ellipsis_capture` (line 619) already uses an explicit `Vec` stack — same shape, in this same file. Fix: convert `emit_node` to the iterative-stack form used by `subtree_ellipsis_capture`.
+- `structural.rs:168-216` — `CompiledStructural::apply` is ~50 lines doing parse + iterate-and-hit + sort + splice + capacity calc + dedup. Fix: extract `collect_hits` and `splice_hits` so each method does one thing.
+- `structural.rs:248-286` — `parse_template` is a hand-rolled byte walker with three branches per iteration (`$$`, `${name}`, `$name`) plus a tail flush; nearly identical in shape to `substitute_metavars` (482-511). Fix: collapse to one scanner that returns an event stream the two callers each fold differently — or at minimum share a single "scan placeholder at i" helper.
+- `structural.rs:440-480` — `compile_friendly_query` is doing five distinct things (substitute → parse → check ABI → unwrap `source_file` → emit query + predicates). Fix: split the unwrap-and-emit half into its own function; the `Result` rejoining stays in this one.
+
+**Coupling (3)**
+- `structural.rs:341-382 + plan.rs:112-137,183-224` — `plan_structural_rewrite` re-implements three helpers that already live in `plan.rs`: the `walk_paths` + `max_files` guard (struct.rs:348-351 ↔ plan.rs:183-190 `scan`), the `Result<Option<FileChange>>` fold (struct.rs:364-369 ↔ plan.rs:192-200 `collect_changes`), and the `total_matches` → `AlreadyApplied` / guard branch (struct.rs:371-382 ↔ plan.rs:202-224 `finalize_plan`). Dual orchestrators. Fix: promote `scan`, `collect_changes`, `finalize_plan` to `pub(crate)` and call them from `plan_structural_rewrite`; pass `convergent_or_scripted = true` since structural never re-probes.
+- `structural.rs:384-408 + plan.rs:248-286` — `plan_one` parallels `process_one` minus the convergence-check branch. Fix: parameterize `process_one` with an `Option<C>` convergence-check, or extract the "read + rewrite + diff + assemble FileChange" tail as a shared `build_file_change` helper consumed by both.
+- `structural.rs:14-16 + plan.rs:293` — `structural.rs` already reaches into `plan.rs` for `read_text_or_skip_binary` and `check_match_counts`, but stops short of reusing the orchestration. The protocol ("scan → parallel per-file → fold → guard") is implicit across both files. Fix: making one orchestrator delegate to the other (per the two findings above) erases the implicit-protocol smell.
+
+**Minor (1)**
+- `structural.rs:578-579` — `caret_col = err.column.min(line.len())` mixes byte (`err.column`) with `line.len()` byte length, then `" ".repeat(caret_col)` uses codepoint-count spaces; on multi-byte input the caret lands off the intended column. Fix: compute display width via `unicode-width` or count chars up to the byte offset.
+
+**Top targets**
+1. `structural.rs:552` — `field_name_for_child(child.id() as u32)` passes the wrong value; generated queries lose all field-position constraints. Highest-impact correctness bug in the file.
+2. `structural.rs:341-382` (vs `plan.rs:183-224`) — collapse the dual orchestrator: have `plan_structural_rewrite` reuse `scan` / `collect_changes` / `finalize_plan` from `plan.rs`. Removes ~40 lines and the implicit cross-file protocol.
+3. `structural.rs:513-561` — convert `emit_node` to the iterative-stack pattern already present at `subtree_ellipsis_capture:619`. Closes the only unbounded-recursion vector on user input.
+4. `structural.rs:536-547` — split the `&& let Ok(text)` short-circuit so a `utf8_text` failure on a 0-child node errors instead of silently emitting a wildcard literal.
