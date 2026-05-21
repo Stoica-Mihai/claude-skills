@@ -107,7 +107,16 @@ IMPORT_PATTERNS: dict[str, list[re.Pattern[str]]] = {
         re.compile(r"""(?:^|\s)export\s+(?:[^'"`]+\s+from\s+)['"]([^'"]+)['"]""", re.MULTILINE),
     ],
     "rust": [
-        re.compile(r"^\s*use\s+([A-Za-z_][\w:]*)", re.MULTILINE),
+        # Plain path: `use crate::foo::Bar`, `pub use foo::bar`. Optional
+        # `pub` prefix supported. Captures up to first whitespace, `{`, or `;`.
+        re.compile(r"^\s*(?:pub\s+)?use\s+([A-Za-z_][\w:]*)", re.MULTILINE),
+        # Grouped: `use crate::foo::{Bar, Baz}` or multi-line block.
+        # Captures the prefix and the braced body separately; extract_imports
+        # handles distribution.
+        re.compile(
+            r"^\s*(?:pub\s+)?use\s+([A-Za-z_][\w:]*)\s*::\s*\{([^}]*)\}",
+            re.MULTILINE | re.DOTALL,
+        ),
         re.compile(r"^\s*mod\s+([A-Za-z_]\w*)\s*;", re.MULTILINE),
     ],
     "go": [
@@ -486,6 +495,54 @@ def extract_imports(text: str, lang: str) -> list[str]:
     for pat in IMPORT_PATTERNS.get(lang, []):
         for m in pat.finditer(text):
             target = m.group(1)
+            if lang == "rust" and m.lastindex and m.lastindex >= 2:
+                # Grouped use: prefix in group(1), braced body in group(2).
+                # Emit `prefix::name` for each name in body, handling nested
+                # paths like `foo::{bar, baz::qux}` and `self`/`super` shortcuts.
+                prefix = m.group(1).strip()
+                body = m.group(2)
+                # Strip comments and split on top-level commas. Nested braces
+                # are rare in real code but handled by depth tracking.
+                body = re.sub(r"//[^\n]*", "", body)
+                body = re.sub(r"/\*.*?\*/", "", body, flags=re.DOTALL)
+                tokens: list[str] = []
+                depth = 0
+                buf = ""
+                for ch in body:
+                    if ch == "{":
+                        depth += 1
+                        buf += ch
+                    elif ch == "}":
+                        depth -= 1
+                        buf += ch
+                    elif ch == "," and depth == 0:
+                        if buf.strip():
+                            tokens.append(buf.strip())
+                        buf = ""
+                    else:
+                        buf += ch
+                if buf.strip():
+                    tokens.append(buf.strip())
+                for tok in tokens:
+                    name = re.split(r"\s+as\s+", tok, maxsplit=1)[0].strip()
+                    if not name or name == "self":
+                        # `use foo::{self, Bar}` — `self` means the module itself.
+                        raw.append(prefix)
+                    elif name == "*":
+                        raw.append(prefix)
+                    elif "{" in name:
+                        # Nested group — emit prefix::name verbatim; the
+                        # resolver's segment splitter will walk it.
+                        nested_prefix, _, nested_body = name.partition("{")
+                        nested_prefix = nested_prefix.rstrip(":").strip()
+                        full_prefix = f"{prefix}::{nested_prefix}" if nested_prefix else prefix
+                        for inner in nested_body.rstrip("}").split(","):
+                            inner = inner.strip()
+                            if inner and inner != "*":
+                                raw.append(f"{full_prefix}::{inner}")
+                    else:
+                        raw.append(f"{prefix}::{name}")
+                continue
             if lang == "go" and "\n" in target:
                 for line in target.splitlines():
                     line = line.strip().strip(",")
@@ -552,9 +609,17 @@ def build_basename_index(
     for f in files:
         stem = f.stem.lower()
         stem_idx[stem].append(f)
+        # Also index the snake_case form so `amux_proto`-style Rust crate
+        # names resolve to files in a `amux-proto/` directory.
+        snake_stem = stem.replace("-", "_")
+        if snake_stem != stem:
+            stem_idx[snake_stem].append(f)
         parent = f.parent.name.lower()
         if parent:
             parent_idx[parent].append(f)
+            snake_parent = parent.replace("-", "_")
+            if snake_parent != parent:
+                parent_idx[snake_parent].append(f)
     return stem_idx, parent_idx
 
 
@@ -697,8 +762,21 @@ def resolve_import(
             rel = p.relative_to(repo_root)
         except ValueError:
             rel = p
-        path_parts_lower = {part.lower() for part in rel.parts}
-        return bool(other_segments_lower & path_parts_lower)
+        # Only directory parts corroborate, not the filename itself. The
+        # last segment is the leaf file (e.g. `http.go`); using its stem as
+        # corroboration would let any import path that happens to contain
+        # "http" elsewhere (e.g. `net/http/httptest`) bind to this file.
+        # That self-corroboration is exactly the false-positive the
+        # path-segment constraint is supposed to kill. Use kebab↔snake
+        # normalisation on directory names so Rust crate-name conventions
+        # still match.
+        parts_lower: set[str] = set()
+        for part in rel.parts[:-1]:
+            p_lower = part.lower()
+            parts_lower.add(p_lower)
+            parts_lower.add(p_lower.replace("-", "_"))
+        normalized_other = {s.replace("-", "_") for s in other_segments_lower}
+        return bool((other_segments_lower | normalized_other) & parts_lower)
 
     def try_index(idx: dict[str, list[Path]]) -> Path | None:
         for seg in reversed(segments):
