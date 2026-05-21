@@ -41,6 +41,12 @@
       "source": "./plugins/architectural-analysis",
       "description": "Static-analysis skills that surface architectural problems in a codebase — hotspot detection, coupling and cohesion signals, refactor-target ranking.",
       "keywords": ["architecture", "hotspots", "coupling", "refactoring", "static-analysis", "code-quality"]
+    },
+    {
+      "name": "skill-builder",
+      "source": "./plugins/skill-builder",
+      "description": "Drop-in replacement for skill-creator with blind eval authoring — evaluation prompts and assertions are written by a subagent that has never seen the skill's body or scripts, fixing the implementation-bias flaw in the upstream workflow.",
+      "keywords": ["skill-creator", "skill-authoring", "evals", "blind-testing", "benchmark", "workflow"]
     }
   ]
 }

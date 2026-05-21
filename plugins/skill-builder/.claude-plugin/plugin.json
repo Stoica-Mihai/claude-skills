@@ -1,0 +1,11 @@
+{
+  "name": "skill-builder",
+  "description": "Drop-in replacement for skill-creator with blind eval authoring. Same drafting / viewer / packaging plumbing, but evaluation prompts and assertions are written by a subagent that has never seen the skill's body or scripts — fixes the implementation-bias problem in the upstream workflow. Use to create new skills, modify existing ones, benchmark performance, or optimize triggering.",
+  "version": "0.1.0",
+  "author": {
+    "name": "MCS"
+  },
+  "repository": "https://github.com/Stoica-Mihai/claude-skills",
+  "license": "Apache-2.0",
+  "keywords": ["skill-creator", "skill-authoring", "evals", "blind-testing", "benchmark", "workflow"]
+}
