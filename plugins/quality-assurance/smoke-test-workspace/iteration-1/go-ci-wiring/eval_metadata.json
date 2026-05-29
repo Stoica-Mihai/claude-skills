@@ -1,0 +1,16 @@
+{
+  "eval_id": 3,
+  "eval_name": "go-ci-wiring",
+  "prompt": "Need build-verification tests wired into GitHub Actions for the Go HTTP API in plugins/quality-assurance/skills/smoke-test/evals/fixtures/go-http-app. Should run on every PR and block merge if anything is red.",
+  "assertions": [
+    {
+      "text": "Produces both the Go test code and a GitHub Actions workflow YAML wiring them in"
+    },
+    {
+      "text": "The Go tests use the standard testing package (or a standard idiom for Go HTTP services) rather than a foreign-language runner"
+    },
+    {
+      "text": "Workflow is configured so failures actually block the PR (sets up Go, runs the smoke target, exits non-zero on failure)"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "quality-assurance",
+  "description": "Quality-engineering skills — build-verification gates, smoke testing, regression discipline. Helps Claude design fast, focused test suites and CI/CD quality gates that catch catastrophic failures before they reach downstream pipelines.",
+  "version": "0.2.0",
+  "author": {
+    "name": "MCS"
+  },
+  "repository": "https://github.com/Stoica-Mihai/claude-skills",
+  "license": "MIT",
+  "keywords": ["smoke-testing", "quality-gates", "ci-cd", "build-verification", "test-strategy", "qa"]
+}

@@ -1,0 +1,19 @@
+{
+  "expectations": [
+    {
+      "text": "Recognises this is a Node/Express project and picks a JS-native runner (the fixture already has vitest/supertest in devDeps \u2014 should be used)",
+      "passed": true,
+      "evidence": "Detected Express + Vitest + supertest correctly; used existing devDeps"
+    },
+    {
+      "text": "Keeps the suite small and explicitly fast \u2014 caps total runtime around 2 minutes or fewer than ~10 checks",
+      "passed": true,
+      "evidence": "6 checks, sub-second in-process runtime"
+    },
+    {
+      "text": "Checks include at least one auth-or-error path, not only happy 200s, so a broken deploy actually surfaces",
+      "passed": true,
+      "evidence": "Includes 401 (no auth), 404 (missing user) error paths plus happy paths"
+    }
+  ]
+}

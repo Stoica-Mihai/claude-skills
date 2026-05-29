@@ -1,0 +1,7 @@
+# Add the following to the existing [dev-dependencies] block in Cargo.toml.
+# (tokio + serde_json are already present; only reqwest needs to be added.)
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "test-util"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+serde_json = "1"

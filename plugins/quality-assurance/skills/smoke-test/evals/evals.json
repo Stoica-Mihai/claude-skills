@@ -1,0 +1,261 @@
+{
+  "skill_name": "smoke-test",
+  "evals": [
+    {
+      "id": 1,
+      "name": "fastapi-no-tests-add-suite",
+      "category": "happy_path",
+      "prompt": "I've got a FastAPI service at plugins/quality-assurance/skills/smoke-test/evals/fixtures/fastapi-app with zero tests. Can you add a smoke suite for it?",
+      "files": ["plugins/quality-assurance/skills/smoke-test/evals/fixtures/fastapi-app"],
+      "assertions": [
+        {"text": "Proposes a focused list of 5-10 concrete checks before generating any code"},
+        {"text": "Generated tests target the actual routes that exist in the fixture (e.g. /health, /users/{id}, /orders) rather than invented endpoints"},
+        {"text": "Output uses a Python-native test framework appropriate for FastAPI (pytest + httpx/TestClient or similar) rather than a generic curl script"},
+        {"text": "Marks environment-specific values like base URL or auth tokens with a clear TODO/placeholder rather than hardcoding production values"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "express-deploy-pain",
+      "category": "happy_path",
+      "prompt": "We keep wasting half our mornings on broken deploys. This is the repo: plugins/quality-assurance/skills/smoke-test/evals/fixtures/express-app. I want a fast test that proves the deploy isn't completely dead before QA touches it.",
+      "files": ["plugins/quality-assurance/skills/smoke-test/evals/fixtures/express-app"],
+      "assertions": [
+        {"text": "Recognises this is a Node/Express project and picks a JS-native runner (the fixture already has vitest/supertest in devDeps — should be used)"},
+        {"text": "Keeps the suite small and explicitly fast — caps total runtime around 2 minutes or fewer than ~10 checks"},
+        {"text": "Checks include at least one auth-or-error path, not only happy 200s, so a broken deploy actually surfaces"}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "go-ci-wiring",
+      "category": "happy_path",
+      "prompt": "Need build-verification tests wired into GitHub Actions for the Go HTTP API in plugins/quality-assurance/skills/smoke-test/evals/fixtures/go-http-app. Should run on every PR and block merge if anything is red.",
+      "files": ["plugins/quality-assurance/skills/smoke-test/evals/fixtures/go-http-app"],
+      "assertions": [
+        {"text": "Produces both the Go test code and a GitHub Actions workflow YAML wiring them in"},
+        {"text": "The Go tests use the standard testing package (or a standard idiom for Go HTTP services) rather than a foreign-language runner"},
+        {"text": "Workflow is configured so failures actually block the PR (sets up Go, runs the smoke target, exits non-zero on failure)"}
+      ]
+    },
+    {
+      "id": 4,
+      "name": "axum-post-deploy-checks",
+      "category": "happy_path",
+      "prompt": "I want post-deploy health checks for our axum service before it promotes to prod. Repo is at plugins/quality-assurance/skills/smoke-test/evals/fixtures/axum-app. Idempotent please — they'll run against the live env.",
+      "files": ["plugins/quality-assurance/skills/smoke-test/evals/fixtures/axum-app"],
+      "assertions": [
+        {"text": "The proposed checks are explicitly idempotent — no side-effectful POSTs that mutate prod data without cleanup"},
+        {"text": "Output is in Rust (uses reqwest/cargo test or an equivalent Rust-native runner), not a script in another language"},
+        {"text": "Distinguishes liveness/readiness from deeper route checks so the suite stays meaningful against a real deployed env"}
+      ]
+    },
+    {
+      "id": 5,
+      "name": "pick-which-routes",
+      "category": "happy_path",
+      "prompt": "Help me pick which 5-10 routes our smoke suite should hit. Service is the FastAPI one in plugins/quality-assurance/skills/smoke-test/evals/fixtures/fastapi-app.",
+      "files": ["plugins/quality-assurance/skills/smoke-test/evals/fixtures/fastapi-app"],
+      "assertions": [
+        {"text": "Returns a prioritised list of routes with a one-line justification each, not just a code dump"},
+        {"text": "Justifications reflect smoke-test discipline — critical-path coverage, blast radius, auth surface — not exhaustive coverage"},
+        {"text": "Total count stays within the 5-10 bound the user asked for"}
+      ]
+    },
+    {
+      "id": 6,
+      "name": "bvt-jargon",
+      "category": "happy_path",
+      "prompt": "set up a BVT for plugins/quality-assurance/skills/smoke-test/evals/fixtures/express-app",
+      "files": ["plugins/quality-assurance/skills/smoke-test/evals/fixtures/express-app"],
+      "assertions": [
+        {"text": "Treats 'BVT' as build-verification testing — i.e. recognises it as a smoke-test request rather than asking what BVT means"},
+        {"text": "Produces a runnable scaffold for the Express fixture, not just a definition of the term"}
+      ]
+    },
+    {
+      "id": 7,
+      "name": "review-cut-for-speed",
+      "category": "happy_path",
+      "prompt": "Our existing smoke suite for the FastAPI service at plugins/quality-assurance/skills/smoke-test/evals/fixtures/fastapi-app takes 7 minutes. What should I cut?",
+      "files": ["plugins/quality-assurance/skills/smoke-test/evals/fixtures/fastapi-app"],
+      "assertions": [
+        {"text": "Asks to see (or reads) the existing suite before proposing cuts rather than guessing"},
+        {"text": "Recommendations explicitly target the <2-minute / 5-10-check discipline and explain which checks duplicate coverage or belong in a deeper tier"},
+        {"text": "Does not propose generating a brand-new suite from scratch when the user only asked for a review"}
+      ]
+    },
+    {
+      "id": 8,
+      "name": "intake-testing-phrasing",
+      "category": "happy_path",
+      "prompt": "I need an intake testing layer for the Go service in plugins/quality-assurance/skills/smoke-test/evals/fixtures/go-http-app — something the deploy pipeline runs first to decide whether the rest of the suite is even worth executing.",
+      "files": ["plugins/quality-assurance/skills/smoke-test/evals/fixtures/go-http-app"],
+      "assertions": [
+        {"text": "Recognises 'intake testing' as smoke / build-acceptance and produces a smoke scaffold (does not ask for clarification)"},
+        {"text": "Output is genuinely small and fast — designed as a gate, not a full integration suite"}
+      ]
+    },
+    {
+      "id": 9,
+      "name": "sanity-vs-smoke",
+      "category": "happy_path",
+      "prompt": "What's the difference between sanity tests and smoke tests, and which one do I want for the axum app at plugins/quality-assurance/skills/smoke-test/evals/fixtures/axum-app?",
+      "files": ["plugins/quality-assurance/skills/smoke-test/evals/fixtures/axum-app"],
+      "assertions": [
+        {"text": "Gives a clear short definition distinguishing the two, then recommends which one fits the user's situation"},
+        {"text": "If a smoke suite is recommended, offers to scaffold one for the axum fixture rather than ending at theory"}
+      ]
+    },
+    {
+      "id": 10,
+      "name": "stressed-quick-suite",
+      "category": "happy_path",
+      "prompt": "ship is on fire. need a smoke suite for the express app in plugins/quality-assurance/skills/smoke-test/evals/fixtures/express-app. fast.",
+      "files": ["plugins/quality-assurance/skills/smoke-test/evals/fixtures/express-app"],
+      "assertions": [
+        {"text": "Responds without excessive preamble — gets to a proposed check list or scaffold quickly"},
+        {"text": "Still surfaces the 5-10 proposed checks before writing code, rather than silently generating a huge file"},
+        {"text": "Final scaffold is actually runnable against the fixture (correct framework wiring, no obvious import errors)"}
+      ]
+    },
+
+    {
+      "id": 11,
+      "name": "adversarial-unit-tests",
+      "category": "adversarial",
+      "prompt": "Can you write unit tests for the order-pricing function in my checkout module? I want full branch coverage and mocks for the tax service.",
+      "files": [],
+      "assertions": [
+        {"text": "Does not produce a smoke/BVT scaffold — recognises this as a unit-testing request"},
+        {"text": "Either declines to invoke smoke-test workflow or explicitly says smoke tests are not the right tool here"}
+      ]
+    },
+    {
+      "id": 12,
+      "name": "adversarial-regression-suite",
+      "category": "adversarial",
+      "prompt": "Design a regression test suite for our payments service so we catch any behaviour change between releases.",
+      "files": [],
+      "assertions": [
+        {"text": "Does not propose a 5-10-check smoke suite as the answer — recognises regression testing is a different tier"},
+        {"text": "If it mentions smoke tests at all, clearly distinguishes them from regression and does not conflate the two"}
+      ]
+    },
+    {
+      "id": 13,
+      "name": "adversarial-hardware-smoke",
+      "category": "adversarial",
+      "prompt": "Help me write a smoke test for this STM32 board — basically a quick power-on self-check to confirm the peripherals are alive.",
+      "files": [],
+      "assertions": [
+        {"text": "Does not produce HTTP/API smoke scaffolds for a web framework — the request is about hardware"},
+        {"text": "Either declines, redirects, or explicitly notes this skill is scoped to web services / APIs"}
+      ]
+    },
+    {
+      "id": 14,
+      "name": "adversarial-load-test",
+      "category": "adversarial",
+      "prompt": "I need to load test our API and see how it behaves at 5k RPS. Can you set up a k6 or locust script?",
+      "files": [],
+      "assertions": [
+        {"text": "Does not output a 5-10-check smoke-test suite — recognises load testing is a different discipline"},
+        {"text": "Response addresses load testing (or says it's out of scope) rather than silently substituting a smoke scaffold"}
+      ]
+    },
+    {
+      "id": 15,
+      "name": "adversarial-debug-single-test",
+      "category": "adversarial",
+      "prompt": "test_create_order keeps flaking in CI — fails maybe 1 in 5 runs. Help me debug it.",
+      "files": [],
+      "assertions": [
+        {"text": "Engages with the debugging request rather than proposing a new smoke suite"},
+        {"text": "Does not redirect into 'let me design your build-verification tests' — stays on the actual flake"}
+      ]
+    },
+    {
+      "id": 16,
+      "name": "adversarial-test-pyramid",
+      "category": "adversarial",
+      "prompt": "Can you explain how the test pyramid applies to a typical microservices setup? Trying to plan our overall testing strategy.",
+      "files": [],
+      "assertions": [
+        {"text": "Answers conceptually about the pyramid without jumping into scaffolding a smoke suite"},
+        {"text": "Does not produce framework-specific test files for a hypothetical fixture"}
+      ]
+    },
+
+    {
+      "id": 17,
+      "name": "edge-bash-cli",
+      "category": "edge_case",
+      "prompt": "I have a CLI tool written in pure Bash — about 400 lines, exposes a few subcommands. Can you add smoke tests for it?",
+      "files": [],
+      "assertions": [
+        {"text": "Acknowledges the project isn't an HTTP service / API and adapts honestly — either offers a CLI-flavoured smoke approach (e.g. bats / shell invocations) or clearly states the skill targets web services and what the user can do instead"},
+        {"text": "Does not silently generate FastAPI/Express scaffolding for a Bash project"}
+      ]
+    },
+    {
+      "id": 18,
+      "name": "edge-existing-suite-review",
+      "category": "edge_case",
+      "prompt": "Our smoke tests live in tests/smoke/ already. Can you review them and tell me what to change? Don't generate a new suite, I want a review.",
+      "files": [],
+      "assertions": [
+        {"text": "Treats this as a review task and asks for / reads the existing files before commenting"},
+        {"text": "Does not overwrite or regenerate the existing suite when the user explicitly said review-only"},
+        {"text": "Recommendations reference the project's 5-10-check / <2-minute discipline rather than generic test-writing advice"}
+      ]
+    },
+    {
+      "id": 19,
+      "name": "edge-django-not-listed",
+      "category": "edge_case",
+      "prompt": "Add a smoke suite to our Django service. It's a standard Django REST Framework app with about 30 endpoints.",
+      "files": [],
+      "assertions": [
+        {"text": "Does not refuse just because Django isn't in the FastAPI/Express/Go/Rust list — adapts to a Django-appropriate setup (e.g. pytest-django, Django test client, or honest generic Python HTTP smoke)"},
+        {"text": "If the skill falls back to a generic template, it says so honestly rather than claiming Django-specific support it doesn't have"},
+        {"text": "Still applies the 5-10-check discipline rather than trying to smoke-test all 30 endpoints"}
+      ]
+    },
+    {
+      "id": 20,
+      "name": "edge-fastify-not-listed",
+      "category": "edge_case",
+      "prompt": "Wire up build-verification tests for our Fastify API. It's similar shape to Express but uses Fastify's plugin model.",
+      "files": [],
+      "assertions": [
+        {"text": "Picks a Fastify-appropriate or at minimum Node-appropriate test approach (fastify.inject, supertest, or similar) rather than insisting on Express idioms"},
+        {"text": "Is explicit if it is reusing an Express-style template as a stand-in, instead of pretending it's tailored to Fastify"}
+      ]
+    },
+    {
+      "id": 21,
+      "name": "edge-very-large-repo",
+      "category": "edge_case",
+      "prompt": "Big monorepo here — 1200+ files, several services living under services/*. Need smoke tests for the orders service specifically (services/orders, it's a FastAPI app). Don't crawl the whole repo, it'll take forever.",
+      "files": [],
+      "assertions": [
+        {"text": "Scopes its work to the named service path rather than scanning the full monorepo"},
+        {"text": "Asks the user to confirm the target path, or scopes detection to it, instead of silently walking 1200+ files"},
+        {"text": "Eventual scaffold is FastAPI-shaped and lives under (or targets) the orders service path"}
+      ]
+    },
+    {
+      "id": 22,
+      "name": "edge-smoke-plus-auth-bug",
+      "category": "edge_case",
+      "prompt": "Two things — please add a smoke suite to the Express app at plugins/quality-assurance/skills/smoke-test/evals/fixtures/express-app, and while you're in there fix the auth middleware bug where it lets requests through with an expired token.",
+      "files": ["plugins/quality-assurance/skills/smoke-test/evals/fixtures/express-app"],
+      "assertions": [
+        {"text": "Handles the smoke-test request properly (proposed checks + scaffold) without ignoring it"},
+        {"text": "Treats the auth bug as a separate concern — either flags it as out of scope for this skill, asks to handle it separately, or clearly separates the two pieces of work rather than tangling them"},
+        {"text": "Does not silently expand the smoke suite into a full security test pass to 'cover' the auth fix"}
+      ]
+    }
+  ]
+}

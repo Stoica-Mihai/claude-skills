@@ -1,0 +1,16 @@
+{
+  "eval_id": 2,
+  "eval_name": "express-deploy-pain",
+  "prompt": "We keep wasting half our mornings on broken deploys. This is the repo: plugins/quality-assurance/skills/smoke-test/evals/fixtures/express-app. I want a fast test that proves the deploy isn't completely dead before QA touches it.",
+  "assertions": [
+    {
+      "text": "Recognises this is a Node/Express project and picks a JS-native runner (the fixture already has vitest/supertest in devDeps \u2014 should be used)"
+    },
+    {
+      "text": "Keeps the suite small and explicitly fast \u2014 caps total runtime around 2 minutes or fewer than ~10 checks"
+    },
+    {
+      "text": "Checks include at least one auth-or-error path, not only happy 200s, so a broken deploy actually surfaces"
+    }
+  ]
+}
