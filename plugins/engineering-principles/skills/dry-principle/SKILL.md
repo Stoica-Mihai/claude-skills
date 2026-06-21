@@ -41,34 +41,37 @@ question you ask each time, and keep a running note of which passes you've compl
 don't circle the same ground. A later pass routinely finds things an earlier one couldn't —
 not because they were hidden, but because you were asking a different question. The passes:
 
-1. **Knowledge, business rules & per-instance state** — the same policy, validation, or
-   calculation in more than one place; parallel structures kept in sync by hand; redundant or
-   derivable state; scattered config; and screen-independent state living inside a component the
-   framework instantiates per screen / row / tab (invisible to grep — it duplicates at runtime).
-   Ask: *"if this rule changes, how many places do I edit?"* and *"if there were two monitors or
-   ten rows, would this timer/fetch/cache run twice — and does it need to?"*
-   → see "Knowledge duplication (the real target)" and "Per-instance and fan-out duplication".
-2. **Magic values & boundary literals** — unnamed literals that carry meaning; `0` / `1` / `-1`
+1. **Knowledge & business rules** — the same policy, validation, or calculation in more than
+   one place; parallel structures kept in sync by hand; redundant or derivable state; scattered
+   config. Ask: *"if this rule changes, how many places do I edit?"*
+   → see "Knowledge duplication (the real target)".
+2. **Per-instance / fan-out state** — screen-independent knowledge (a fetch, a timer, a cache, a
+   "pinned" / "selected" flag) living inside a component the framework instantiates per screen /
+   row / tab. The source appears exactly once, so this is invisible to every text-based lens —
+   it only duplicates at runtime, and it's the one that's also a latent desync *bug*, not just
+   waste. Ask: *"if there were two monitors or ten rows, would this run or store twice — and does
+   it need to?"* → see "Per-instance and fan-out duplication".
+3. **Magic values & boundary literals** — unnamed literals that carry meaning; `0` / `1` / `-1`
    comparisons that really ask a semantic question; stringly-typed code ignoring an enum that
    already exists. Ask: *"does this literal mean something, and does a name for it already
    exist?"* → see "Code-level duplication" (magic numbers/strings, boundary literals).
-3. **Repeated logic, parameters & orchestration** — copied blocks with one or two values
+4. **Repeated logic, parameters & orchestration** — copied blocks with one or two values
    changed; parameter sprawl; the same `begin/try/commit/rollback` or `load→auth→authorize`
    wrapped *around* a varying call. Ask: *"what did every caller do around the interesting
    line?"* → see "Repeated logic patterns", "Parameter sprawl", "Call-site duplication".
-4. **Cross-file siblings, wiring & symbol↔label** — 3+ sibling files exposing the same outward
+5. **Cross-file siblings, wiring & symbol↔label** — 3+ sibling files exposing the same outward
    shape (signal triples, event sets, prop interfaces, repeated UI elements/layouts/tokens); a
    handler's token versus its user-facing label/route/flag living as a bare string in another
    file. Ask: *"do the siblings share an interface? does this name reappear as a literal
    somewhere else?"* → see "UI components", "Interaction and wiring duplication", "Symbol /
    label duplication".
-5. **Same-file scattered & beyond-code** — the same 4-line block embedded in three functions of
+6. **Same-file scattered & beyond-code** — the same 4-line block embedded in three functions of
    one file; duplicated test setup, config, docs, or schema constraints. Ask: *"read the
    look-alike bodies side by side — what repeats?"* → see "Same-file scattered" scanning,
    "Beyond code".
 
-Scale the sweep to the work: a one-line fix collapses to near-nothing (a glance at passes 1–2
-and you're done), but a real review or refactor earns all five deliberate passes. When you
+Scale the sweep to the work: a one-line fix collapses to near-nothing (a quick glance and
+you're done), but a real review or refactor earns all six deliberate passes. When you
 finish, fold the hits from every pass into one consolidated set of findings rather than
 reporting each pass separately — see "Communication".
 
@@ -724,7 +727,7 @@ below are the same lenses stated as actions:
    parallel (same signal triples, same event set, same prop interface), that's the Rule of
    Three across files, and it's exactly the archetype the rule was designed to catch.
    In-file review misses this every time because each file reads fine on its own. This is the
-   cross-file pass (pass 4) — if your earlier passes keep coming up empty but something still
+   cross-file pass (pass 5) — if your earlier passes keep coming up empty but something still
    feels off, that's the signal to widen the lens: the duplication lives *between* files rather
    than within one, and only a sideways diff of sibling interfaces will surface it.
 
