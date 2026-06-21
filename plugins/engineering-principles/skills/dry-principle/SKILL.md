@@ -21,6 +21,52 @@ rule (and should be unified).
 The test: "If this knowledge changes, how many places do I need to update?" If the answer is
 more than one, that's a DRY violation worth examining.
 
+## Run this as a multi-pass sweep
+
+The different kinds of duplication below don't just *look* different — they're found by
+different search motions, and that's the catch. Magic values surface when you *scan literals*.
+Knowledge duplication surfaces when you *ask what changes together*. Wiring duplication surfaces
+when you *compare interaction shapes* across siblings. Symbol↔label duplication surfaces when
+you *match a typed token against a bare string in another file*. Same-file scattered duplication
+surfaces when you *read look-alike function bodies side by side*. These are genuinely different
+mental questions, and the moment you lock onto one — say, hunting magic numbers — you stop
+seeing the others, because you're no longer asking their question. This is why a single
+read-through reliably catches the loudest one or two categories and silently walks past the
+rest. It isn't that the rest are subtle; it's that you weren't looking with the right lens.
+
+So don't try to see everything in one look. Make one focused pass per lens, switching the
+question you ask each time, and keep a running note of which passes you've completed so you
+don't circle the same ground. A later pass routinely finds things an earlier one couldn't —
+not because they were hidden, but because you were asking a different question. The passes:
+
+1. **Knowledge & business rules** — the same policy, validation, or calculation in more than
+   one place; parallel structures kept in sync by hand; redundant or derivable state; scattered
+   config. Ask: *"if this rule changes, how many places do I edit?"*
+   → see "Knowledge duplication (the real target)".
+2. **Magic values & boundary literals** — unnamed literals that carry meaning; `0` / `1` / `-1`
+   comparisons that really ask a semantic question; stringly-typed code ignoring an enum that
+   already exists. Ask: *"does this literal mean something, and does a name for it already
+   exist?"* → see "Code-level duplication" (magic numbers/strings, boundary literals).
+3. **Repeated logic, parameters & orchestration** — copied blocks with one or two values
+   changed; parameter sprawl; the same `begin/try/commit/rollback` or `load→auth→authorize`
+   wrapped *around* a varying call. Ask: *"what did every caller do around the interesting
+   line?"* → see "Repeated logic patterns", "Parameter sprawl", "Call-site duplication".
+4. **Cross-file siblings, wiring & symbol↔label** — 3+ sibling files exposing the same outward
+   shape (signal triples, event sets, prop interfaces, repeated UI elements/layouts/tokens); a
+   handler's token versus its user-facing label/route/flag living as a bare string in another
+   file. Ask: *"do the siblings share an interface? does this name reappear as a literal
+   somewhere else?"* → see "UI components", "Interaction and wiring duplication", "Symbol /
+   label duplication".
+5. **Same-file scattered & beyond-code** — the same 4-line block embedded in three functions of
+   one file; duplicated test setup, config, docs, or schema constraints. Ask: *"read the
+   look-alike bodies side by side — what repeats?"* → see "Same-file scattered" scanning,
+   "Beyond code".
+
+Scale the sweep to the work: a one-line fix collapses to near-nothing (a glance at passes 1–2
+and you're done), but a real review or refactor earns all five deliberate passes. When you
+finish, fold the hits from every pass into one consolidated set of findings rather than
+reporting each pass separately — see "Communication".
+
 ## What to look for
 
 Before writing or modifying code, scan the relevant context for these patterns:
@@ -611,6 +657,10 @@ duplication, not when you imagine you might.
 
 ### When reviewing or modifying existing code
 
+This is where the multi-pass sweep earns its keep — run the passes from "Run this as a
+multi-pass sweep" over the area you're touching, switching the question each pass. The points
+below are the same lenses stated as actions:
+
 1. Notice duplication in the area you're touching. You don't need to fix every DRY violation
    in the codebase — focus on the code you're already changing.
 2. If you find duplicated knowledge that affects your change, flag it. Suggest a concrete
@@ -624,10 +674,10 @@ duplication, not when you imagine you might.
    names, method signatures, prop types. If three siblings expose the same outward shape in
    parallel (same signal triples, same event set, same prop interface), that's the Rule of
    Three across files, and it's exactly the archetype the rule was designed to catch.
-   In-file review misses this every time because each file reads fine on its own. Repeated
-   invocations of DRY review on a project that never surface a given duplication are a
-   signal to widen the scan: if narrow review has already been run three times without
-   catching something, the something lives between files rather than within one.
+   In-file review misses this every time because each file reads fine on its own. This is the
+   cross-file pass (pass 4) — if your earlier passes keep coming up empty but something still
+   feels off, that's the signal to widen the lens: the duplication lives *between* files rather
+   than within one, and only a sideways diff of sibling interfaces will surface it.
 
 5. **Cross-check handler ↔ label pairs.** For every named action the module wires — a key
    binding, route, CLI flag, command, event, metric, env var, permission, localization key —

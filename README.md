@@ -79,7 +79,7 @@ Meta-skills that shape how Claude approaches code. These skills don't add new co
 
 | Skill | Description |
 |-------|-------------|
-| `dry-principle` | Enforces DRY thinking on every coding task — scans for knowledge duplication, magic values, boundary literals, redundant state, parameter sprawl, stringly-typed reuse, and repeated logic, call-site, and interaction patterns, while guarding against premature abstraction via the Rule of Three, coincidental similarity, and YAGNI. |
+| `dry-principle` | Enforces DRY thinking on every coding task as a deliberate multi-pass sweep — one focused lens per pass (knowledge duplication, magic values, boundary literals, redundant state, parameter sprawl, stringly-typed reuse, repeated logic, call-site, interaction, cross-file siblings, symbol↔label, same-file scattered), because each kind hides from the search motion that finds the others. Guards against premature abstraction via the Rule of Three, coincidental similarity, and YAGNI. |
 | `fact-check` | Enforces evidence-based problem solving. No guessing — reads the actual source, traces callers and callees, checks git history, verifies library behavior against the version in use, and confirms each fix before moving on. |
 
 ## License
