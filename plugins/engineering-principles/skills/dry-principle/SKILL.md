@@ -88,10 +88,22 @@ provable on a live codebase, so stop when the angles run dry, not when you've "p
 
 For a whole-repository audit specifically — "find all the duplication in this codebase", a large
 refactor, a pre-release cleanup — fan the six passes out **one agent per lens** (giving each
-agent a single question is what stops it drifting across lenses), and read
-`references/parallel-sweep.md` first: it has the agent tree, the rule that cross-cutting lenses
-must keep whole-repo view rather than being directory-split, and where the Rule-of-Three count
-has to live. Don't reach for this on an ordinary edit — the fan-out only pays off at repo scale.
+agent a single question is what stops it drifting across lenses). Two ways to run it:
+
+- **Deterministic (preferred):** run the bundled workflow at `scripts/dry-sweep.js` via the
+  `Workflow` tool — `Workflow({ scriptPath: "<this skill dir>/scripts/dry-sweep.js", args: {
+  scope: "<repo or path>", patternsPath: "<this skill dir>/references/patterns.md" } })`. It
+  spawns exactly six fixed-label lens agents in parallel, then one merge agent that does the
+  cross-lens dedup, the Rule-of-Three count, and the leverage-ranked report — identical structure
+  every run. `Workflow` requires the user to opt in, so offer it for a real audit.
+- **Fallback (guidance):** if `Workflow` isn't available, do it by hand following
+  `references/parallel-sweep.md` — same agent tree, but the model improvises the spawn, so the
+  shape varies run to run.
+
+Either way, read `references/parallel-sweep.md` for the *why*: the rule that cross-cutting lenses
+must keep whole-repo view rather than being directory-split, and why the Rule-of-Three count has
+to live in the merge step. Don't reach for any of this on an ordinary edit — the fan-out only
+pays off at repo scale.
 
 Once you have a batch of findings to *act* on, read `references/applying-fixes.md` before
 touching code. Finding duplication is the safe half; removing it is where DRY regresses — a

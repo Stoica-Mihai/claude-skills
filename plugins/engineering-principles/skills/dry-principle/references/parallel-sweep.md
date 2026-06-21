@@ -5,6 +5,10 @@ codebase", a large refactor, a pre-release cleanup. A normal edit that triggers 
 does inline thinking and never reaches this file; fanning out across agents for a three-line
 change is pure overhead.
 
+> The deterministic way to run this is the bundled workflow `scripts/dry-sweep.js` (via the
+> `Workflow` tool) — it spawns exactly the agent tree below, the same way every run. This file is
+> the *rationale* behind that tree and the by-hand fallback when `Workflow` isn't available.
+
 The point of fanning out is not raw speed. It's that the sweep's core discipline — *one mental
 motion per pass, because locking onto one lens blinds you to the others* — is hard to hold in a
 single context juggling six questions at once. Give **each agent exactly one lens** and it
