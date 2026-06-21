@@ -84,6 +84,13 @@ pass to the next, so a later pass doesn't re-flag a coincidental match you alrea
 know you've converged when a fresh deep pass turns up only one-line nits — literal zero is never
 provable on a live codebase, so stop when the angles run dry, not when you've "proven" emptiness.
 
+For a whole-repository audit specifically — "find all the duplication in this codebase", a large
+refactor, a pre-release cleanup — fan the six passes out **one agent per lens** (giving each
+agent a single question is what stops it drifting across lenses), and read
+`references/parallel-sweep.md` first: it has the agent tree, the rule that cross-cutting lenses
+must keep whole-repo view rather than being directory-split, and where the Rule-of-Three count
+has to live. Don't reach for this on an ordinary edit — the fan-out only pays off at repo scale.
+
 ## What to look for
 
 Before writing or modifying code, scan the relevant context for these patterns:
