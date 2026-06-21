@@ -644,6 +644,31 @@ touches every caller. Unifying it turns one conceptual change into one file chan
 DRY's biggest failure mode is premature or wrong abstraction. These guardrails are just as
 important as the principle itself.
 
+### A candidate is a hypothesis, not a finding
+
+A duplication you spotted by pattern — two blocks that look alike, the same literal in three
+files — is a *hypothesis*, not a finding. Before you report it or act on it, open every site and
+read it in full, including the surrounding code, and actively try to *disprove* the match.
+Surface similarity is cheap to notice; the value of the review is the deeper look that reveals
+whether the dedup is actually possible. More often than you'd expect, a factor visible only in
+the real code disqualifies the merge:
+
+- One site has an error path, a retry, an exit-code check, or an edge case the others lack.
+- Two blocks read alike but consume different outputs — one needs a parser on stdout, the other
+  only the exit status — so unifying them forces a worse interface onto both.
+- The literals are near but not equal (`-0.3` vs `-0.03`): typo-level proximity, not a shared
+  value. Merging couples two unrelated constants.
+- The divergence is *intentional* — noted in a comment, an established convention, or project
+  memory. "Fixing" it reintroduces the bug the divergence was working around.
+- The two change for different reasons (the coincidental-similarity test below); they only look
+  alike at this moment in time.
+
+Spend the effort to find that factor before you flag anything. A candidate that survived a
+genuine attempt to disprove it is worth reporting; a surface match passed along unchecked is
+noise — it wastes the reader, and if acted on, it breaks working code. When the deeper look
+*does* disqualify a candidate, record *why*: that reasoning is as valuable as the findings, and
+it stops the next pass (or the next reviewer) from re-flagging the same thing.
+
 ### The Rule of Three
 
 Two instances of similar code are not enough evidence to abstract. Wait for three occurrences —

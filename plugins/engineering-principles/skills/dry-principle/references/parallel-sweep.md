@@ -84,8 +84,10 @@ can apply the rule honestly.
 ### 3. Every leaf carries the "when NOT to deduplicate" guardrails
 
 Thirty eager agents with no brakes produce a wall of over-abstraction suggestions. Each leaf
-must apply the guardrails from the skill — coincidental similarity, the wrong-abstraction risk,
-YAGNI — and return *why* it rejected a candidate, not silently drop it. Those rejection reasons
+treats its matches as *hypotheses* — it opens and reads the actual sites and tries to disprove
+each one (see the skill's "A candidate is a hypothesis, not a finding") rather than reporting a
+surface pattern. It applies the guardrails — coincidental similarity, the wrong-abstraction
+risk, YAGNI — and returns *why* it rejected a candidate, not silently drop it. Those rejection reasons
 are the **rejection ledger**: the orchestrator keeps it so a finding cleared in one round isn't
 re-surfaced in the next, and so the human can see what was considered and dismissed.
 
