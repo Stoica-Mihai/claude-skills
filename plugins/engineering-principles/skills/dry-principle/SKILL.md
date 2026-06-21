@@ -91,6 +91,15 @@ agent a single question is what stops it drifting across lenses), and read
 must keep whole-repo view rather than being directory-split, and where the Rule-of-Three count
 has to live. Don't reach for this on an ordinary edit — the fan-out only pays off at repo scale.
 
+Once you have a batch of findings to *act* on, read `references/applying-fixes.md` before
+touching code. Finding duplication is the safe half; removing it is where DRY regresses — a
+hoist that changes lifecycle, a "shared" helper that merged two things which only looked alike,
+a singleton hoist that globalizes state which should have stayed per-instance. That reference
+covers the execution order (foundational and subsuming fixes first, so you don't polish code
+you're about to delete), the failure mode specific to each fix type and how to check it, and the
+step-by-step singleton hoist for the per-instance lens — the one fix that changes runtime
+structure rather than text, so it's the easiest to get wrong.
+
 ## What to look for
 
 Before writing or modifying code, scan the relevant context for these patterns:
