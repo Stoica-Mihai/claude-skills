@@ -28,8 +28,10 @@ different search motions, and that's the catch. Magic values surface when you *s
 Knowledge duplication surfaces when you *ask what changes together*. Wiring duplication surfaces
 when you *compare interaction shapes* across siblings. Symbol↔label duplication surfaces when
 you *match a typed token against a bare string in another file*. Same-file scattered duplication
-surfaces when you *read look-alike function bodies side by side*. These are genuinely different
-mental questions, and the moment you lock onto one — say, hunting magic numbers — you stop
+surfaces when you *read look-alike function bodies side by side*. Per-instance duplication
+surfaces only when you *picture the component multiplied across every screen, row, or tab it
+renders into* — it's invisible in the source, which appears exactly once. These are genuinely
+different mental questions, and the moment you lock onto one — say, hunting magic numbers — you stop
 seeing the others, because you're no longer asking their question. This is why a single
 read-through reliably catches the loudest one or two categories and silently walks past the
 rest. It isn't that the rest are subtle; it's that you weren't looking with the right lens.
@@ -39,10 +41,13 @@ question you ask each time, and keep a running note of which passes you've compl
 don't circle the same ground. A later pass routinely finds things an earlier one couldn't —
 not because they were hidden, but because you were asking a different question. The passes:
 
-1. **Knowledge & business rules** — the same policy, validation, or calculation in more than
-   one place; parallel structures kept in sync by hand; redundant or derivable state; scattered
-   config. Ask: *"if this rule changes, how many places do I edit?"*
-   → see "Knowledge duplication (the real target)".
+1. **Knowledge, business rules & per-instance state** — the same policy, validation, or
+   calculation in more than one place; parallel structures kept in sync by hand; redundant or
+   derivable state; scattered config; and screen-independent state living inside a component the
+   framework instantiates per screen / row / tab (invisible to grep — it duplicates at runtime).
+   Ask: *"if this rule changes, how many places do I edit?"* and *"if there were two monitors or
+   ten rows, would this timer/fetch/cache run twice — and does it need to?"*
+   → see "Knowledge duplication (the real target)" and "Per-instance and fan-out duplication".
 2. **Magic values & boundary literals** — unnamed literals that carry meaning; `0` / `1` / `-1`
    comparisons that really ask a semantic question; stringly-typed code ignoring an enum that
    already exists. Ask: *"does this literal mean something, and does a name for it already
@@ -66,6 +71,15 @@ Scale the sweep to the work: a one-line fix collapses to near-nothing (a glance 
 and you're done), but a real review or refactor earns all five deliberate passes. When you
 finish, fold the hits from every pass into one consolidated set of findings rather than
 reporting each pass separately — see "Communication".
+
+When the codebase is large enough that you fan the sweep out across several readers or
+subagents, partition the work by *concern* — data flow, wiring, theming, per-instance state —
+not by directory. A module-by-module split feels tidy but is blind to exactly the cross-module
+and runtime-instantiation duplication that hides best; each reader sees one folder and every
+file in it reads fine on its own. Carry a short ledger of what you rejected and *why* from one
+pass to the next, so a later pass doesn't re-flag a coincidental match you already cleared. You
+know you've converged when a fresh deep pass turns up only one-line nits — literal zero is never
+provable on a live codebase, so stop when the angles run dry, not when you've "proven" emptiness.
 
 ## What to look for
 
@@ -113,6 +127,41 @@ Before writing or modifying code, scan the relevant context for these patterns:
   from a single schema definition where possible.
 - **Shotgun surgery smell** — when a single logical change requires touching many files, the
   knowledge is probably scattered rather than centralized.
+
+### Per-instance and fan-out duplication
+
+Every lens so far assumes the copies are *visible in the source* — the same block in two files,
+the same literal in three comparisons. This one is invisible to grep, AST diffing, and a careful
+read, because the source appears exactly once. The duplication happens at *runtime*, when a
+declarative framework instantiates that single component many times.
+
+A component rendered per-screen, per-row, per-tab, or per-window — `Variants` / `Repeater` over
+`Quickshell.screens`, a React list `.map`, a per-window controller — multiplies *everything
+stateful inside it* by the instance count. When that state is screen-independent knowledge (a
+data fetch, a refresh timer, a network client, a cache, a "pinned" or "selected" flag), each
+instance keeps its own copy. Two monitors means two API calls, two timers firing forever, and
+two diverging copies of the same fact — none of which the author sees, because they wrote the
+widget once.
+
+The test: **"if there were two monitors (or ten rows), would this run or store twice — and does
+it need to?"** Screen-*dependent* state (this bar's hover, this row's measured geometry) is
+correctly per-instance. Screen-*independent* knowledge that merely happens to live inside a
+per-instance component is duplicated, and should be hoisted out.
+
+Flag this at MED/HIGH **even when there is currently only one instance**, because unlike textual
+duplication it is also a latent *correctness* bug: per-instance mutable state silently desyncs
+the moment a second instance appears. A media widget storing its "pinned player" per-bar lets
+monitor A pin one player while monitor B drives another — a real desync, not just wasted
+compute. A per-bar clock with seconds enabled runs N system clocks ticking every second *and*
+drifts visually between bars.
+
+**Fix:** hoist the screen-independent logic into one shared service or singleton (`pragma
+Singleton` in QML, a store or context in React, a module-level singleton elsewhere); the
+per-instance component becomes a thin view that binds to it.
+
+Signs to scan for: a component instantiated via `Variants` / `Repeater` / `.map` over a
+collection, holding members — timers, fetchers, network calls, caches, selection state — that
+don't depend on the per-instance key.
 
 ### Code-level duplication
 
