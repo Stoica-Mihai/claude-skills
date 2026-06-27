@@ -15,6 +15,7 @@ End-to-end orchestrator for a single OpenSpec change. Takes a user's request, pl
 1. **One change, one workflow**: This skill handles a single discrete change. If the request splits into independent pieces, hand off to `opsx-ext:task-queue` instead.
 2. **Verify before commit**: The change is implemented and verified automatically, but only committed after the user reviews it.
 3. **Parallel where possible**: Maximize parallelization within phases — spawn as many subagents as the work allows.
+4. **Delegate wide fan-out to a workflow**: The deterministic phases (implement, test, verify-fix) ship as Workflow scripts in this skill's `scripts/` directory — `implement-and-test.js` and `fix-fanout.js`. Phases 2d/2e/2f call them by absolute path (`<this skill's base directory>/scripts/<file>.js`). Calling the Workflow tool from this skill is sanctioned opt-in. Use them for wide plans; implement inline for narrow ones (see 2d Step 4).
 
 When dispatching subagents within a phase:
 - Launch all independent subagents in a single tool-call turn — do not wait between dispatches
@@ -77,47 +78,65 @@ Once concerns are resolved, re-run `openspec validate <change-name>` to confirm 
 
 #### 2d — Implement
 
-Run implementation in **parallel waves**, orchestrated by this skill directly. Do **not** invoke `/opsx:apply` here — that command's step 6 is an in-process serial loop ("for each pending task: implement, mark complete, continue"), so once it starts there is no task list left to fan out from. Parallelism must be planned before any task is touched.
+Implementation runs in **dependency-ordered waves**: waves run in sequence, groups within a wave run in parallel. Do **not** invoke `/opsx:apply` here — that command's step 6 is an in-process serial loop, so once it starts there is no task list left to fan out from. Parallelism must be planned before any task is touched.
+
+The wave **plan** is judgment and stays here. The wave **execution** (fan-out, per-wave barriers, test triage) is delegated to a deterministic Workflow so it cannot silently serialize or lose wave-completion state — a benchmark showed equal correctness but lower wall-clock and tokens versus hand-dispatching, with the gap widening as the plan gets wider.
 
 **Step 1 — Read the task list.** Open `openspec/changes/<change-name>/tasks.md` and the change's other artifacts (`proposal.md`, `design.md`, `specs/`).
 
-**Step 2 — Group tasks by primary edit target.** Tasks within tasks.md are usually grouped into sections that each map to one source file (e.g. Section 4 → `src/paint.rs`). All tasks within one such file group MUST be handled by the same subagent — concurrent edits to the same file by separate subagents corrupt each other. Then identify each group's primary file(s) and which groups depend on symbols exported by which other groups.
+**Step 2 — Group tasks by primary edit target.** Tasks within tasks.md are usually grouped into sections that each map to one source file (e.g. Section 4 → `src/paint.rs`). All tasks within one such file group MUST be handled by the same subagent — concurrent edits to the same file by separate subagents corrupt each other. Identify each group's primary file(s) and which groups depend on symbols exported by which other groups.
 
-**Step 3 — Build a wave plan.** A typical wave structure:
+**Step 3 — Build the wave plan.** A typical structure:
 
-- **Wave 0 — Scaffolding.** Cargo.toml / package.json / pyproject.toml / workspace registration / module declarations / error types and other primitives that every later group depends on. Run as a single subagent or do directly — usually small enough to not need fan-out.
-- **Wave 1 — Independent modules.** Every file group whose only inter-group dependency is on Wave 0 artifacts. Fan out: one subagent per group, dispatched in parallel.
-- **Wave 2+ — Aggregators.** Files that re-export from or wire together Wave 1 modules (e.g. `lib.rs`, `index.ts`, `mod.rs`, top-level `__init__.py`). Run after Wave 1 is fully complete.
-- **Test wave.** Test files. Usually one subagent per test file, in parallel — but only after the code under test is complete.
-- **Verify wave.** Build / typecheck / lint / `openspec validate` commands. Sequential; the orchestrator runs these directly via Bash.
+- **Wave 0 — Scaffolding.** Cargo.toml / package.json / pyproject.toml / workspace registration / module declarations / error types — primitives every later group depends on.
+- **Wave 1 — Independent modules.** Every file group whose only inter-group dependency is on Wave 0 artifacts.
+- **Wave 2+ — Aggregators.** Files that re-export from or wire together earlier modules (`lib.rs`, `index.ts`, `mod.rs`, top-level `__init__.py`).
 
 When in doubt, prefer one extra wave with cleaner dependency lines over packing borderline-independent groups into the same wave.
 
-**Step 4 — Dispatch each wave.** For each wave, send all subagent calls in a single tool-use turn (multiple Agent tool calls in one assistant message). Each subagent prompt MUST include:
+**Step 4 — Choose how to execute.**
 
-- The exact tasks it owns, by their tasks.md numbering (e.g. "implement tasks 4.1 through 4.7")
-- The full text of those tasks copied inline (don't make subagents re-read tasks.md)
-- The relevant cross-references from `proposal.md` / `design.md` / spec deltas inline
-- The list of files it is allowed to create/edit (its primary file(s))
-- An explicit instruction to **return a JSON list of completed task numbers** in its final summary, e.g. `completed: ["4.1","4.2","4.3","4.4","4.5","4.6","4.7"]`
-- An explicit instruction to **NOT edit `tasks.md`** — that file is owned by the orchestrator
-- An explicit comment policy: **only write a comment when it captures a non-obvious WHY** (hidden constraint, surprising invariant, workaround for a specific bug). Do not restate the grammar, type signatures, or what the code does — readers can see that. When in doubt, omit.
+- **Narrow plan** (≤2 groups running in parallel across the whole change): implement inline yourself. Workflow spin-up overhead is not worth it — the benchmark showed small changes are a wash.
+- **Wide plan** (≥3 parallel groups, or many waves): delegate to the workflow below.
 
-**Step 5 — Mark tasks complete after each wave.** Once every subagent in the current wave has returned, the orchestrator reads `tasks.md` and edits each `- [ ] N.M` → `- [x] N.M` for the task numbers the subagents reported as complete. This is the only place tasks.md is mutated. Then proceed to the next wave.
+**Step 5 — Delegate to the implement-and-test workflow.** Calling the Workflow tool from this skill is sanctioned (these instructions are the opt-in — it will not re-prompt). Invoke it with the script bundled next to this skill:
 
-**Step 6 — Errors.** If any subagent in a wave reports errors or partial completion, dispatch fix subagents in the next turn (still parallel for independent errors). Do not start the next wave until the current wave's outputs are clean.
+```
+Workflow({
+  scriptPath: "<this skill's base directory>/scripts/implement-and-test.js",
+  args: {
+    changeName: "<change-name>",
+    waves: [
+      { title: "Wave 0 — Scaffold",
+        groups: [
+          { label: "scaffold",
+            files: ["src/error.rs", "Cargo.toml"],
+            tasks: [{ num: "0.1", text: "<full task text copied inline>" }],
+            context: "<relevant proposal/design/spec excerpts inline>" }
+        ] },
+      { title: "Wave 1 — Independent modules", groups: [ /* one per file group */ ] },
+      { title: "Wave 2 — Aggregators", groups: [ /* ... */ ] }
+    ],
+    test: { enabled: <true if a test suite exists>, runCmd: "<e.g. npm test>", coverageCmd: "<or empty>" }
+  }
+})
+```
+
+Build each `group` with the **full task text copied inline** (don't make agents re-read tasks.md), the relevant cross-references inline, and the exact files that group owns. The workflow handles the rest: it dispatches each wave in order with groups in parallel, instructs each agent to edit only its group's `files`, returns `{ completed, errors, testStatus }`, and — when `test.enabled` — runs the suite and fans out coverage. The script already instructs agents to return completed task numbers, to NOT edit tasks.md, and to follow the WHY-only comment policy, so you do not repeat those in the args.
+
+**Step 6 — Mark tasks complete.** After the workflow returns, read `tasks.md` and edit each `- [ ] N.M` → `- [x] N.M` for every number in the returned `completed` array. This is the only place tasks.md is mutated. If `errors` is non-empty, dispatch fix subagents (or re-run the relevant wave) before proceeding.
 
 **Config file update:** After implementation, check whether the change introduces config-driven behavior (env vars, feature flags, settings). If so, update relevant existing config files (`.env.example`, config templates, schema files, Docker/compose files). Only update files that already exist — do not create new config infrastructure.
 
 #### 2e — Test
 
-Check whether the project has an existing test suite (test directories, test files, test runner config).
+If you delegated to the implement-and-test workflow with `test.enabled: true`, the suite ran, failures were fixed, and per-file coverage was fanned out already — inspect the returned `testStatus`. If it reports remaining failures or gaps, dispatch fix subagents and re-run the suite until clean. Then **remove stale tests** referencing deleted code or obsolete behavior (the workflow does not do this).
 
-If tests exist:
+If you took the narrow inline path in 2d, or `test.enabled` was false but a suite exists, run testing yourself:
 
 1. **Run the full suite.** Fix all failures before moving on.
 2. **Check coverage.** Run with coverage enabled. Identify untested code paths in changed code.
-3. **Add missing tests.** **Parallelization:** Dispatch one subagent per file/module needing coverage. Target close to 100% on changed files.
+3. **Add missing tests.** One subagent per file/module needing coverage. Target close to 100% on changed files.
 4. **Remove stale tests.** Clean up tests referencing deleted code or obsolete behavior.
 5. **Re-run with coverage.** Confirm all pass and coverage improved. Repeat if gaps remain.
 
@@ -127,7 +146,25 @@ If no test suite exists, skip this step — do not create a test framework unles
 
 Invoke `/opsx:verify` to validate implementation against artifacts. Verification catches drift between what was planned and what was built — fixing suggestions too prevents spec debt from accumulating.
 
-Fix ALL findings — including suggestions. **Parallelization:** Group findings by file, dispatch one subagent per file to fix concurrently. Re-run `/opsx:verify`. Repeat until zero findings. Maximum 100 passes — if findings persist, log the remaining ones and proceed to Phase 3.
+This is a loop the skill drives, because `/opsx:verify` is a sub-skill a workflow cannot invoke. Each pass:
+
+1. Run `/opsx:verify`.
+2. If it reports zero findings, exit the loop.
+3. Otherwise group the findings by file and delegate the fixes to the fan-out workflow (one subagent per file, in parallel):
+
+```
+Workflow({
+  scriptPath: "<this skill's base directory>/scripts/fix-fanout.js",
+  args: {
+    changeName: "<change-name>",
+    findings: [ { file: "src/x.rs", items: ["<finding 1>", "<finding 2>"] }, ... ]
+  }
+})
+```
+
+4. When it returns, run `/opsx:verify` again.
+
+Fix ALL findings — including suggestions. Maximum 100 passes — if findings persist, log the remaining ones and proceed to Phase 3. For a single-file or one-off finding, just fix it inline rather than spinning up the workflow.
 
 ### Phase 3 — Summary & User Verification
 
