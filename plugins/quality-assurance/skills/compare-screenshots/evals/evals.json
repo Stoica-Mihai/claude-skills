@@ -1,0 +1,325 @@
+{
+  "skill_name": "compare-screenshots",
+  "evals": [
+    {
+      "id": 1,
+      "group": "A",
+      "prompt": "hey can you tell me what changed between these two screenshots? /home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_cosmetic_before.png and /home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_cosmetic_after.png",
+      "expected_output": "Compares the two UI screenshots and reports the cosmetic differences, with a similarity score and an annotated image highlighting the changed regions.",
+      "files": [
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_cosmetic_before.png",
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_cosmetic_after.png"
+      ],
+      "expectations": [
+        "reports a similarity percentage between the two images",
+        "produces a third image with the changed regions boxed in red",
+        "gives a written description of what visually changed"
+      ]
+    },
+    {
+      "id": 2,
+      "group": "A",
+      "prompt": "I refactored a screen and want to make sure the copy is the only thing that moved. before: /home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_text_before.png after: /home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_text_after.png",
+      "expected_output": "Diffs the two screens and pinpoints the text differences, with similarity score and a boxed annotated image.",
+      "files": [
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_text_before.png",
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_text_after.png"
+      ],
+      "expectations": [
+        "identifies that the text content changed and describes where",
+        "reports a similarity percentage",
+        "outputs an annotated image marking the changed text region"
+      ]
+    },
+    {
+      "id": 3,
+      "group": "A",
+      "prompt": "did the layout shift at all here? ui_layout_before.png vs ui_layout_after.png (both in /home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/)",
+      "expected_output": "Detects the layout shift between the two versions and explains which regions moved, with a similarity score and annotated diff image.",
+      "files": [
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_layout_before.png",
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_layout_after.png"
+      ],
+      "expectations": [
+        "reports that a layout shift occurred and where",
+        "reports a similarity percentage",
+        "produces an annotated image with the shifted regions boxed"
+      ]
+    },
+    {
+      "id": 4,
+      "group": "A",
+      "prompt": "Visual regression check please. These two should be pixel-for-pixel identical - confirm nothing changed. /home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_identical_before.png /home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_identical_after.png",
+      "expected_output": "Confirms the two screenshots are visually identical (near 100% similarity) and reports no meaningful changes.",
+      "files": [
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_identical_before.png",
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_identical_after.png"
+      ],
+      "expectations": [
+        "states the two images are visually identical or effectively unchanged",
+        "reports a similarity percentage at or near 100%",
+        "does not invent differences that are not there"
+      ]
+    },
+    {
+      "id": 5,
+      "group": "A",
+      "prompt": "spot the difference between these two for me",
+      "expected_output": "Compares the supplied screenshot pair and reports the visual differences with a similarity score and annotated image.",
+      "files": [
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_cosmetic_before.png",
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_cosmetic_after.png"
+      ],
+      "expectations": [
+        "compares the two images and lists what differs",
+        "reports a similarity percentage",
+        "produces an annotated image with changes marked in red"
+      ]
+    },
+    {
+      "id": 6,
+      "group": "A",
+      "prompt": "We shipped a UI tweak and QA flagged something looks off. Can you diff the baseline against the candidate and give me a rundown of every change? baseline=/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_text_before.png candidate=/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_text_after.png",
+      "expected_output": "Diffs baseline vs candidate, lists each visual change region by region, with similarity score and an annotated image.",
+      "files": [
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_text_before.png",
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_text_after.png"
+      ],
+      "expectations": [
+        "gives a per-region written rundown of what changed",
+        "reports a similarity percentage",
+        "produces an annotated image with the changed areas boxed"
+      ]
+    },
+    {
+      "id": 7,
+      "group": "A",
+      "prompt": "compare these screenshots and lemme know whats diffrent, theyre v1 and v2 of the same page. files are ui_layout_before.png and ui_layout_after.png under /home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files",
+      "expected_output": "Compares v1 vs v2, describes the differences, reports similarity, and produces an annotated diff image.",
+      "files": [
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_layout_before.png",
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_layout_after.png"
+      ],
+      "expectations": [
+        "describes what is different between the two versions",
+        "reports a similarity percentage",
+        "produces an annotated image highlighting the differences"
+      ]
+    },
+    {
+      "id": 8,
+      "group": "A",
+      "prompt": "/compare-screenshots /home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_cosmetic_before.png /home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_cosmetic_after.png",
+      "expected_output": "Runs the comparison on the two images and returns similarity score, annotated image, and written diff.",
+      "files": [
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_cosmetic_before.png",
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_cosmetic_after.png"
+      ],
+      "expectations": [
+        "reports a similarity percentage",
+        "produces an annotated image with changed regions marked",
+        "provides a written description of the differences"
+      ]
+    },
+    {
+      "id": 9,
+      "group": "A",
+      "prompt": "Two screens, expected vs actual from my test run. Tell me exactly what's off so I can decide if it's a real regression or just noise. Expected: /home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_identical_before.png  Actual: /home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_identical_after.png",
+      "expected_output": "Compares expected vs actual and reports whether they match; for an identical pair it confirms no real differences and a near-100% similarity.",
+      "files": [
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_identical_before.png",
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_identical_after.png"
+      ],
+      "expectations": [
+        "reports a similarity percentage",
+        "concludes the images match / no real regression",
+        "does not fabricate differences"
+      ]
+    },
+    {
+      "id": 10,
+      "group": "A",
+      "prompt": "got a before and after of our settings page, what moved? before is at evals/files/ui_layout_before.png and after at evals/files/ui_layout_after.png in this repo",
+      "expected_output": "Locates and compares the two screenshots, reports the moved/changed regions, similarity, and an annotated image.",
+      "files": [
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_layout_before.png",
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_layout_after.png"
+      ],
+      "expectations": [
+        "reports which regions moved or changed",
+        "reports a similarity percentage",
+        "produces an annotated image with the changes boxed"
+      ]
+    },
+    {
+      "id": 11,
+      "group": "B",
+      "prompt": "Compare these two config files and tell me what changed: /etc/app/config.v1.yaml and /etc/app/config.v2.yaml",
+      "expected_output": "Performs a text/config diff (or asks for the files) rather than a visual screenshot comparison; does not produce a similarity percentage or annotated image.",
+      "files": [],
+      "expectations": [
+        "treats this as a text/config diff, not an image comparison",
+        "does NOT produce a similarity-percentage visual diff or a red-boxed annotated image"
+      ]
+    },
+    {
+      "id": 12,
+      "group": "B",
+      "prompt": "Extract the text from this screenshot for me: /home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_text_before.png",
+      "expected_output": "Performs OCR / reads the text out of the single image; does not attempt a two-image visual diff.",
+      "files": [
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_text_before.png"
+      ],
+      "expectations": [
+        "transcribes or reads the content of the single image",
+        "does NOT attempt a before/after visual comparison or report a similarity percentage"
+      ]
+    },
+    {
+      "id": 13,
+      "group": "B",
+      "prompt": "Write a Playwright test that takes a screenshot of the dashboard and fails the build if it doesn't match the stored baseline.",
+      "expected_output": "Helps author a Playwright visual-regression test (code); does not itself perform an ad-hoc image comparison or emit a similarity score and annotated image.",
+      "files": [],
+      "expectations": [
+        "produces or discusses Playwright test code for visual regression",
+        "does NOT run a one-off image diff that outputs a similarity percentage and red-boxed image"
+      ]
+    },
+    {
+      "id": 14,
+      "group": "B",
+      "prompt": "Take a screenshot of https://example.com and crop it to just the header.",
+      "expected_output": "Captures/screenshots a page and edits/crops the image; does not compare two screenshots.",
+      "files": [],
+      "expectations": [
+        "treats this as capturing and editing a single image",
+        "does NOT perform a two-image comparison or report a similarity percentage"
+      ]
+    },
+    {
+      "id": 15,
+      "group": "B",
+      "prompt": "These two screenshots show CPU usage numbers - 47% vs 52%. Which is higher and what's the percentage change?",
+      "expected_output": "Reasons about the two numeric values (52% is higher, ~5 point increase); does not run a pixel-level visual diff of the images.",
+      "files": [],
+      "expectations": [
+        "answers the numeric comparison question about the two values",
+        "does NOT perform a visual image diff with annotated boxes"
+      ]
+    },
+    {
+      "id": 16,
+      "group": "B",
+      "prompt": "Can you make these two product mockups look more similar to each other? Tweak the second one to match the first's color palette.",
+      "expected_output": "Treats this as an image-editing / design request, not a difference report; does not produce a read-only similarity diff.",
+      "files": [],
+      "expectations": [
+        "treats this as an image-editing/design task",
+        "does NOT just report visual differences with a similarity percentage and stop"
+      ]
+    },
+    {
+      "id": 17,
+      "group": "C",
+      "prompt": "Compare these two screenshots and tell me what changed: /home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/diff_sizes_before.png and /home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/diff_sizes_after.png",
+      "expected_output": "Handles the differing resolutions gracefully (normalizing or noting the size mismatch) and still produces a meaningful diff, or clearly explains the size difference, rather than crashing or silently misaligning everything.",
+      "files": [
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/diff_sizes_before.png",
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/diff_sizes_after.png"
+      ],
+      "expectations": [
+        "acknowledges or handles the resolution mismatch instead of erroring out",
+        "either produces a meaningful comparison or clearly explains why the differing sizes complicate it",
+        "does not report nonsense differences caused purely by misalignment"
+      ]
+    },
+    {
+      "id": 18,
+      "group": "C",
+      "prompt": "what's different between these two? /home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/different_screens_before.png /home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/different_screens_after.png",
+      "expected_output": "Detects that the two images are entirely different screens with no meaningful correspondence and tells the user they are too different to diff meaningfully, rather than fabricating a region-by-region comparison.",
+      "files": [
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/different_screens_before.png",
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/different_screens_after.png"
+      ],
+      "expectations": [
+        "recognizes the two images are not similar enough to compare meaningfully",
+        "tells the user they are too different rather than inventing a detailed diff",
+        "reports a low similarity rather than a fabricated change list"
+      ]
+    },
+    {
+      "id": 19,
+      "group": "C",
+      "prompt": "Run a visual regression check on these - they're supposed to be identical: /home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_identical_before.png and /home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_identical_after.png",
+      "expected_output": "Confirms identity with a near-100% similarity and an empty/clean change report, not hallucinated differences.",
+      "files": [
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_identical_before.png",
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_identical_after.png"
+      ],
+      "expectations": [
+        "reports a similarity at or near 100%",
+        "states there are no meaningful changes",
+        "annotated output (if produced) shows no boxed regions / nothing flagged"
+      ]
+    },
+    {
+      "id": 20,
+      "group": "C",
+      "prompt": "compare this screenshot for differences: /home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_cosmetic_before.png",
+      "expected_output": "Notices only one image was provided and asks for the second image rather than fabricating a comparison or comparing the image to itself.",
+      "files": [
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_cosmetic_before.png"
+      ],
+      "expectations": [
+        "recognizes that only one image was supplied",
+        "asks for the second image instead of inventing a diff",
+        "does not produce a similarity percentage against a missing/duplicate image"
+      ]
+    },
+    {
+      "id": 21,
+      "group": "C",
+      "prompt": "diff the before and after: /home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_text_before.png and /home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/does_not_exist_after.png",
+      "expected_output": "Detects that the second file is missing/unreadable and reports the error clearly rather than silently failing or fabricating a comparison.",
+      "files": [
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_text_before.png"
+      ],
+      "expectations": [
+        "reports that the second image path could not be found/read",
+        "does not fabricate a similarity percentage or change list for a nonexistent file"
+      ]
+    },
+    {
+      "id": 22,
+      "group": "C",
+      "prompt": "Here's a before and after - the after is a totally redesigned page, basically a different screen. Can you still give me a percentage and a diff? before /home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/different_screens_before.png after /home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/different_screens_after.png",
+      "expected_output": "Even when explicitly pushed for a percentage, recognizes the pair is essentially two different screens, reports a low similarity, and warns that a region-by-region diff would not be meaningful rather than fabricating precise change regions.",
+      "files": [
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/different_screens_before.png",
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/different_screens_after.png"
+      ],
+      "expectations": [
+        "reports a low similarity reflecting how different the screens are",
+        "warns the comparison is not meaningful for two unrelated screens",
+        "does not invent a confident region-by-region change list"
+      ]
+    },
+    {
+      "id": 23,
+      "group": "C",
+      "prompt": "these two checkout screens look the same to me but the button state changed - can you confirm what's different? /home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_alpha_before.png and /home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_alpha_after.png",
+      "expected_output": "Detects that the 'Pay now' button differs (its transparency/opacity changed even though the color pixels are the same) and reports it as a real change with a similarity score and annotated image, rather than declaring the two identical.",
+      "files": [
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_alpha_before.png",
+        "/home/mcs/Documents/git/claude-skills/plugins/quality-assurance/skills/compare-screenshots/evals/files/ui_alpha_after.png"
+      ],
+      "expectations": [
+        "does NOT declare the two images identical",
+        "identifies the button region as the thing that changed",
+        "produces an annotated image and a similarity percentage"
+      ]
+    }
+  ]
+}

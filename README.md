@@ -82,6 +82,19 @@ Meta-skills that shape how Claude approaches code. These skills don't add new co
 | `dry-principle` | Enforces DRY thinking on every coding task as a deliberate multi-pass sweep — one focused lens per pass (knowledge duplication, per-instance/fan-out state that duplicates at runtime, magic values, boundary literals, redundant state, parameter sprawl, stringly-typed reuse, repeated logic, call-site, interaction, cross-file siblings, symbol↔label, same-file scattered), because each kind hides from the search motion that finds the others. For whole-repo audits it fans out one agent per lens (cross-cutting lenses keep whole-repo view; Rule-of-Three counted centrally), then guides safe refactor execution — fix ordering, per-fix-type verification, and the singleton-hoist procedure. Guards against premature abstraction via the Rule of Three, coincidental similarity, and YAGNI. |
 | `fact-check` | Enforces evidence-based problem solving. No guessing — reads the actual source, traces callers and callees, checks git history, verifies library behavior against the version in use, and confirms each fix before moving on. |
 
+### quality-assurance
+
+Quality-engineering skills — smoke testing, build-verification gates, and visual screenshot diffing.
+
+```
+/plugin install quality-assurance@claude-skills
+```
+
+| Skill / Command | Description |
+|-----------------|-------------|
+| `smoke-test` | Detects the project's stack and scaffolds a focused 5-10 check smoke-test suite (API-first, <2-minute, idempotent) in the right framework, wired for CI. |
+| `/compare-screenshots <img1> <img2>` | Diffs two UI screenshots — handles different sizes/zoom via feature registration — into a similarity score, a confidence-coloured annotated overlay (changed regions boxed), and a written rundown of what changed. |
+
 ## License
 
 MIT

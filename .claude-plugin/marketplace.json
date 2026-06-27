@@ -51,8 +51,8 @@
     {
       "name": "quality-assurance",
       "source": "./plugins/quality-assurance",
-      "description": "Quality-engineering skills — smoke testing, build-verification gates, regression discipline. Includes the smoke-test skill that auto-detects a project's stack and scaffolds a focused 5-10 check suite in the right framework (FastAPI/pytest, Express/Vitest, Go httptest, axum/tower).",
-      "keywords": ["smoke-testing", "quality-gates", "ci-cd", "build-verification", "test-strategy", "qa"]
+      "description": "Quality-engineering skills — smoke testing, build-verification gates, regression discipline, and visual screenshot diffing. Includes the smoke-test skill that scaffolds a focused 5-10 check suite in the right framework (FastAPI/pytest, Express/Vitest, Go httptest, axum/tower), and compare-screenshots, which diffs two UI screenshots (any size/zoom) into a similarity score, a confidence-coloured annotated overlay, and a written rundown.",
+      "keywords": ["smoke-testing", "quality-gates", "ci-cd", "build-verification", "test-strategy", "qa", "visual-regression", "screenshot-diff", "visual-diff"]
     }
   ]
 }
