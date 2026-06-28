@@ -30,6 +30,24 @@ function fdTheme(root){
   root.setAttribute('data-theme',root.getAttribute('data-theme')==='dark'?'light':'dark');
 }
 
+// Toast: non-blocking message. opts: {type:'info'|'err' (default err), timeout ms}.
+// Darts in from the right; auto-dismisses by sliding back out (no fade).
+function fdToast(msg,opts){
+  opts=opts||{};
+  var wrap=document.querySelector('.toaster');
+  if(!wrap){wrap=document.createElement('div');wrap.className='toaster';document.body.appendChild(wrap)}
+  var t=document.createElement('div');
+  t.className='toast'+(opts.type==='info'?' info':'');
+  t.textContent=msg;
+  wrap.appendChild(t);
+  setTimeout(function(){
+    t.style.transition='transform var(--med) var(--ease)';
+    t.style.transform='translateX(40px)';
+    setTimeout(function(){if(t.parentNode)t.remove()},220);
+  },opts.timeout||3200);
+  return t;
+}
+
 // Off-canvas drawer: toggle .drawer-open on the panel + show/hide its scrim.
 function fdDrawer(panel,scrim){
   panel=typeof panel==='string'?document.getElementById(panel):panel;

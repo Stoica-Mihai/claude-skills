@@ -174,6 +174,48 @@
     <button class="btn btn-primary" onclick="document.getElementById('confirm').showModal()"><span>OPEN MODAL →</span></button>
   </div>
 
+  <div class="sect">
+    <div class="kick">CHECKBOX &amp; RADIO</div>
+    <div class="row">
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700"><input type="checkbox" class="check" checked> Telemetry</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700"><input type="checkbox" class="check"> Ghost laps</label>
+      <span style="width:18px"></span>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700"><input type="radio" name="mode" class="radio" checked> Track</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700"><input type="radio" name="mode" class="radio"> Street</label>
+    </div>
+  </div>
+
+  <div class="sect">
+    <div class="kick">SEGMENTED &amp; PAGINATION</div>
+    <div class="row">
+      <div class="seg" onclick="if(event.target.tagName=='BUTTON'){this.querySelectorAll('button').forEach(b=>b.classList.remove('on'));event.target.classList.add('on')}">
+        <button class="on">LIST</button><button>GRID</button><button>MAP</button>
+      </div>
+      <div class="pager">
+        <button disabled aria-label="Previous">‹</button><button class="on">1</button><button>2</button><button>3</button><button aria-label="Next">›</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sect">
+    <div class="kick">BREADCRUMB · TOOLTIP · TOAST</div>
+    <nav class="crumb"><a href="#">GARAGE</a><span class="sep">›</span><a href="#">TIPO 1909</a><span class="sep">›</span><span class="cur">ENGINE</span></nav>
+    <div class="row" style="margin-top:12px">
+      <span class="tip" data-tip="Edit" tabindex="0">
+        <button class="iconbtn" aria-label="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path d="M4 20h4L20 8l-4-4L4 16v4z"/><path d="M14 6l4 4"/></svg></button>
+      </span>
+      <button class="btn btn-primary" onclick="fdToast('Session saved',{type:'info'})"><span>SAVE →</span></button>
+      <button class="btn btn-ghost" onclick="fdToast('Upload failed',{type:'err'})"><span>TRIGGER ERROR</span></button>
+    </div>
+  </div>
+
+  <div class="sect">
+    <div class="kick">SKELETON</div>
+    <div class="skel" style="width:50%"></div>
+    <div class="skel" style="width:85%;margin-top:8px"></div>
+    <div class="skel" style="width:70%;margin-top:8px"></div>
+  </div>
+
 </div>
 
 <dialog id="confirm">

@@ -281,3 +281,107 @@ border color and themes for free.
   </tbody>
 </table>
 ```
+
+## Checkbox & radio
+
+Styled **native** inputs, so keyboard + a11y work with no JS. Both are squares
+(circles break law 1): checkbox fills accent with a check, radio shows an inset
+accent block.
+
+```html
+<label style="display:flex;align-items:center;gap:8px">
+  <input type="checkbox" class="check" checked> Telemetry
+</label>
+<label style="display:flex;align-items:center;gap:8px">
+  <input type="radio" name="mode" class="radio" checked> Track
+</label>
+<label style="display:flex;align-items:center;gap:8px">
+  <input type="radio" name="mode" class="radio"> Street
+</label>
+```
+
+## Segmented control
+
+Welded buttons (the `.combo` idiom); active fills ink. For a few visible options
+where tabs are too heavy and a select is overkill.
+
+```html
+<div class="seg">
+  <button class="on">LIST</button>
+  <button>GRID</button>
+  <button>MAP</button>
+</div>
+```
+
+Toggle `.on` in JS. Real `<button>`s, so they're keyboard-reachable.
+
+## Pagination
+
+```html
+<div class="pager">
+  <button disabled aria-label="Previous">‹</button>
+  <button class="on">1</button>
+  <button>2</button>
+  <button>3</button>
+  <button aria-label="Next">›</button>
+</div>
+```
+
+Welded square cells; current page fills accent, disabled prev/next go `--muted`.
+
+## Breadcrumb
+
+```html
+<nav class="crumb">
+  <a href="#">GARAGE</a><span class="sep">›</span>
+  <a href="#">TIPO 1909</a><span class="sep">›</span>
+  <span class="cur">ENGINE</span>
+</nav>
+```
+
+## Tooltip
+
+```html
+<span class="tip" data-tip="Delete" tabindex="0">
+  <button class="iconbtn danger">…</button>
+</span>
+```
+
+`data-tip` on the wrapper; an ink box darts up on hover/focus. No arrow (a pointy
+triangle fights the square grid) — a butt-joined block.
+
+## Toast
+
+```html
+<button class="btn btn-primary" onclick="fdToast('Saved',{type:'info'})"><span>SAVE</span></button>
+<button class="btn btn-ghost" onclick="fdToast('Upload failed',{type:'err'})"><span>FAIL</span></button>
+```
+
+`fdToast(msg, {type:'info'|'err', timeout})` darts a card in from the bottom-right
+and slides it out — never fades. Error/attention = accent border (default), neutral
+= `info`. Success rides on the label, not a green (law 4).
+
+## Empty state
+
+```html
+<div class="empty">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+       stroke-linecap="square" stroke-linejoin="miter"><rect x="3" y="3" width="18" height="18"/><path d="M3 9h18"/></svg>
+  <h2>NOTHING HERE YET</h2>
+  <p>Spin up your first session to see it land.</p>
+  <button class="btn btn-primary"><span>NEW SESSION →</span></button>
+</div>
+```
+
+A composed pattern (no new chrome): a large `currentColor` glyph, a 900-italic
+headline, calm body, one skewed CTA.
+
+## Skeleton
+
+```html
+<div class="skel" style="width:60%"></div>
+<div class="skel" style="width:90%;margin-top:8px"></div>
+```
+
+Content-shaped placeholder; reuses the marching `fd-march` stripe (a spinner would
+be rotary, off-brand). Size with inline `width`/`height`.

@@ -56,14 +56,16 @@ Both files are in [`skills/futurism-design/assets/`](skills/futurism-design/asse
 ## Components
 
 nav · buttons (primary/ink/ghost + loading/ok/err states) · icon button · keycap ·
-badges (red/default/outline) · input · form row · custom select (label≠value via
-`data-value`) · animated toggle · status dot · cards · list rows · tabs ·
-alerts (warn/info) · striped progress · table · blockquote · darting links ·
-modal (`<dialog>`) · off-canvas drawer · runtime accent picker.
+keyboard chord · badges (red/default/outline) · input · form row · checkbox · radio ·
+custom select (label≠value via `data-value`) · animated toggle · segmented control ·
+status dot · cards · list rows · tabs · alerts (warn/info) · striped progress ·
+skeleton · table · pagination · breadcrumb · tooltip · blockquote · darting links ·
+modal (`<dialog>`) · toast · off-canvas drawer · empty state · runtime accent picker.
 
-Built for apps as well as pages — modals, forms, interactive states, mobile
-drawers, and a theme-independent `--scrim` for overlays. See SKILL.md's
-"Responsive & touch" section for the layout patterns.
+Built for apps as well as pages — modals, toasts, forms (real native checkbox/radio),
+interactive states, mobile drawers, keyboard-accessible focus rings, and a
+theme-independent `--scrim` for overlays. See SKILL.md's "Responsive & touch"
+section for the layout patterns.
 
 Token tables and full markup: [`skills/futurism-design/references/`](skills/futurism-design/references/).
 
