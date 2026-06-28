@@ -101,35 +101,63 @@ Return the list of artifact file paths created, whether validate is clean, and a
 
 // ---- Phase 2c: Self-review loop (fan out one reviewer per artifact; fix; repeat until clean) ----
 phase('Self-review')
+// Concerns carry a severity; only BLOCKING ones gate the loop. Minor/stylistic
+// notes are logged but never trigger another pass — prose artifacts always have
+// *something* a fresh reviewer could nitpick, which otherwise oscillates forever.
 const REVIEW = {
   type: 'object', additionalProperties: false,
   required: ['file', 'concerns'],
   properties: {
     file: { type: 'string' },
-    concerns: { type: 'array', items: { type: 'string' } },
+    concerns: {
+      type: 'array',
+      items: {
+        type: 'object', additionalProperties: false,
+        required: ['severity', 'note'],
+        properties: {
+          severity: { type: 'string', enum: ['blocking', 'minor'] },
+          note: { type: 'string' },
+        },
+      },
+    },
   },
 }
-let reviewPass = 0
-while (reviewPass < 100) {
+// Markdown self-review should converge in 1-2 rounds. The low cap + the
+// non-decreasing break stop the reviewer/fixer ping-pong; 100 was a footgun.
+const MAX_REVIEW = 3
+let reviewPass = 0, prevBlocking = Infinity, minorTotal = 0
+while (reviewPass < MAX_REVIEW) {
   reviewPass++
   const reviews = (await parallel(ff.artifactFiles.map(f => () =>
     agent(`Review the OpenSpec artifact at ${f} (change "${changeName}", root ${root}).
-Read it and the sibling artifacts in the same change directory for cross-references. Report concerns only:
-missing requirements/edge cases, contradictions with sibling artifacts, vague task breakdowns, technical risks in the design.
-Return an empty concerns array if it is sound.`,
+Read it and the sibling artifacts for cross-references. Report ONLY genuinely BLOCKING defects (severity "blocking"):
+a contradiction between artifacts, a missing or malformed requirement/scenario, a task breakdown that cannot be
+implemented as written, or a design decision that violates a stated requirement. Mark everything else — polish,
+"could add more detail", nice-to-haves, stylistic preferences — as severity "minor". Artifacts need NOT be
+exhaustive; do not invent blocking concerns. Return an empty concerns array if it is sound.`,
       { label: `review:${f.split('/').pop()}`, phase: 'Self-review', schema: REVIEW })
   ))).filter(Boolean)
 
-  const withConcerns = reviews.filter(r => r.concerns.length)
-  if (!withConcerns.length) { log(`self-review clean after ${reviewPass} pass(es)`); break }
+  const blocking = reviews
+    .map(r => ({ file: r.file, concerns: r.concerns.filter(c => c.severity === 'blocking') }))
+    .filter(r => r.concerns.length)
+  minorTotal += reviews.reduce((n, r) => n + r.concerns.filter(c => c.severity === 'minor').length, 0)
+  const blockingCount = blocking.reduce((n, r) => n + r.concerns.length, 0)
 
-  log(`self-review pass ${reviewPass}: ${withConcerns.length} artifact(s) with concerns`)
-  await parallel(withConcerns.map(r => () =>
-    agent(`Fix these concerns in the OpenSpec artifact ${r.file} (change "${changeName}", root ${root}):
-${r.concerns.map((c, i) => `  ${i + 1}. ${c}`).join('\n')}
-Edit only ${r.file}. After editing, run \`openspec validate ${changeName}\` and fix any structural errors you introduced.`,
+  if (!blocking.length) { log(`self-review clean after ${reviewPass} pass(es)${minorTotal ? ` (${minorTotal} minor note(s) left as-is)` : ''}`); break }
+  // Not strictly fewer blockers than last round → oscillating, not converging. Stop.
+  if (blockingCount >= prevBlocking) { log(`self-review not converging (${blockingCount} blocking, prev ${prevBlocking}) — stopping at pass ${reviewPass}`); break }
+  prevBlocking = blockingCount
+
+  log(`self-review pass ${reviewPass}: ${blockingCount} blocking concern(s) across ${blocking.length} artifact(s)`)
+  await parallel(blocking.map(r => () =>
+    agent(`Fix these BLOCKING concerns in the OpenSpec artifact ${r.file} (change "${changeName}", root ${root}):
+${r.concerns.map((c, i) => `  ${i + 1}. ${c.note}`).join('\n')}
+Make the minimal edit that resolves them — do not expand scope or add nice-to-haves. Edit only ${r.file}.
+After editing, run \`openspec validate ${changeName}\` and fix any structural errors you introduced.`,
       { label: `review-fix:${r.file.split('/').pop()}`, phase: 'Self-review' })
   ))
+  if (reviewPass === MAX_REVIEW) log(`self-review hit pass cap (${MAX_REVIEW}) with ${blockingCount} blocking concern(s) still open`)
 }
 
 // ---- Phase 2d: Implement. Agent plans the waves; the script fans out (NOT openspec-apply, which is serial). ----
@@ -269,21 +297,27 @@ const VERIFY = {
     },
   },
 }
+const MAX_VERIFY = 5
 let verifyPass = 0
 let verifyClean = false
-while (verifyPass < 100) {
+let prevFindings = Infinity
+while (verifyPass < MAX_VERIFY) {
   verifyPass++
   const v = must(await agent(
     `Working directory: ${root}. Invoke the Skill tool with skill name "openspec-verify-change" passing the change name "${changeName}" (so it never has to ask which change).
-It returns a CRITICAL/WARNING/SUGGESTION report. Convert that report into structured findings grouped by the file each finding concerns (use the change artifact path when a finding is about an artifact rather than source). Set clean=true only if there are zero CRITICAL/WARNING/SUGGESTION items.`,
+It returns a CRITICAL/WARNING/SUGGESTION report. Convert that report into structured findings grouped by the file each finding concerns (use the change artifact path when a finding is about an artifact rather than source). Include ONLY CRITICAL and WARNING items in findings — omit SUGGESTIONs (they are optional, not defects). Set clean=true if there are no CRITICAL or WARNING items (a SUGGESTION-only report is clean).`,
     { label: `verify:pass-${verifyPass}`, phase: 'Verify', schema: VERIFY }), 'verify')
   if (v.clean || !v.findings.length) { verifyClean = true; log(`verify clean after ${verifyPass} pass(es)`); break }
-  log(`verify pass ${verifyPass}: ${v.findings.length} file(s) with findings`)
+  const findingCount = v.findings.reduce((n, f) => n + f.items.length, 0)
+  if (findingCount >= prevFindings) { log(`verify not converging (${findingCount} findings, prev ${prevFindings}) — stopping at pass ${verifyPass}`); break }
+  prevFindings = findingCount
+  log(`verify pass ${verifyPass}: ${findingCount} finding(s) across ${v.findings.length} file(s)`)
   await parallel(v.findings.map(f => () =>
     agent(`Fix these verification findings in ${f.file} (change "${changeName}", root ${root}):
 ${f.items.map((it, i) => `  ${i + 1}. ${it}`).join('\n')}
 Fix the cause, not the symptom. Edit only ${f.file} (and its direct test if a finding requires it).`,
       { label: `verify-fix:${f.file.split('/').pop()}`, phase: 'Verify' })))
+  if (verifyPass === MAX_VERIFY) log(`verify hit pass cap (${MAX_VERIFY}) with ${findingCount} finding(s) still open`)
 }
 
 return {
