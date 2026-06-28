@@ -258,7 +258,7 @@ dialog .modal{max-height:calc(100dvh - 24px);overflow-y:auto}
 .seg button.on{background:var(--ink);color:var(--bg)}
 .seg button:focus-visible{outline:3px solid var(--accent);outline-offset:-3px;z-index:1}
 
-/* Pagination — welded square cells; current fills accent, disabled goes muted. */
+/* Pagination — welded square cells; current fills ink, disabled goes muted. */
 .pager{display:inline-flex}
 .pager button{font-family:var(--mono,ui-monospace,monospace);font-size:12px;font-weight:700;min-width:32px;height:32px;border:2px solid var(--line);background:var(--surf);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background var(--fast),color var(--fast)}
 .pager button+button{margin-left:-2px}
@@ -286,6 +286,13 @@ dialog .modal{max-height:calc(100dvh - 24px);overflow-y:auto}
   .prog>i,.skel{background:Highlight}
   .dot{background:Highlight}
   .dot.dead{background:GrayText}
+}
+
+/* Print: drop fixed overlays + solid shadows so pages print clean (screen-app kit,
+   so this is a courtesy, not a layout). */
+@media print{
+  .toaster,.drawer,.scrim-bg,dialog::backdrop{display:none!important}
+  *{box-shadow:none!important}
 }
 
 @media (prefers-reduced-motion:reduce){

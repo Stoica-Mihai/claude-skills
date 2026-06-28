@@ -20,6 +20,7 @@
 </style>
 </head>
 <body>
+<noscript><div style="border:2px solid var(--line);border-left:8px solid var(--accent);padding:10px 12px;margin:16px;font-size:13px;font-weight:700">This demo's interactive components (select, tabs, toggle, accent picker, modal, toast) need JavaScript.</div></noscript>
 <div class="wrap">
 
   <div class="head">
@@ -253,7 +254,6 @@
     {name:'Violet',light:'#7a3fd6',dark:'#b06bff'},
     {name:'Pink',light:'#d62f86',dark:'#ff5fae'}
   ];
-  var accent;
   function flipTheme(){
     fdTheme();
     var d=document.documentElement.getAttribute('data-theme')==='dark';
@@ -261,10 +261,10 @@
     sw.querySelector('.l').classList.toggle('act',!d);
     sw.querySelector('.d').classList.toggle('act',d);
     sw.setAttribute('aria-pressed',d?'true':'false');
-    if(accent)accent.reapply();
+    // accent re-applies itself on theme change (fdAccent's observer) — no reapply() needed.
   }
   function showVal(){document.getElementById('chassisval').textContent=fdSelVal(document.querySelector('.sel[data-field="chassis"]'))}
-  window.addEventListener('DOMContentLoaded',function(){accent=fdAccent('accpick',ACC)});
+  window.addEventListener('DOMContentLoaded',function(){fdAccent('accpick',ACC)});
 </script>
 </body>
 </html>

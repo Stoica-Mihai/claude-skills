@@ -85,7 +85,7 @@ function fdTheme(root){
 function fdToast(msg,opts){
   opts=opts||{};
   var wrap=document.querySelector('.toaster');
-  if(!wrap){wrap=document.createElement('div');wrap.className='toaster';document.body.appendChild(wrap)}
+  if(!wrap){wrap=document.createElement('div');wrap.className='toaster';wrap.setAttribute('role','status');wrap.setAttribute('aria-live','polite');document.body.appendChild(wrap)}
   var t=document.createElement('div');
   t.className='toast'+(opts.type==='err'?' err':'');
   t.textContent=msg;
