@@ -317,49 +317,55 @@ Welded buttons (the `.combo` idiom); active fills ink. For a few visible options
 where tabs are too heavy and a select is overkill.
 
 ```html
-<div class="seg">
-  <button class="on">LIST</button>
-  <button>GRID</button>
-  <button>MAP</button>
+<div class="seg" role="group" aria-label="View">
+  <button class="on" aria-pressed="true">LIST</button>
+  <button aria-pressed="false">GRID</button>
+  <button aria-pressed="false">MAP</button>
 </div>
 ```
 
-Toggle `.on` in JS. Real `<button>`s, so they're keyboard-reachable.
+Toggle `.on` + `aria-pressed` in JS. Real `<button>`s, so they're keyboard-reachable;
+`role="group"` + `aria-pressed` announce it as a single-choice set.
 
 ## Pagination
 
 ```html
-<div class="pager">
+<nav class="pager" aria-label="Pagination">
   <button disabled aria-label="Previous">‹</button>
-  <button class="on">1</button>
+  <button class="on" aria-current="page">1</button>
   <button>2</button>
   <button>3</button>
   <button aria-label="Next">›</button>
-</div>
+</nav>
 ```
 
-Welded square cells; current page fills accent, disabled prev/next go `--muted`.
+Welded square cells; current page fills ink (matches `.seg`/`.tab` — accent stays
+the live/attention role) and carries `aria-current="page"`; disabled prev/next go `--muted`.
 
 ## Breadcrumb
 
 ```html
-<nav class="crumb">
+<nav class="crumb" aria-label="Breadcrumb">
   <a href="#">GARAGE</a><span class="sep">›</span>
   <a href="#">TIPO 1909</a><span class="sep">›</span>
-  <span class="cur">ENGINE</span>
+  <span class="cur" aria-current="page">ENGINE</span>
 </nav>
 ```
+
+Links carry the same darting accent underline as the nav on hover.
 
 ## Tooltip
 
 ```html
-<span class="tip" data-tip="Delete" tabindex="0">
-  <button class="iconbtn danger">…</button>
+<span class="tip" data-tip="Delete">
+  <button class="iconbtn danger" aria-label="Delete">…</button>
 </span>
 ```
 
-`data-tip` on the wrapper; an ink box darts up on hover/focus. No arrow (a pointy
-triangle fights the square grid) — a butt-joined block.
+`data-tip` on the wrapper; an ink box darts down toward the trigger on hover/focus.
+No arrow (a pointy triangle fights the square grid) — a butt-joined block. The
+tooltip is **visual only** (CSS `::after` isn't in the accessibility tree), so the
+control inside must carry its own `aria-label` — don't rely on the tip for the name.
 
 ## Toast
 

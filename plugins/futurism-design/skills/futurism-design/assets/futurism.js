@@ -8,6 +8,7 @@
 function fdOptValue(o){return o.dataset.value!==undefined?o.dataset.value:o.textContent}
 // Open/close a select, keeping aria-expanded in sync; focus the active option on open.
 function fdSelOpen(sel,open){
+  if(open)document.querySelectorAll('.sel.open').forEach(function(o){if(o!==sel)fdSelOpen(o,false)});
   sel.classList.toggle('open',open);
   var v=sel.querySelector('.sel-val');
   if(v)v.setAttribute('aria-expanded',open?'true':'false');
@@ -25,29 +26,47 @@ function fdSel(opt){
 // Read a .sel's current value (the picked option's data-value/label).
 function fdSelVal(sel){return sel?(sel.dataset.value||''):''}
 
-// Tabs: activate clicked tab + matching panel; keep aria-selected + roving tabindex.
+// Scope containing a tab strip AND its panels. Prefer an explicit [data-tabs]
+// wrapper; fall back to the tab strip's parent (panels are usually its siblings).
+function fdTabScope(el){
+  var r=el.closest('[data-tabs]')||el.closest('.sect')||el.parentNode;
+  if(r&&!r.querySelector('.panel')){var t=el.closest('.tabs');if(t&&t.parentNode)r=t.parentNode}
+  return r||document;
+}
+// Tabs: activate the tab + matching panel; keep aria-selected + roving tabindex.
 function fdTab(el,i){
-  var root=el.closest('[data-tabs]')||el.closest('.sect')||document;
+  var root=fdTabScope(el);
   root.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on');t.setAttribute('aria-selected','false');t.tabIndex=-1});
   el.classList.add('on');el.setAttribute('aria-selected','true');el.tabIndex=0;
-  root.querySelectorAll('.panel').forEach(function(p,j){p.classList.toggle('on',j===i)});
+  root.querySelectorAll('.panel').forEach(function(p,j){var on=j===i;p.classList.toggle('on',on);p.hidden=!on});
 }
 
+var fdUid=0;
+function fdId(el,prefix){if(!el.id)el.id=prefix+(fdUid++);return el.id}
 // Auto-wire ARIA roles + tabindex on .sel / .tabs / .toggle so markup stays clean.
 // Idempotent; call again after injecting new components. Runs once on load.
 function fdInit(root){
   root=root||document;
+  // Select = button that pops a listbox (APG menu-button/listbox; roving focus on
+  // options is correct here, unlike role=combobox which needs aria-activedescendant).
   root.querySelectorAll('.sel').forEach(function(sel){
-    var v=sel.querySelector('.sel-val');
-    if(v){v.setAttribute('role','combobox');v.setAttribute('aria-haspopup','listbox');v.setAttribute('aria-expanded','false');if(!v.hasAttribute('tabindex'))v.tabIndex=0}
-    var list=sel.querySelector('.sel-list');if(list)list.setAttribute('role','listbox');
+    var v=sel.querySelector('.sel-val'),list=sel.querySelector('.sel-list');
+    if(list)list.setAttribute('role','listbox');
+    if(v){v.setAttribute('role','button');v.setAttribute('aria-haspopup','listbox');v.setAttribute('aria-expanded','false');
+      if(list)v.setAttribute('aria-controls',fdId(list,'fd-list-'));if(!v.hasAttribute('tabindex'))v.tabIndex=0}
     sel.querySelectorAll('.sel-opt').forEach(function(o){o.setAttribute('role','option');o.setAttribute('aria-selected',o.classList.contains('sel-on')?'true':'false');o.tabIndex=-1});
   });
   root.querySelectorAll('.tabs').forEach(function(tl){
     tl.setAttribute('role','tablist');
-    tl.querySelectorAll('.tab').forEach(function(t){t.setAttribute('role','tab');t.setAttribute('aria-selected',t.classList.contains('on')?'true':'false');t.tabIndex=t.classList.contains('on')?0:-1});
+    var scope=fdTabScope(tl.querySelector('.tab')||tl);
+    var panels=Array.prototype.slice.call(scope.querySelectorAll('.panel'));
+    Array.prototype.slice.call(tl.querySelectorAll('.tab')).forEach(function(t,i){
+      t.setAttribute('role','tab');
+      var on=t.classList.contains('on');t.setAttribute('aria-selected',on?'true':'false');t.tabIndex=on?0:-1;
+      var p=panels[i];
+      if(p){p.setAttribute('role','tabpanel');t.setAttribute('aria-controls',fdId(p,'fd-panel-'));p.setAttribute('aria-labelledby',fdId(t,'fd-tab-'));if(!p.hasAttribute('tabindex'))p.tabIndex=0;p.hidden=!on}
+    });
   });
-  root.querySelectorAll('.panel').forEach(function(p){p.setAttribute('role','tabpanel');if(!p.hasAttribute('tabindex'))p.tabIndex=0});
   root.querySelectorAll('.toggle').forEach(function(t){
     if(t.tagName!=='BUTTON'){t.setAttribute('role','switch');if(!t.hasAttribute('tabindex'))t.tabIndex=0}
     t.setAttribute('aria-checked',t.classList.contains('on')?'true':'false');
@@ -94,10 +113,11 @@ function fdDrawer(panel,scrim){
 function fdAccent(pick,accents,onChange){
   pick=typeof pick==='string'?document.getElementById(pick):pick;
   if(!pick)return;
-  var trig=pick.querySelector('.acctrig'),pop=pick.querySelector('.accpop');
+  var trig=pick.querySelector('.acctrig'),pop=pick.querySelector('.accpop'),current;
   var saved=localStorage.getItem('fd-accent')||accents[0].name;
   function dark(){return document.documentElement.getAttribute('data-theme')==='dark'}
   function apply(a){
+    current=a;
     var col=dark()?a.dark:a.light,r=document.documentElement.style;
     r.setProperty('--accent',col);
     r.setProperty('--shadow',dark()?col:'#1a1714');
@@ -124,6 +144,9 @@ function fdAccent(pick,accents,onChange){
     trig.onclick=function(){var o=pick.classList.toggle('open');trig.setAttribute('aria-expanded',o?'true':'false')};
   }
   apply(accents.find(function(a){return a.name===saved})||accents[0]);
+  // Re-apply on theme flip so --accent/--shadow track the new theme without the
+  // caller having to call reapply() after every fdTheme().
+  new MutationObserver(function(){if(current)apply(current)}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
   return {reapply:function(){apply(accents.find(function(a){return a.name===(localStorage.getItem('fd-accent')||accents[0].name)})||accents[0])}};
 }
 
@@ -142,6 +165,7 @@ document.addEventListener('click',function(e){
 
 // Keyboard for the div-built controls (native button/dialog/checkbox handle their own).
 document.addEventListener('keydown',function(e){
+  if(!e.target||!e.target.closest)return;
   // Custom select: Enter/Space/Down open; Up/Down move; Enter pick; Esc/Tab close.
   var sel=e.target.closest('.sel');
   if(sel){
@@ -154,18 +178,24 @@ document.addEventListener('keydown',function(e){
     else if(e.key==='Tab'){if(open)fdSelOpen(sel,false)}
     return;
   }
-  // Tabs: Left/Right move focus + activate (roving tabindex).
+  // Tabs: Enter/Space activate the focused tab; Left/Right move + activate.
+  // Calls fdTab directly (no reliance on inline onclick indices).
   var tab=e.target.closest('.tab');
-  if(tab&&(e.key==='ArrowRight'||e.key==='ArrowLeft')){
+  if(tab&&(e.key==='Enter'||e.key===' '||e.key==='ArrowRight'||e.key==='ArrowLeft')){
     e.preventDefault();
     var tabs=Array.prototype.slice.call(tab.closest('.tabs').querySelectorAll('.tab')),ti=tabs.indexOf(tab);
-    var n=e.key==='ArrowRight'?(ti+1)%tabs.length:(ti-1+tabs.length)%tabs.length;
-    tabs[n].focus();tabs[n].click();
+    if(e.key==='Enter'||e.key===' '){fdTab(tab,ti)}
+    else{var n=e.key==='ArrowRight'?(ti+1)%tabs.length:(ti-1+tabs.length)%tabs.length;fdTab(tabs[n],n);tabs[n].focus()}
     return;
   }
   // Toggle (div role=switch): Enter/Space flips it (native <button> handles itself).
   var tg=e.target.closest('.toggle');
   if(tg&&tg.tagName!=='BUTTON'&&(e.key==='Enter'||e.key===' ')){
-    e.preventDefault();tg.classList.toggle('on');tg.setAttribute('aria-checked',tg.classList.contains('on')?'true':'false');
+    e.preventDefault();tg.classList.toggle('on');tg.setAttribute('aria-checked',tg.classList.contains('on')?'true':'false');return;
+  }
+  // Escape closes the accent popover or an open drawer and restores focus.
+  if(e.key==='Escape'){
+    document.querySelectorAll('.accpick.open').forEach(function(p){p.classList.remove('open');var t=p.querySelector('.acctrig');if(t){t.setAttribute('aria-expanded','false');t.focus()}});
+    document.querySelectorAll('.drawer.drawer-open').forEach(function(d){d.classList.remove('drawer-open');var s=document.querySelector('.scrim-bg');if(s)s.style.display='none'});
   }
 },false);

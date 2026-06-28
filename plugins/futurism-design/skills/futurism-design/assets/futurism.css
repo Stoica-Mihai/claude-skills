@@ -4,7 +4,7 @@
    data-theme="dark" to the root for the carbon theme. */
 
 :root{
-  --bg:#efe9dc; --surf:#f7f3ea; --ink:#1a1714; --muted:#5a5247;
+  --bg:#efe9dc; --surf:#f7f3ea; --ink:#1a1714; --muted:#4a4339;
   --accent:#d22f1a; --line:#1a1714; --shadow:#1a1714; --field:#f7f3ea; --on-accent:#efe9dc;
   --ease:cubic-bezier(.2,.9,.1,1); --fast:.12s; --med:.2s;
   --space:8px; --border:2px; --shadow-off:6px;
@@ -216,7 +216,7 @@ dialog .modal{max-height:calc(100dvh - 24px);overflow-y:auto}
    with an on-accent check; radio stays field with an inset accent block. */
 .check,.radio{appearance:none;-webkit-appearance:none;width:18px;height:18px;flex:none;margin:0;border:2px solid var(--line);background:var(--field);cursor:pointer;position:relative;transition:background var(--fast) var(--ease)}
 .check:checked{background:var(--accent)}
-.check:checked::after{content:"";position:absolute;left:4px;top:0;width:6px;height:11px;border:solid var(--on-accent);border-width:0 3px 3px 0;transform:rotate(40deg)}
+.check:checked::after{content:"";position:absolute;left:4px;top:0;width:6px;height:11px;border:solid var(--on-accent);border-width:0 3px 3px 0;transform:rotate(45deg)}
 .radio:checked::after{content:"";position:absolute;inset:3px;background:var(--accent)}
 .check:focus-visible,.radio:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 
@@ -231,7 +231,7 @@ dialog .modal{max-height:calc(100dvh - 24px);overflow-y:auto}
    No opacity fade (visibility toggles; the transform carries the motion). */
 .tip{position:relative}
 .tip::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;background:var(--ink);color:var(--bg);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;padding:5px 8px;box-shadow:4px 4px 0 var(--shadow);z-index:65;
-  visibility:hidden;transform:translateX(-50%) translateY(4px);transition:transform var(--fast) var(--ease)}
+  visibility:hidden;transform:translateX(-50%) translateY(-4px);transition:transform var(--fast) var(--ease)}
 .tip:hover::after,.tip:focus-within::after{visibility:visible;transform:translateX(-50%) translateY(0)}
 
 /* Empty state — composed from existing parts; this just centers them. */
@@ -241,7 +241,7 @@ dialog .modal{max-height:calc(100dvh - 24px);overflow-y:auto}
 /* Skeleton — content-shaped placeholder. Reuses the fd-march barber-pole (a spinner
    would be rotary, off-brand) at a low accent-mix. Set width/height inline. */
 .skel{height:14px;border:2px solid var(--line);background-color:var(--field);
-  background-image:linear-gradient(45deg,color-mix(in srgb,var(--accent) 10%,transparent) 25%,transparent 25% 50%,color-mix(in srgb,var(--accent) 10%,transparent) 50% 75%,transparent 75%);
+  background-image:linear-gradient(45deg,color-mix(in srgb,var(--accent) 22%,transparent) 25%,transparent 25% 50%,color-mix(in srgb,var(--accent) 22%,transparent) 50% 75%,transparent 75%);
   background-size:22px 22px;animation:fd-march 1s linear infinite}
 
 /* Segmented control — welded buttons (the .combo idiom); active fills ink. For a
@@ -250,21 +250,25 @@ dialog .modal{max-height:calc(100dvh - 24px);overflow-y:auto}
 .seg button{font-family:var(--font);font-weight:800;font-style:italic;font-size:12px;padding:7px 14px;border:2px solid var(--line);background:var(--surf);color:var(--ink);cursor:pointer;transition:background var(--fast),color var(--fast)}
 .seg button+button{margin-left:-2px}
 .seg button.on{background:var(--ink);color:var(--bg)}
-.seg button:focus-visible{outline:3px solid var(--accent);outline-offset:-2px;z-index:1}
+.seg button:focus-visible{outline:3px solid var(--accent);outline-offset:-3px;z-index:1}
 
 /* Pagination — welded square cells; current fills accent, disabled goes muted. */
 .pager{display:inline-flex}
 .pager button{font-family:var(--mono,ui-monospace,monospace);font-size:12px;font-weight:700;min-width:32px;height:32px;border:2px solid var(--line);background:var(--surf);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background var(--fast),color var(--fast)}
 .pager button+button{margin-left:-2px}
 .pager button:not(:disabled):hover{background:var(--ink);color:var(--bg)}
-.pager button.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+/* current page fills ink = selected/committed (matches .seg/.tab); accent stays
+   reserved for the live/attention role. aria-current=page carries the semantics. */
+.pager button.on{background:var(--ink);color:var(--bg)}
 .pager button:disabled{color:var(--muted);cursor:default}
-.pager button:focus-visible{outline:3px solid var(--accent);outline-offset:-2px;z-index:1}
+.pager button:focus-visible{outline:3px solid var(--accent);outline-offset:-3px;z-index:1}
 .pager svg{width:14px;height:14px}
 
 /* Breadcrumb — uppercase trail; chevron sep reuses the .sel caret glyph. */
 .crumb{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
-.crumb a{border:none;color:var(--accent)}
+.crumb a{border:none;color:var(--accent);position:relative}
+.crumb a::after{content:"";position:absolute;left:0;right:100%;bottom:-2px;height:2px;background:var(--accent);transition:right var(--fast) var(--ease)}
+.crumb a:hover::after{right:0}
 .crumb .sep{color:var(--muted)}
 .crumb .cur{color:var(--ink)}
 

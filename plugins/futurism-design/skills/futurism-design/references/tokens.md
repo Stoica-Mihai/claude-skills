@@ -10,7 +10,7 @@ reference. If you change a value, change it in the CSS — not just here.
 | `--bg` | page ground | `#efe9dc` | `#16140f` |
 | `--surf` | raised surface (cards, lists) | `#f7f3ea` | `#211d16` |
 | `--ink` | display + heavy text, borders | `#1a1714` | `#efe9dc` |
-| `--muted` | body / secondary text | `#5a5247` | `#a89f8e` |
+| `--muted` | body / secondary text | `#4a4339` | `#a89f8e` |
 | `--accent` | the one red — links, CTAs, rules | `#d22f1a` | `#ff4d33` |
 | `--line` | border color | `#1a1714` | `#efe9dc` |
 | `--shadow` | solid offset shadow color | `#1a1714` | `#ff4d33` |
@@ -59,7 +59,7 @@ fades or springy bounces. `prefers-reduced-motion: reduce` disables all of it.
 
 ```css
 :root{
-  --bg:#efe9dc; --surf:#f7f3ea; --ink:#1a1714; --muted:#5a5247;
+  --bg:#efe9dc; --surf:#f7f3ea; --ink:#1a1714; --muted:#4a4339;
   --accent:#d22f1a; --line:#1a1714; --shadow:#1a1714; --field:#f7f3ea; --on-accent:#efe9dc;
   --ease:cubic-bezier(.2,.9,.1,1); --fast:.12s; --med:.2s;
   --space:8px; --border:2px; --shadow-off:6px;
