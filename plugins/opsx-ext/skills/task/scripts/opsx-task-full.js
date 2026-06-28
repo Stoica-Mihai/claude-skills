@@ -77,6 +77,36 @@ const changeName = exploration.changeName
 
 // ---- Phase 2a/2b: Create + generate artifacts via openspec-ff-change skill ----
 phase('Artifacts')
+
+// Lock open decisions to ONE concrete answer BEFORE artifact generation. ff lets
+// each artifact author make its own "reasonable" call, so an unresolved judgment
+// call gets different answers in different files — the cross-artifact contradiction
+// the self-review loop then chases. Deciding once up front kills it at the source.
+let lockedDecisions = []
+if (exploration.openQuestions && exploration.openQuestions.length) {
+  const DECIDE = {
+    type: 'object', additionalProperties: false, required: ['decisions'],
+    properties: {
+      decisions: {
+        type: 'array',
+        items: {
+          type: 'object', additionalProperties: false, required: ['question', 'decision'],
+          properties: { question: { type: 'string' }, decision: { type: 'string' } },
+        },
+      },
+    },
+  }
+  const d = await agent(
+    `For the OpenSpec change "${changeName}" (root ${root}) — "${A.description}" — commit a single concrete answer to each open question below, so every artifact can agree on it. Pick the most reasonable default given the codebase; be SPECIFIC (the exact token/name/value/approach), never "either/or". These answers are binding for artifact generation.
+Open questions:
+${exploration.openQuestions.map((q, i) => `  ${i + 1}. ${q}`).join('\n')}`,
+    { label: 'lock-decisions', phase: 'Artifacts', schema: DECIDE })
+  if (d && d.decisions) {
+    lockedDecisions = d.decisions
+    log(`locked ${lockedDecisions.length} decision(s) before artifact generation`)
+  }
+}
+
 const FF = {
   type: 'object', additionalProperties: false,
   required: ['created', 'artifactFiles', 'valid', 'validationNotes'],
@@ -92,6 +122,7 @@ const ff = must(await agent(
 Invoke the Skill tool with skill name "openspec-ff-change", passing this exact input so it never has to ask the user anything:
   change name "${changeName}" for: ${A.description}
 ${A.schema ? `Use the openspec schema "${A.schema}".` : ''}
+${lockedDecisions.length ? `These decisions are FINAL — every artifact must use exactly these answers; do not re-decide them per artifact:\n${lockedDecisions.map((x, i) => `  ${i + 1}. ${x.question} -> ${x.decision}`).join('\n')}\n` : ''}For any OTHER decision the input leaves open, make it ONCE, state it explicitly in the earliest artifact that needs it, and ensure every later artifact reads and matches that choice — never let two artifacts give different answers to the same question.
 Let it create the change and generate ALL artifacts (proposal, specs, design, tasks) needed for implementation.
 
 Then run \`openspec validate ${changeName}\` as a standalone bash command. If it reports structural errors (missing SHALL/MUST, empty requirement bodies, missing Scenario blocks), edit the artifacts to fix them and re-run validate until it is clean.
