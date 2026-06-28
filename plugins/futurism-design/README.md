@@ -63,9 +63,10 @@ skeleton · table · pagination · breadcrumb · tooltip · blockquote · dartin
 modal (`<dialog>`) · toast · off-canvas drawer · empty state · runtime accent picker.
 
 Built for apps as well as pages — modals, toasts, forms (real native checkbox/radio),
-interactive states, mobile drawers, keyboard-accessible focus rings, and a
-theme-independent `--scrim` for overlays. See SKILL.md's "Responsive & touch"
-section for the layout patterns.
+interactive states, mobile drawers, and a theme-independent `--scrim` for overlays.
+Accessible by default: the div-built controls get ARIA roles + full keyboard nav
+(select, tabs, toggle) auto-wired by `fdInit`, and every control shows a 3px accent
+focus ring. See SKILL.md's "Responsive & touch" and "Accessibility" sections.
 
 Token tables and full markup: [`skills/futurism-design/references/`](skills/futurism-design/references/).
 

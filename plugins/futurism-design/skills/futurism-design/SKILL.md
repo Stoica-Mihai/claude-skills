@@ -113,6 +113,18 @@ in light it stays ink; and a theme toggle styled with `.toggle` must force
 `background: var(--ink)` on its `.on` state so the switch itself doesn't absorb
 the user's accent.
 
+## Accessibility
+
+The custom controls are div-built, so `futurism.js` carries their semantics — keep
+it loaded. `fdInit()` runs on load and wires ARIA roles + keyboard on `.sel`
+(combobox/listbox, Enter/↑↓/Esc), `.tabs` (tablist, ←/→ roving), and `.toggle`
+(switch, Space/Enter); call `fdInit()` again after injecting components at runtime.
+Every focusable control shows the same 3px accent `:focus-visible` ring — don't
+remove it. Native elements stay native on purpose: checkbox/radio are styled
+`<input>`s, and the modal is a real `<dialog>` (Tab-trap + Esc); give the dialog
+an `autofocus` button. Overlays dim with `--scrim`, motion respects
+`prefers-reduced-motion` (the live `.dot` keeps a static ring there).
+
 ## Responsive & touch
 
 The laws are resolution-independent, but the layout patterns below keep an app

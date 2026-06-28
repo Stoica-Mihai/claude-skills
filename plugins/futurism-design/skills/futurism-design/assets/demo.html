@@ -15,6 +15,7 @@
   .switch{display:inline-flex;border:2px solid var(--line);font-size:10px;font-weight:900;letter-spacing:1px;cursor:pointer}
   .switch span{padding:6px 12px}
   .switch .act{background:var(--accent);color:var(--on-accent)}
+  .switch:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
   .head{display:flex;align-items:center;justify-content:flex-end;gap:14px}
 </style>
 </head>
@@ -26,9 +27,9 @@
       <button class="acctrig" aria-label="Accent color"></button>
       <div class="accpop"></div>
     </div>
-    <div class="switch" id="themeSwitch" onclick="flipTheme()">
+    <button class="switch" id="themeSwitch" onclick="flipTheme()" aria-label="Toggle light/dark theme" aria-pressed="false">
       <span class="l act">LIGHT</span><span class="d">DARK</span>
-    </div>
+    </button>
   </div>
 
   <nav class="nav">
@@ -107,7 +108,7 @@
       <p style="font-size:11px;font-family:var(--mono);margin:6px 0 0">value → <b id="chassisval">spec-gp</b></p>
     </div>
     <div class="row">
-      <div class="toggle on"><i></i></div>
+      <div class="toggle on" aria-label="Notifications"><i></i></div>
       <span style="font-size:12px;font-weight:700">Notifications on</span>
     </div>
   </div>
@@ -225,7 +226,7 @@
     <div class="mfoot">
       <span class="kick">irreversible</span>
       <div class="grp">
-        <button class="btn btn-ghost" onclick="document.getElementById('confirm').close()"><span>CANCEL</span></button>
+        <button class="btn btn-ghost" autofocus onclick="document.getElementById('confirm').close()"><span>CANCEL</span></button>
         <button class="btn btn-primary" onclick="document.getElementById('confirm').close()"><span>DELETE →</span></button>
       </div>
     </div>
@@ -249,6 +250,7 @@
     var sw=document.getElementById('themeSwitch');
     sw.querySelector('.l').classList.toggle('act',!d);
     sw.querySelector('.d').classList.toggle('act',d);
+    sw.setAttribute('aria-pressed',d?'true':'false');
     if(accent)accent.reapply();
   }
   function showVal(){document.getElementById('chassisval').textContent=fdSelVal(document.querySelector('.sel[data-field="chassis"]'))}

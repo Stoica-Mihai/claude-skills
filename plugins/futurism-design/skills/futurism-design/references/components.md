@@ -10,6 +10,8 @@ via tokens — no per-component dark variant needed.
 <link rel="stylesheet" href="futurism.css">
 <script src="futurism.js" defer></script>
 <!-- light is default; for dark: <html data-theme="dark"> -->
+<!-- futurism.js runs fdInit() on load to wire ARIA roles + keyboard on
+     .sel/.tabs/.toggle. After injecting components dynamically, call fdInit() again. -->
 ```
 
 ## Theme switch
@@ -138,6 +140,8 @@ gap. Don't cram a chord into one cap (`⌘K`).
 ```
 
 Open/close and click-outside are handled by `futurism.js`; `fdSel` sets the value.
+`fdInit` (auto-runs on load) wires the ARIA roles (`combobox`/`listbox`/`option`),
+so it's keyboard-operable: Enter/Space/↓ open, ↑↓ move, Enter picks, Esc closes.
 
 When the displayed label differs from the stored value, add `data-value` — the
 option shows its text but `fdSel` stores `data-value`. Read it with `fdSelVal(sel)`
@@ -169,8 +173,10 @@ tall content scrolls inside `.modal`.
 </dialog>
 ```
 
-Open/close with `dialog.showModal()` / `dialog.close()`. The `::backdrop` uses
-`--scrim`. For non-`<dialog>` cases use `.overlay.open` wrapping the same `.modal`.
+Open/close with `dialog.showModal()` / `dialog.close()`. Native `<dialog>` traps
+Tab and closes on Esc; add `autofocus` to the least-destructive button (e.g.
+CANCEL) so focus lands sensibly on open. The `::backdrop` uses `--scrim`. For
+non-`<dialog>` cases use `.overlay.open` wrapping the same `.modal`.
 
 ## List rows
 
@@ -221,6 +227,8 @@ panel static at your breakpoint (see the Responsive & touch section in SKILL.md)
 ```
 
 `futurism.js` flips `.on` on click. Read state via `.classList.contains('on')`.
+`fdInit` makes it `role="switch"`, focusable, and Space/Enter-operable; add an
+`aria-label` so its purpose is announced. (Or use a native `<button class="toggle">`.)
 
 ## Cards
 
@@ -245,6 +253,9 @@ panel static at your breakpoint (see the Responsive & touch section in SKILL.md)
 <div class="panel">Specs content.</div>
 <div class="panel">Press content.</div>
 ```
+
+`fdInit` wires `role="tablist"/"tab"/"tabpanel"` + roving tabindex; ←/→ move and
+activate the focused tab.
 
 ## Alerts
 

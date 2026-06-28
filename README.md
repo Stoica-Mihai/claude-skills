@@ -105,7 +105,7 @@ A web design system with a strong point of view — bold italic display type, a 
 
 | Skill | Description |
 |-------|-------------|
-| `futurism-design` | Applies the Futurism (Paper-Futurist) web aesthetic to any page, component, or app. Reuses a bundled `futurism.css` + `futurism.js` kit (nav, buttons + states, icon button, keycap, chord, badges, inputs, form rows, checkbox/radio, custom select, toggle, segmented control, status dot, cards, list rows, tabs, alerts, progress, skeleton, table, pagination, breadcrumb, tooltip, modal, toast, drawer, empty state, accent picker) governed by eight design laws, with token-driven light/dark theming and keyboard focus rings. Web-only; invoke with `/futurism-design`. |
+| `futurism-design` | Applies the Futurism (Paper-Futurist) web aesthetic to any page, component, or app. Reuses a bundled `futurism.css` + `futurism.js` kit (nav, buttons + states, icon button, keycap, chord, badges, inputs, form rows, checkbox/radio, custom select, toggle, segmented control, status dot, cards, list rows, tabs, alerts, progress, skeleton, table, pagination, breadcrumb, tooltip, modal, toast, drawer, empty state, accent picker) governed by eight design laws, with token-driven light/dark theming, keyboard focus rings, and ARIA roles + keyboard nav auto-wired on the custom controls. Web-only; invoke with `/futurism-design`. |
 
 ## License
 
