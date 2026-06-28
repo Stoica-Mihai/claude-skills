@@ -49,10 +49,14 @@ user explicitly overrides:
    the tension between hard rectangles and skewed type is the point.
 2. **Solid offset shadows, never blur.** `box-shadow: 6px 6px 0 var(--shadow)`.
    A blurred shadow instantly reads as Material/SaaS, not Futurism.
-   *Gotcha:* the offset shadow is **clipped by any `overflow:auto/hidden`
+   *Gotcha 1:* the offset shadow is **clipped by any `overflow:auto/hidden`
    ancestor**. Keep the shadowed element's scroll container at `overflow:visible`
    and move the scroll inward (this is why the modal sets `dialog{overflow:visible}`
    and scrolls inside `.modal`).
+   *Gotcha 2:* in dark, `--shadow` follows the accent, so an **accent-filled control
+   must throw an ink shadow, not `--shadow`** — an accent shadow under an accent fill
+   is the same hue and smears into one blob. Surfaces (cards/modals on `--surf`) are
+   fine with `--shadow`; only same-hue fills need the override (see `.btn-primary:hover`).
 3. **2px ink borders** on surfaces and controls — structure is drawn, not
    implied by elevation.
 4. **One accent only.** Red (`--accent`) carries links, CTAs, rules, highlights.

@@ -47,6 +47,10 @@ button{font-family:var(--font);color:inherit;background:none;border:0}
    shadow (like .card), so it has more Futurist depth than passive surfaces. */
 .btn:hover{transform:skewX(-8deg) translate(-3px,-3px);box-shadow:5px 5px 0 var(--shadow)}
 .btn:active{transform:skewX(-8deg) scale(.96);box-shadow:none}
+/* Accent-fill controls throw an INK shadow, not --shadow: in dark --shadow follows
+   the accent, so an accent shadow under an accent button smears into one blob.
+   Ink contrasts in both themes (dark in light, cream in dark). */
+.btn-primary:hover,.btn.err:hover{box-shadow:5px 5px 0 var(--ink)}
 .btn-primary{background:var(--accent);color:var(--on-accent)}
 .btn-ink{background:var(--ink);color:var(--bg)}
 .btn-ghost{background:transparent;color:var(--ink);border:2px solid var(--ink)}
