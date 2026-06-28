@@ -1,6 +1,6 @@
 ---
 name: opsx-ext:task
-description: Use when the user wants new code written or new behavior added — "add X", "build X", "implement X", "create X", "migrate X", or "do this task". Drives a single OpenSpec change end-to-end in the current working tree — explore, plan, self-review, implement, test, verify, then hand back for review and commit. Prefer `opsx-ext:task-queue` when the request clearly splits into multiple independent changes that benefit from isolated worktrees. Skip for questions, explanations, bug fixes, single-line patches, console.log debugging, version bumps, and /opsx command runs.
+description: Use when the user wants new code written or new behavior added — "add X", "build X", "implement X", "create X", "migrate X", or "do this task". Drives a single OpenSpec change end-to-end — explore, plan, self-review, implement, test, verify — as one deterministic workflow, then hands back for review and commit. Prefer `opsx-ext:task-queue` when the request clearly splits into multiple independent changes that benefit from isolated worktrees. Skip for questions, explanations, bug fixes, single-line patches, console.log debugging, version bumps, and /opsx command runs.
 argument-hint: <description of what you want to build or change>
 effort: max
 model: opus[1m]
@@ -8,193 +8,71 @@ model: opus[1m]
 
 # Autonomous Task Workflow
 
-End-to-end orchestrator for a single OpenSpec change. Takes a user's request, plans it, implements it, and verifies it in the current working tree — then hands back to the user for final review and commit.
+Drives a single OpenSpec change end-to-end. The whole autonomous pipeline — explore, generate artifacts, self-review, implement, test, verify — runs inside ONE deterministic Workflow. This skill does only what a workflow physically cannot: check preconditions, and handle the parts that need a human or that spawn subagents (the review gate, and archive + commit).
 
-## Core Principles
+An A/B on this design measured it ~1.8× faster wall-clock-to-done than driving each phase from the main thread, because it collapses the many main-thread round-trips (one per phase, plus one per self-review and verify loop iteration) into a single hand-off. The gap widens with the number of phases and loop iterations.
 
-1. **One change, one workflow**: This skill handles a single discrete change. If the request splits into independent pieces, hand off to `opsx-ext:task-queue` instead.
-2. **Verify before commit**: The change is implemented and verified automatically, but only committed after the user reviews it.
-3. **Parallel where possible**: Maximize parallelization within phases — spawn as many subagents as the work allows.
-4. **Delegate wide fan-out to a workflow**: The deterministic phases (implement, test, verify-fix) ship as Workflow scripts in this skill's `scripts/` directory — `implement-and-test.js` and `fix-fanout.js`. Phases 2d/2e/2f call them by absolute path (`<this skill's base directory>/scripts/<file>.js`). Calling the Workflow tool from this skill is sanctioned opt-in. Use them for wide plans; implement inline for narrow ones (see 2d Step 4).
+## Why the split is exactly here
 
-When dispatching subagents within a phase:
-- Launch all independent subagents in a single tool-call turn — do not wait between dispatches
-- Give each subagent a complete, self-contained prompt with all context it needs so it can work autonomously
-- Use background execution for subagents whose results are not blocking the next immediate action
-- Only serialize work when there is a true data dependency
+A Workflow runs in the background, returns one result, and its leaf subagents have the `Skill` tool but NOT the `Agent`/`Task` tool. That fixes the boundary:
+
+- **Inside the workflow** (Phases 1–2f): explore, generate artifacts, self-review, implement in waves, test, verify. The workflow invokes the `openspec-explore`, `openspec-ff-change`, and `openspec-verify-change` skills directly — all three run non-interactively (explore has no mandatory prompt; ff/verify are given the change name/description so they never ask). It does NOT use `openspec-new-change` (halts for the user) or `openspec-apply-change` (serial) — `new` is subsumed by `ff`, and `apply` is replaced by script-driven wave fan-out.
+- **Outside the workflow** (this skill): the human approval gate, and `openspec-archive-change` — which prompts the user repeatedly and itself spawns a subagent, so it cannot run inside a workflow leaf.
 
 ## Hard Requirement
 
-OpenSpec must be initialized in the project. If the `openspec/` directory does not exist, stop immediately and tell the user to run `openspec init` and `openspec update` first. Do not proceed without this.
+OpenSpec must be initialized: `openspec/` must exist in the project. If it does not, stop and tell the user to run `openspec init` and `openspec update` first.
 
-## Running OpenSpec CLI Commands
+## Steps
 
-The sub-skills invoked throughout this workflow (`/opsx:ff`, `/opsx:apply`, etc.) run `openspec` CLI commands that produce JSON output. Run each command as a standalone Bash call — the Bash tool returns stdout directly. Do NOT pipe `openspec` output through Python, jq, or any other inline processor. Do NOT use `2>&1` — stderr mixed into stdout corrupts JSON parsing. If you need to inspect specific fields from large JSON output, save the output to a temp file with `> /tmp/openspec-out.json` and use the Read tool.
+### 1 — Precondition
 
-## Workflow
+Confirm `openspec/` exists (Bash). Abort with the message above if not. That is the only thing the main thread does before the gate — everything else is the workflow.
 
-Follow these phases in exact order. Do not skip phases. Do not reorder them.
+### 2 — Run the full pipeline
 
-### Phase 1 — Explore
-
-Invoke `/opsx:explore` with the user's description to investigate the codebase, understand the current state, and surface gaps or ambiguities.
-
-**Parallelization:** If the request spans multiple areas (frontend + backend, multiple services, etc.), dispatch one subagent per area to explore concurrently. Merge all findings before presenting to the user.
-
-After exploration, present:
-- Your understanding of the request
-- Gaps, ambiguities, or open questions
-- A short, descriptive change name (kebab-case)
-
-If the request clearly splits into multiple independent changes (e.g., "add the user model AND the auth endpoints AND the middleware"), stop and recommend `opsx-ext:task-queue` instead — that case warrants worktree-per-change isolation. Otherwise, proceed directly to Phase 2 without asking for confirmation. The user reviews everything in Phase 3; gating the start of implementation on a confirmation prompt just adds friction.
-
-### Phase 2 — Plan & Implement
-
-Run steps 2a through 2f without stopping. The next user interaction point is Phase 3.
-
-#### 2a — Create Change
-
-Invoke `/opsx:new` with the change name from Phase 1.
-
-#### 2b — Generate Artifacts
-
-Invoke `/opsx:ff` to fast-forward and generate all planning artifacts (proposal, specs, design, tasks).
-
-**Validate structure.** Run `openspec validate <change-name>` as a Bash call. Validation enforces format rules that the semantic review in 2c does not check — every `### Requirement:` must contain SHALL/MUST, must have body text, and must include at least one `#### Scenario:` block. If validation errors, edit the artifacts to fix the structural issues and re-run until clean before proceeding to 2c.
-
-#### 2c — Self-Review Artifacts
-
-Ask yourself: **"Are there any concerns about these artifacts?"**
-
-**Parallelization:** Dispatch one subagent per artifact file to review simultaneously. Each reviews its artifact looking for:
-- Missing requirements or edge cases
-- Contradictions between artifacts (provide cross-references in each subagent's prompt)
-- Incomplete or vague task breakdowns
-- Technical risks in the design
-
-Collect all concerns, fix them, re-review. Repeat until zero concerns. Maximum 100 passes — if concerns persist, present remaining to the user.
-
-Once concerns are resolved, re-run `openspec validate <change-name>` to confirm the semantic edits didn't break the format. Fix any new structural errors before exiting the loop.
-
-#### 2d — Implement
-
-Implementation runs in **dependency-ordered waves**: waves run in sequence, groups within a wave run in parallel. Do **not** invoke `/opsx:apply` here — that command's step 6 is an in-process serial loop, so once it starts there is no task list left to fan out from. Parallelism must be planned before any task is touched.
-
-The wave **plan** is judgment and stays here. The wave **execution** (fan-out, per-wave barriers, test triage) is delegated to a deterministic Workflow so it cannot silently serialize or lose wave-completion state — a benchmark showed equal correctness but lower wall-clock and tokens versus hand-dispatching, with the gap widening as the plan gets wider.
-
-**Step 1 — Read the task list.** Open `openspec/changes/<change-name>/tasks.md` and the change's other artifacts (`proposal.md`, `design.md`, `specs/`).
-
-**Step 2 — Group tasks by primary edit target.** Tasks within tasks.md are usually grouped into sections that each map to one source file (e.g. Section 4 → `src/paint.rs`). All tasks within one such file group MUST be handled by the same subagent — concurrent edits to the same file by separate subagents corrupt each other. Identify each group's primary file(s) and which groups depend on symbols exported by which other groups.
-
-**Step 3 — Build the wave plan.** A typical structure:
-
-- **Wave 0 — Scaffolding.** Cargo.toml / package.json / pyproject.toml / workspace registration / module declarations / error types — primitives every later group depends on.
-- **Wave 1 — Independent modules.** Every file group whose only inter-group dependency is on Wave 0 artifacts.
-- **Wave 2+ — Aggregators.** Files that re-export from or wire together earlier modules (`lib.rs`, `index.ts`, `mod.rs`, top-level `__init__.py`).
-
-When in doubt, prefer one extra wave with cleaner dependency lines over packing borderline-independent groups into the same wave.
-
-**Step 4 — Choose how to execute.**
-
-- **Narrow plan** (≤2 groups running in parallel across the whole change): implement inline yourself. Workflow spin-up overhead is not worth it — the benchmark showed small changes are a wash.
-- **Wide plan** (≥3 parallel groups, or many waves): delegate to the workflow below.
-
-**Step 5 — Delegate to the implement-and-test workflow.** Calling the Workflow tool from this skill is sanctioned (these instructions are the opt-in — it will not re-prompt). Invoke it with the script bundled next to this skill:
+Calling the Workflow tool from this skill is sanctioned (these instructions are the opt-in). Invoke the bundled script:
 
 ```
 Workflow({
-  scriptPath: "<this skill's base directory>/scripts/implement-and-test.js",
+  scriptPath: "<this skill's base directory>/scripts/opsx-task-full.js",
   args: {
-    changeName: "<change-name>",
-    waves: [
-      { title: "Wave 0 — Scaffold",
-        groups: [
-          { label: "scaffold",
-            files: ["src/error.rs", "Cargo.toml"],
-            tasks: [{ num: "0.1", text: "<full task text copied inline>" }],
-            context: "<relevant proposal/design/spec excerpts inline>" }
-        ] },
-      { title: "Wave 1 — Independent modules", groups: [ /* one per file group */ ] },
-      { title: "Wave 2 — Aggregators", groups: [ /* ... */ ] }
-    ],
-    test: { enabled: <true if a test suite exists>, runCmd: "<e.g. npm test>", coverageCmd: "<or empty>" }
+    description: "<the user's request, verbatim>",
+    root: "<absolute path of the project>",
+    schema: "<optional openspec schema name, omit for default>"
+    // omit `test` — the workflow detects the suite itself. Pass
+    // test:{enabled,runCmd,coverageCmd} only to override that detection.
   }
 })
 ```
 
-Build each `group` with the **full task text copied inline** (don't make agents re-read tasks.md), the relevant cross-references inline, and the exact files that group owns. The workflow handles the rest: it dispatches each wave in order with groups in parallel, instructs each agent to edit only its group's `files`, returns `{ completed, errors, testStatus }`, and — when `test.enabled` — runs the suite and fans out coverage. The script already instructs agents to return completed task numbers, to NOT edit tasks.md, and to follow the WHY-only comment policy, so you do not repeat those in the args.
+The workflow returns one of:
 
-**Step 6 — Mark tasks complete.** After the workflow returns, read `tasks.md` and edit each `- [ ] N.M` → `- [x] N.M` for every number in the returned `completed` array. This is the only place tasks.md is mutated. If `errors` is non-empty, dispatch fix subagents (or re-run the relevant wave) before proceeding.
+- `{ stopped: "should-split", exploration }` — the request is really several independent changes. Stop and recommend `opsx-ext:task-queue`; do not implement.
+- `{ changeName, summary, openQuestions, artifactFiles, completed, errors, testStatus, verifyClean, verifyPasses }` — the pipeline ran to verification.
 
-**Config file update:** After implementation, check whether the change introduces config-driven behavior (env vars, feature flags, settings). If so, update relevant existing config files (`.env.example`, config templates, schema files, Docker/compose files). Only update files that already exist — do not create new config infrastructure.
+If `errors` is non-empty or `verifyClean` is false, surface that — those are the seams the pipeline could not close on its own.
 
-#### 2e — Test
+### 3 — Human gate
 
-If you delegated to the implement-and-test workflow with `test.enabled: true`, the suite ran, failures were fixed, and per-file coverage was fanned out already — inspect the returned `testStatus`. If it reports remaining failures or gaps, dispatch fix subagents and re-run the suite until clean. Then **remove stale tests** referencing deleted code or obsolete behavior (the workflow does not do this).
+Present a one-paragraph summary: change name, file count, `verifyClean` state, any `openQuestions`, and a smoke test the user can run. Then:
 
-If you took the narrow inline path in 2d, or `test.enabled` was false but a suite exists, run testing yourself:
+**Do not proceed until the user confirms.** If they report issues, fix them (re-running `openspec-verify-change` until clean), then return and wait again.
 
-1. **Run the full suite.** Fix all failures before moving on.
-2. **Check coverage.** Run with coverage enabled. Identify untested code paths in changed code.
-3. **Add missing tests.** One subagent per file/module needing coverage. Target close to 100% on changed files.
-4. **Remove stale tests.** Clean up tests referencing deleted code or obsolete behavior.
-5. **Re-run with coverage.** Confirm all pass and coverage improved. Repeat if gaps remain.
-
-If no test suite exists, skip this step — do not create a test framework unless the user asked for it.
-
-#### 2f — Verify Loop
-
-Invoke `/opsx:verify` to validate implementation against artifacts. Verification catches drift between what was planned and what was built — fixing suggestions too prevents spec debt from accumulating.
-
-This is a loop the skill drives, because `/opsx:verify` is a sub-skill a workflow cannot invoke. Each pass:
-
-1. Run `/opsx:verify`.
-2. If it reports zero findings, exit the loop.
-3. Otherwise group the findings by file and delegate the fixes to the fan-out workflow (one subagent per file, in parallel):
-
-```
-Workflow({
-  scriptPath: "<this skill's base directory>/scripts/fix-fanout.js",
-  args: {
-    changeName: "<change-name>",
-    findings: [ { file: "src/x.rs", items: ["<finding 1>", "<finding 2>"] }, ... ]
-  }
-})
-```
-
-4. When it returns, run `/opsx:verify` again.
-
-Fix ALL findings — including suggestions. Maximum 100 passes — if findings persist, log the remaining ones and proceed to Phase 3. For a single-file or one-off finding, just fix it inline rather than spinning up the workflow.
-
-### Phase 3 — Summary & User Verification
-
-Present a one-paragraph summary: the change name, file count, and a smoke test the user can run to verify it. Omit the smoke test if nothing is testable from outside (e.g. an internal refactor).
-
-Example:
-
-> "`add-user-model` is verified and ready for review (4 files changed). Smoke test: `npm test -- --grep User`. Let me know if it looks good to finalize, or what needs fixing."
-
-If the user reports issues, fix them, re-run `/opsx:verify` until clean, then return and wait for confirmation.
-
-**Do not proceed until the user confirms.**
-
-### Phase 4 — Finalize
+### 4 — Finalize
 
 Once approved:
 
-1. Invoke `/opsx:archive` to finalize the change.
-2. Update documentation (README.md, CLAUDE.md, any docs referencing changed functionality). **Parallelization:** Dispatch one subagent per doc file needing updates.
-3. Stage only files created or modified during this workflow — do not use `git add .` or `git add -A`.
-4. Commit:
-   ```
-   <short summary>
+1. Invoke the `openspec-archive-change` skill for `<changeName>` (it runs here, in the main thread, because it prompts the user and spawns its own subagent).
+2. Update documentation affected by the change (README, CLAUDE.md, etc.).
+3. Stage only files created or modified during this change — never `git add .`.
+4. Commit with a short summary + bullet body. Do not include a Co-Authored-By line.
 
-   - <change 1>
-   - <change 2>
-   - <change 3>
-   ```
-   Do not include a Co-Authored-By line.
+Present: `"<change-name> is committed and ready."`
 
-Present a one-line confirmation:
+## Seams to be honest about
 
-> "`<change-name>` is committed and ready."
+- **Explore runs as a one-shot, not a conversation.** `openspec-explore` is invoked non-interactively, so it investigates and reports once instead of having a back-and-forth about scope. Open questions it raises are surfaced at the gate rather than resolved mid-run.
+- **No mid-run visibility or steering.** The pipeline runs opaque in the background until it returns. If the user wants to inspect or redirect between phases, that is the one thing this design trades away.
+- **Nested skills run without their own fan-out.** When the workflow's leaf invokes `openspec-ff-change` / `openspec-verify-change`, that leaf cannot spawn subagents, so if those skills would normally parallelize internally they run serially here.
+- **No mid-run human input.** Any `openspec-*` step that would normally ask the user a question proceeds on reasonable defaults (we pass the change name/description so they don't ask). Genuinely ambiguous calls surface as `openQuestions` at the gate, not as a mid-run prompt.
