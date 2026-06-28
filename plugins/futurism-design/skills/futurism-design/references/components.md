@@ -16,9 +16,16 @@ via tokens — no per-component dark variant needed.
 
 ## Theme switch
 
+A 2-state labeled pill; `.act` marks the live segment.
+
 ```html
-<div class="switch" onclick="fdTheme()">LIGHT / DARK</div>
+<button class="switch" onclick="fdTheme()" aria-label="Toggle light/dark theme" aria-pressed="false">
+  <span class="l act" aria-hidden="true">LIGHT</span><span class="d" aria-hidden="true">DARK</span>
+</button>
 ```
+
+`fdTheme()` flips the theme; in the same handler move `.act` to the now-active
+label and update `aria-pressed` (see `demo.html`'s `flipTheme`).
 
 ## Nav
 

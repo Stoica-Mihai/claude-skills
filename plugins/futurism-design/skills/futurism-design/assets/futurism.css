@@ -120,6 +120,13 @@ input:focus,textarea:focus{outline:3px solid var(--accent);outline-offset:0}
 .toggle.on{background:var(--accent)}
 .toggle.on>i{left:24px;border-right:none;border-left:2px solid var(--line)}
 
+/* Segmented LIGHT/DARK-style switch — a 2-state labeled pill; .act marks the live
+   segment. Flip with fdTheme() and move .act to the active label in your handler. */
+.switch{display:inline-flex;border:2px solid var(--line);font-size:10px;font-weight:900;letter-spacing:1px;cursor:pointer;background:none}
+.switch span{padding:6px 12px}
+.switch .act{background:var(--accent);color:var(--on-accent)}
+.switch:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+
 /* Cards */
 .card{background:var(--surf);border:2px solid var(--line);padding:14px;position:relative;box-shadow:var(--shadow-off) var(--shadow-off) 0 var(--shadow);
   transition:transform var(--fast) var(--ease),box-shadow var(--fast) var(--ease)}
