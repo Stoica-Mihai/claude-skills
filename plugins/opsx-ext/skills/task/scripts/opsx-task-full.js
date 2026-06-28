@@ -160,7 +160,7 @@ const REVIEW = {
 }
 // Markdown self-review should converge in 1-2 rounds. Low cap + non-progress break
 // stop the ping-pong; residual blockers escalate to the human gate, not silence.
-const MAX_REVIEW = 3
+const MAX_REVIEW = 5
 let reviewPass = 0, prevBlocking = Infinity, minorTotal = 0
 let residualConcerns = []
 while (reviewPass < MAX_REVIEW) {
