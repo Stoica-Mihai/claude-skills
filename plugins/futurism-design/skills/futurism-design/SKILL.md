@@ -39,7 +39,7 @@ The look is fully specified; your job is to apply it faithfully.
 5. Default theme is **light**. Enable dark by setting `data-theme="dark"` on the
    root element (`<html>`); call `fdTheme()` to flip it.
 
-## The seven laws
+## The eight laws
 
 These are what make output read as *this* system rather than a red-tinted
 generic site. Break one and the aesthetic collapses, so hold them unless the
@@ -49,6 +49,10 @@ user explicitly overrides:
    the tension between hard rectangles and skewed type is the point.
 2. **Solid offset shadows, never blur.** `box-shadow: 6px 6px 0 var(--shadow)`.
    A blurred shadow instantly reads as Material/SaaS, not Futurism.
+   *Gotcha:* the offset shadow is **clipped by any `overflow:auto/hidden`
+   ancestor**. Keep the shadowed element's scroll container at `overflow:visible`
+   and move the scroll inward (this is why the modal sets `dialog{overflow:visible}`
+   and scrolls inside `.modal`).
 3. **2px ink borders** on surfaces and controls — structure is drawn, not
    implied by elevation.
 4. **One accent only.** Red (`--accent`) carries links, CTAs, rules, highlights.
@@ -63,6 +67,12 @@ user explicitly overrides:
 7. **Never trust native form popups.** `<select>`, date pickers, etc. render with
    OS chrome that ignores the system. Use the custom `.sel` component (and the
    same approach for any other native popup) so the whole control is on-brand.
+8. **Theme native `<button>` explicitly.** Buttons don't inherit `color` — the UA
+   gives them `ButtonText` (dark), which becomes dark-on-dark in the carbon theme,
+   and an inline `background` beats class rules. So every button must set its
+   `color`/`background` from tokens; never rely on inheritance. The kit's
+   `button{}` reset and each `.btn`/`.iconbtn` variant already do this — match it
+   when you add a new button-like control.
 
 ## Type discipline
 
@@ -77,9 +87,42 @@ user explicitly overrides:
 Every component is built on CSS variables, so light/dark is a single attribute
 flip — no per-component dark overrides. When adding a new component, express all
 colors as the existing tokens (`--bg`, `--surf`, `--ink`, `--muted`, `--accent`,
-`--line`, `--shadow`, `--field`, `--on-accent`) and it will theme for free. If a
-value can't be expressed in tokens, add a new token to both theme blocks rather
-than hard-coding a hex.
+`--line`, `--shadow`, `--field`, `--on-accent`, `--scrim`) and it will theme for
+free. If a value can't be expressed in tokens, add a new token to both theme
+blocks rather than hard-coding a hex.
+
+**Overlays use `--scrim`, never `--ink`.** Backdrops must *dim*, so they need a
+theme-independent dark wash. `--ink` is the cream foreground in dark — an ink
+backdrop would lighten the page. `--scrim` (`rgba(0,0,0,.55)`) is the same in both
+themes for exactly this reason.
+
+**Runtime accent.** Law #4 is one accent, but letting the *user* pick that one
+accent is on-system — see the `.accpick` component and `fdAccent()`. Two couplings
+to respect: in dark the offset shadow follows the accent (`--shadow` = accent),
+in light it stays ink; and a theme toggle styled with `.toggle` must force
+`background: var(--ink)` on its `.on` state so the switch itself doesn't absorb
+the user's accent.
+
+## Responsive & touch
+
+The laws are resolution-independent, but the layout patterns below keep an app
+usable on a phone without breaking the aesthetic:
+
+- **Off-canvas drawer.** A fixed sidebar slides in over a `--scrim` backdrop on
+  mobile and becomes static at your desktop breakpoint. Use `.drawer` /
+  `.scrim-bg` + `fdDrawer()`.
+- **Touch targets ≥ ~40px.** Bump icon buttons, keycaps, and accent swatches up
+  at narrow widths — the 22–30px desktop sizes are too small for thumbs.
+- **No horizontal body scroll.** Contain wide content (tables, tab bars, command
+  rows) with `overflow-x:auto` on *that* element; never let the page body scroll
+  sideways. Add `min-width:0` to flex children that hold ellipsised text.
+- **Collapse header chrome.** Hide the wordmark/subtitle and toggle labels at
+  narrow widths, keeping just the logo mark + essential controls.
+- **Popover, not inline rows, on mobile.** A wide control (e.g. the 7-swatch
+  accent row) collapses to a single trigger + popover — that's what `.accpick` is.
+
+Drive these with `min-width` media queries (mobile-first): style the compact
+layout as the default, then restore the desktop layout at `@media (min-width:768px)`.
 
 ## When extending the kit
 

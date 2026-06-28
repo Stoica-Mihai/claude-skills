@@ -42,21 +42,28 @@ To use the kit directly:
 
 Both files are in [`skills/futurism-design/assets/`](skills/futurism-design/assets/).
 
-## The seven laws
+## The eight laws
 
 1. **Square corners always** — `border-radius: 0`.
-2. **Solid offset shadows, never blur** — `box-shadow: 6px 6px 0 var(--shadow)`.
+2. **Solid offset shadows, never blur** — `box-shadow: 6px 6px 0 var(--shadow)` (clipped by `overflow:auto/hidden` ancestors — keep them `visible`).
 3. **2px ink borders** on surfaces and controls.
 4. **One accent only** — red carries links, CTAs, rules, highlights.
 5. **Motion is machine** — fast, directional, eased; never springy/bouncy. Respects `prefers-reduced-motion`.
 6. **Skewed CTAs** — `skewX(-8deg)` with counter-skewed label.
 7. **Never trust native form popups** — build custom controls (e.g. the `.sel` select).
+8. **Theme native `<button>` explicitly** — buttons don't inherit `color`; set `color`/`background` from tokens.
 
 ## Components
 
-nav · buttons (primary/ink/ghost) · badges (red/default/outline) · input ·
-custom select · animated toggle · cards · tabs · alerts (warn/info) · striped
-progress · table · blockquote · darting links.
+nav · buttons (primary/ink/ghost + loading/ok/err states) · icon button · keycap ·
+badges (red/default/outline) · input · form row · custom select (label≠value via
+`data-value`) · animated toggle · status dot · cards · list rows · tabs ·
+alerts (warn/info) · striped progress · table · blockquote · darting links ·
+modal (`<dialog>`) · off-canvas drawer · runtime accent picker.
+
+Built for apps as well as pages — modals, forms, interactive states, mobile
+drawers, and a theme-independent `--scrim` for overlays. See SKILL.md's
+"Responsive & touch" section for the layout patterns.
 
 Token tables and full markup: [`skills/futurism-design/references/`](skills/futurism-design/references/).
 
