@@ -29,6 +29,7 @@ so an ink scrim would *lighten* the page instead of dimming it.
 | token / rule | value |
 |---|---|
 | `--font` | `'Helvetica Neue', Arial, sans-serif` |
+| `--mono` | `'SFMono-Regular', ui-monospace, Menlo, Consolas, monospace` (keycaps, data, code) |
 | display (h1/h2) | weight 900, italic, letter-spacing −1 to −2px, line-height .86–.9 |
 | h3 | weight 800, italic |
 | body `p` | 15px, line-height 1.55, color `--muted` |
@@ -63,6 +64,7 @@ fades or springy bounces. `prefers-reduced-motion: reduce` disables all of it.
   --ease:cubic-bezier(.2,.9,.1,1); --fast:.12s; --med:.2s;
   --space:8px; --border:2px; --shadow-off:6px;
   --font:'Helvetica Neue',Arial,sans-serif;
+  --mono:'SFMono-Regular',ui-monospace,Menlo,Consolas,monospace;
   --scrim:rgba(0,0,0,.55);
 }
 [data-theme="dark"]{

@@ -9,6 +9,7 @@
   --ease:cubic-bezier(.2,.9,.1,1); --fast:.12s; --med:.2s;
   --space:8px; --border:2px; --shadow-off:6px;
   --font:'Helvetica Neue',Arial,sans-serif;
+  --mono:'SFMono-Regular',ui-monospace,Menlo,Consolas,monospace;
   /* Overlay dim — theme-INDEPENDENT (same in light + dark). Never use --ink for
      overlays: ink is the cream foreground in dark, so it would lighten not dim. */
   --scrim:rgba(0,0,0,.55);
@@ -47,12 +48,14 @@ button{font-family:var(--font);color:inherit;background:none;border:0}
 .btn-primary{background:var(--accent);color:var(--on-accent)}
 .btn-ink{background:var(--ink);color:var(--bg)}
 .btn-ghost{background:transparent;color:var(--ink);border:2px solid var(--ink)}
-/* State variants — success keeps its own green (the one place a non-accent hue is
-   allowed, since it signals system state, not brand); error reuses the accent. */
-.btn.ok{background:#1f9d55;color:#fff}
+/* State variants — stay inside the one-red palette (law 4): ink = done/committed,
+   accent = error/attention. .saving marches diagonal stripes (the machine motion
+   from .prog), never an opacity pulse, which would read as fade-puff (law 5). */
+.btn.ok{background:var(--ink);color:var(--bg)}
 .btn.err{background:var(--accent);color:var(--on-accent)}
-.btn.saving{pointer-events:none;animation:fd-pulse 1s var(--ease) infinite}
-@keyframes fd-pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.btn.saving{pointer-events:none;
+  background-image:repeating-linear-gradient(115deg,transparent 0 8px,color-mix(in srgb,var(--on-accent) 22%,transparent) 8px 16px);
+  animation:fd-stripe 1s linear infinite}
 
 /* Icon button — square, token-themed (must set color explicitly; see reset above) */
 .iconbtn{width:30px;height:30px;border:2px solid var(--line);background:var(--surf);color:var(--ink);display:flex;align-items:center;justify-content:center;
@@ -66,9 +69,11 @@ button{font-family:var(--font);color:inherit;background:none;border:0}
   transition:background var(--fast),color var(--fast)}
 .keycap:hover{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
 
-/* Status dot — live indicator; .dead stops the pulse */
-.dot{width:9px;height:9px;flex:none;background:var(--accent);animation:fd-pulse 1.4s var(--ease) infinite}
+/* Status dot — live indicator. Hard step-end blink (a square-wave status LED, like
+   the terminal cursor), not a smooth pulse — a sine fade would read as fade-puff. */
+.dot{width:9px;height:9px;flex:none;background:var(--accent);animation:fd-blink 1.2s step-end infinite}
 .dot.dead{background:var(--muted);animation:none}
+@keyframes fd-blink{50%{opacity:.15}}
 
 /* Form row — label + control pair used in settings panels */
 .form-row{display:flex;flex-direction:column;gap:4px;margin-bottom:14px}

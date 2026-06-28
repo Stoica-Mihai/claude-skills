@@ -63,8 +63,10 @@ counter-skews to keep text upright.
 <button class="btn err"><span>FAILED</span></button>
 ```
 
-`.saving` pulses and blocks clicks; `.ok` is the one allowed non-accent hue
-(green = system state, not brand); `.err` reuses the accent.
+States stay inside the one-red palette: `.saving` marches diagonal stripes (the
+`.prog` machine motion — not an opacity pulse) and blocks clicks; `.ok` fills ink
+(done/committed); `.err` reuses the accent. Convey success with the label
+("SAVED ✓"), not a second hue.
 
 ## Icon button
 
