@@ -54,8 +54,8 @@ button{font-family:var(--font);color:inherit;background:none;border:0}
 .btn.ok{background:var(--ink);color:var(--bg)}
 .btn.err{background:var(--accent);color:var(--on-accent)}
 .btn.saving{pointer-events:none;
-  background-image:repeating-linear-gradient(115deg,transparent 0 8px,color-mix(in srgb,var(--on-accent) 22%,transparent) 8px 16px);
-  animation:fd-stripe 1s linear infinite}
+  background-image:linear-gradient(45deg,color-mix(in srgb,var(--on-accent) 22%,transparent) 25%,transparent 25% 50%,color-mix(in srgb,var(--on-accent) 22%,transparent) 50% 75%,transparent 75%);
+  background-size:22px 22px;animation:fd-march .55s linear infinite}
 
 /* Icon button — square, token-themed (must set color explicitly; see reset above) */
 .iconbtn{width:30px;height:30px;border:2px solid var(--line);background:var(--surf);color:var(--ink);display:flex;align-items:center;justify-content:center;
@@ -133,9 +133,11 @@ input:focus,textarea:focus{outline:3px solid var(--accent);outline-offset:0}
 
 /* Progress */
 .prog{height:14px;border:2px solid var(--line);background:var(--field);position:relative;overflow:hidden}
-.prog>i{display:block;height:100%;background:repeating-linear-gradient(115deg,var(--accent) 0 8px,color-mix(in srgb,var(--accent) 70%,#000) 8px 16px);
-  transition:width var(--med) var(--ease);animation:fd-stripe 1s linear infinite}
-@keyframes fd-stripe{from{background-position:0 0}to{background-position:32px 0}}
+.prog>i{display:block;height:100%;background-color:var(--accent);
+  background-image:linear-gradient(45deg,color-mix(in srgb,var(--accent) 70%,#000) 25%,transparent 25% 50%,color-mix(in srgb,var(--accent) 70%,#000) 50% 75%,transparent 75%);
+  background-size:22px 22px;transition:width var(--med) var(--ease);animation:fd-march .8s linear infinite}
+/* Shift by exactly one tile (background-size) so the barber-pole loops with no seam. */
+@keyframes fd-march{from{background-position:0 0}to{background-position:22px 0}}
 
 /* Table */
 table{width:100%;border-collapse:collapse;font-size:13px}
