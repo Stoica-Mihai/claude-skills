@@ -95,6 +95,18 @@ Quality-engineering skills — smoke testing, build-verification gates, and visu
 | `smoke-test` | Detects the project's stack and scaffolds a focused 5-10 check smoke-test suite (API-first, <2-minute, idempotent) in the right framework, wired for CI. |
 | `/compare-screenshots <img1> <img2>` | Diffs two UI screenshots — handles different sizes/zoom via feature registration — into a similarity score, a confidence-coloured annotated overlay (changed regions boxed), and a written rundown of what changed. |
 
+### futurism-design
+
+A web design system with a strong point of view — bold italic display type, a single red accent, square corners, solid offset shadows, fast directional motion, and paired light/dark themes. Ships a drop-in stylesheet + full component kit, plus an explicit skill that keeps generated UI on-brand instead of defaulting to generic styling.
+
+```
+/plugin install futurism-design@claude-skills
+```
+
+| Skill | Description |
+|-------|-------------|
+| `futurism-design` | Applies the Futurism (Paper-Futurist) web aesthetic to any page, component, or app. Reuses a bundled `futurism.css` + `futurism.js` kit (nav, buttons, badges, inputs, custom select, toggle, cards, tabs, alerts, progress, table) governed by seven design laws, with token-driven light/dark theming. Web-only; invoke with `/futurism-design`. |
+
 ## License
 
 MIT

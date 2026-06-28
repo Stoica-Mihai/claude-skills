@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Futurism Design System — demo</title>
+<link rel="stylesheet" href="futurism.css">
+<script src="futurism.js" defer></script>
+<style>
+  .wrap{max-width:760px;margin:0 auto;padding:28px}
+  .sect{border-top:2px solid var(--line);margin-top:24px;padding-top:16px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0}
+  .grid{display:flex;gap:14px;flex-wrap:wrap}
+  .grid>.card{flex:1;min-width:200px}
+  .switch{display:inline-flex;border:2px solid var(--line);font-size:10px;font-weight:900;letter-spacing:1px;cursor:pointer}
+  .switch span{padding:6px 12px}
+  .switch .act{background:var(--accent);color:var(--on-accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="row" style="justify-content:flex-end">
+    <div class="switch" onclick="fdTheme();var d=document.documentElement.getAttribute('data-theme')==='dark';this.querySelector('.l').classList.toggle('act',!d);this.querySelector('.d').classList.toggle('act',d)">
+      <span class="l act">LIGHT</span><span class="d">DARK</span>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <div class="logo">FUTURISMO<span style="color:var(--accent)">.</span></div>
+    <div class="links"><a href="#">WORK</a><a href="#">STUDIO</a><a href="#">CONTACT</a></div>
+    <button class="btn btn-primary"><span>START →</span></button>
+  </nav>
+
+  <div class="sect" style="border:none;margin-top:18px;padding:0">
+    <div class="kick">MANIFESTO · 1909</div>
+    <h1>SPEED IS BEAUTY</h1>
+    <p>Body stays calm and legible. Drama lives in display type and the single red,
+      not the paragraph. Inline <a href="#">links dart<span class="arr"> →</span></a>.</p>
+    <blockquote>Motion is the only truth.</blockquote>
+  </div>
+
+  <div class="sect">
+    <div class="kick">BUTTONS &amp; BADGES</div>
+    <div class="row">
+      <button class="btn btn-primary"><span>PRIMARY →</span></button>
+      <button class="btn btn-ink"><span>INK</span></button>
+      <button class="btn btn-ghost"><span>GHOST</span></button>
+    </div>
+    <div class="row">
+      <span class="badge red">NEW</span><span class="badge">DEFAULT</span><span class="badge out">OUTLINE</span>
+    </div>
+  </div>
+
+  <div class="sect">
+    <div class="kick">FORM</div>
+    <div class="row" style="align-items:flex-start">
+      <div style="flex:1;min-width:160px"><label>Full name</label><input value="Filippo M."></div>
+      <div style="flex:1;min-width:160px"><label>Discipline</label>
+        <div class="sel">
+          <div class="sel-val"><span class="sel-cur">Painting</span><i class="caret">›</i></div>
+          <div class="sel-list">
+            <div class="sel-opt sel-on" onclick="fdSel(this)">Painting</div>
+            <div class="sel-opt" onclick="fdSel(this)">Sculpture</div>
+            <div class="sel-opt" onclick="fdSel(this)">Architecture</div>
+            <div class="sel-opt" onclick="fdSel(this)">Manifesto</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="toggle on"><i></i></div>
+      <span style="font-size:12px;font-weight:700">Notifications on</span>
+    </div>
+  </div>
+
+  <div class="sect">
+    <div class="kick">CARDS</div>
+    <div class="grid">
+      <div class="card"><span class="badge red">001</span><h3>Dynamism</h3><p>Hover lunges up-left; solid shadow stretches.</p><a href="#">Open<span class="arr"> →</span></a></div>
+      <div class="card"><span class="badge red">002</span><h3>Velocity</h3><p>Square corners, solid shadow, fast easing.</p><a href="#">Open<span class="arr"> →</span></a></div>
+    </div>
+  </div>
+
+  <div class="sect">
+    <div class="kick">TABS</div>
+    <div class="tabs" data-tabs>
+      <div class="tab on" onclick="fdTab(this,0)">Overview</div>
+      <div class="tab" onclick="fdTab(this,1)">Specs</div>
+      <div class="tab" onclick="fdTab(this,2)">Press</div>
+    </div>
+    <div class="panel on">Overview — the manifesto: motion, aggression, the beauty of speed.</div>
+    <div class="panel">Specs — 0–100 in 2.8s, top 331, kinetic everything.</div>
+    <div class="panel">Press — "The future has a redline." — Studio Notes</div>
+  </div>
+
+  <div class="sect">
+    <div class="kick">ALERTS</div>
+    <div class="alert">⚠ Engine at redline. Reduce load.</div>
+    <div class="alert info" style="margin-top:8px">ℹ Build deployed in 0.8s.</div>
+  </div>
+
+  <div class="sect">
+    <div class="kick">PROGRESS</div>
+    <div class="prog"><i style="width:62%"></i></div>
+  </div>
+
+  <div class="sect">
+    <div class="kick">TABLE</div>
+    <table>
+      <thead><tr><th>Model</th><th>0–100</th><th>Top</th></tr></thead>
+      <tbody>
+        <tr><td>Tipo 1909</td><td>3.2s</td><td>305</td></tr>
+        <tr><td>Manifesto GT</td><td>2.8s</td><td>331</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+</body>
+</html>
