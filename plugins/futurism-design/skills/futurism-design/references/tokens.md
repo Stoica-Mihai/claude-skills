@@ -31,7 +31,7 @@ so an ink scrim would *lighten* the page instead of dimming it.
 | `--font` | `'Helvetica Neue', Arial, sans-serif` |
 | `--mono` | `'SFMono-Regular', ui-monospace, Menlo, Consolas, monospace` (keycaps, data, code) |
 | display (h1/h2) | weight 900, italic, letter-spacing −1 to −2px, line-height .86–.9 |
-| h3 | weight 800, italic |
+| h3 | weight 900, italic, letter-spacing −.5px |
 | body `p` | 15px, line-height 1.55, color `--muted` |
 | `.kick` / labels | 11px, uppercase, letter-spacing 2–4px, weight 700 |
 

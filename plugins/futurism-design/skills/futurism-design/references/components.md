@@ -249,9 +249,20 @@ panel static at your breakpoint (see the Responsive & touch section in SKILL.md)
 ## Alerts
 
 ```html
-<div class="alert">⚠ Engine at redline. Reduce load.</div>
-<div class="alert info">ℹ Build deployed in 0.8s.</div>
+<div class="alert">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+       stroke-linecap="square" stroke-linejoin="miter"><path d="M12 3L1 21h22L12 3z"/><path d="M12 10v5M12 18v.01"/></svg>
+  Engine at redline. Reduce load.
+</div>
+<div class="alert info">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+       stroke-linecap="square" stroke-linejoin="miter"><rect x="3" y="3" width="18" height="18"/><path d="M12 11v6M12 7v.01"/></svg>
+  Build deployed in 0.8s.
+</div>
 ```
+
+Lead with a `currentColor` stroke SVG, not an emoji — it inherits the alert's
+border color and themes for free.
 
 ## Progress
 
