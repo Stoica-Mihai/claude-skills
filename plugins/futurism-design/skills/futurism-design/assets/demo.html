@@ -23,7 +23,11 @@
 <noscript><div style="border:2px solid var(--line);border-left:8px solid var(--accent);padding:10px 12px;margin:16px;font-size:13px;font-weight:700">This demo's interactive components (select, tabs, toggle, accent picker, modal, toast) need JavaScript.</div></noscript>
 <div class="wrap">
 
-  <div class="head">
+  <div class="head" style="justify-content:space-between">
+    <button class="iconbtn" aria-label="Open menu" onclick="fdDrawer('demoDrawer','demoScrim')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+    <div style="display:flex;align-items:center;gap:14px">
     <div class="accpick" id="accpick">
       <button class="acctrig" aria-label="Accent color"></button>
       <div class="accpop"></div>
@@ -31,6 +35,7 @@
     <button class="switch" id="themeSwitch" onclick="flipTheme()" aria-label="Toggle light/dark theme" aria-pressed="false">
       <span class="l act" aria-hidden="true">LIGHT</span><span class="d" aria-hidden="true">DARK</span>
     </button>
+    </div>
   </div>
 
   <nav class="nav">
@@ -229,6 +234,17 @@
   </div>
 
 </div>
+
+<aside class="drawer" id="demoDrawer" aria-label="Menu">
+  <div style="padding:18px">
+    <div class="kick">MENU</div>
+    <nav class="crumb" aria-label="Sections" style="flex-direction:column;align-items:flex-start;gap:12px;margin-top:14px;font-size:13px">
+      <a href="#">WORK</a><a href="#">STUDIO</a><a href="#">CONTACT</a>
+    </nav>
+    <button class="btn btn-ghost" style="margin-top:18px" onclick="fdDrawer('demoDrawer','demoScrim')"><span>CLOSE</span></button>
+  </div>
+</aside>
+<div class="scrim-bg" id="demoScrim" style="display:none" onclick="fdDrawer('demoDrawer','demoScrim')"></div>
 
 <dialog id="confirm">
   <div class="modal">
