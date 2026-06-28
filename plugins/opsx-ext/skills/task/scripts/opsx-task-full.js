@@ -99,7 +99,12 @@ Then run \`openspec validate ${changeName}\` as a standalone bash command. If it
 Return the list of artifact file paths created, whether validate is clean, and any notes.`,
   { label: 'ff+validate', phase: 'Artifacts', schema: FF }), 'ff')
 
-// ---- Phase 2c: Self-review loop (fan out one reviewer per artifact; fix; repeat until clean) ----
+// ---- Phase 2c: Self-review loop. Read-only reviewers fan out (blocking-only); a
+// SINGLE reconciliation agent then edits ALL artifacts together. Per-file fixers
+// were the failure engine: the dominant concern class is cross-artifact
+// contradictions, which a one-sided "edit only this file" fixer cannot resolve —
+// it documents the conflict instead, the other file still disagrees, and it gets
+// re-flagged every pass. One reconciler that can touch every file fixes that. ----
 phase('Self-review')
 // Concerns carry a severity; only BLOCKING ones gate the loop. Minor/stylistic
 // notes are logged but never trigger another pass — prose artifacts always have
@@ -122,42 +127,48 @@ const REVIEW = {
     },
   },
 }
-// Markdown self-review should converge in 1-2 rounds. The low cap + the
-// non-decreasing break stop the reviewer/fixer ping-pong; 100 was a footgun.
+// Markdown self-review should converge in 1-2 rounds. Low cap + non-progress break
+// stop the ping-pong; residual blockers escalate to the human gate, not silence.
 const MAX_REVIEW = 3
 let reviewPass = 0, prevBlocking = Infinity, minorTotal = 0
+let residualConcerns = []
 while (reviewPass < MAX_REVIEW) {
   reviewPass++
   const reviews = (await parallel(ff.artifactFiles.map(f => () =>
     agent(`Review the OpenSpec artifact at ${f} (change "${changeName}", root ${root}).
 Read it and the sibling artifacts for cross-references. Report ONLY genuinely BLOCKING defects (severity "blocking"):
-a contradiction between artifacts, a missing or malformed requirement/scenario, a task breakdown that cannot be
-implemented as written, or a design decision that violates a stated requirement. Mark everything else — polish,
-"could add more detail", nice-to-haves, stylistic preferences — as severity "minor". Artifacts need NOT be
+a contradiction between artifacts (two files specifying different answers for the same thing), a missing or
+malformed requirement/scenario, or a task breakdown that cannot be implemented as written.
+Mark everything else "minor": polish, "could add more detail", nice-to-haves, stylistic preferences — AND anything
+that cannot be resolved by editing the artifact text, e.g. "no automated test/verification harness exists" or other
+tooling that does not yet exist (those are implementation notes, not artifact defects). Do NOT cite sibling
+artifacts by line number, and do NOT flag shifted/stale line references as blocking. Artifacts need not be
 exhaustive; do not invent blocking concerns. Return an empty concerns array if it is sound.`,
       { label: `review:${f.split('/').pop()}`, phase: 'Self-review', schema: REVIEW })
   ))).filter(Boolean)
 
-  const blocking = reviews
-    .map(r => ({ file: r.file, concerns: r.concerns.filter(c => c.severity === 'blocking') }))
-    .filter(r => r.concerns.length)
+  const blockers = reviews.flatMap(r => r.concerns.filter(c => c.severity === 'blocking').map(c => ({ file: r.file, note: c.note })))
   minorTotal += reviews.reduce((n, r) => n + r.concerns.filter(c => c.severity === 'minor').length, 0)
-  const blockingCount = blocking.reduce((n, r) => n + r.concerns.length, 0)
 
-  if (!blocking.length) { log(`self-review clean after ${reviewPass} pass(es)${minorTotal ? ` (${minorTotal} minor note(s) left as-is)` : ''}`); break }
-  // Not strictly fewer blockers than last round → oscillating, not converging. Stop.
-  if (blockingCount >= prevBlocking) { log(`self-review not converging (${blockingCount} blocking, prev ${prevBlocking}) — stopping at pass ${reviewPass}`); break }
-  prevBlocking = blockingCount
+  if (!blockers.length) { residualConcerns = []; log(`self-review clean after ${reviewPass} pass(es)${minorTotal ? ` (${minorTotal} minor note(s) left as-is)` : ''}`); break }
+  // Not strictly fewer blockers than last round → oscillating. Escalate, don't loop.
+  if (blockers.length >= prevBlocking) { residualConcerns = blockers; log(`self-review not converging (${blockers.length} blocking, prev ${prevBlocking}) — escalating residual to the human gate`); break }
+  prevBlocking = blockers.length
+  residualConcerns = blockers
 
-  log(`self-review pass ${reviewPass}: ${blockingCount} blocking concern(s) across ${blocking.length} artifact(s)`)
-  await parallel(blocking.map(r => () =>
-    agent(`Fix these BLOCKING concerns in the OpenSpec artifact ${r.file} (change "${changeName}", root ${root}):
-${r.concerns.map((c, i) => `  ${i + 1}. ${c.note}`).join('\n')}
-Make the minimal edit that resolves them — do not expand scope or add nice-to-haves. Edit only ${r.file}.
-After editing, run \`openspec validate ${changeName}\` and fix any structural errors you introduced.`,
-      { label: `review-fix:${r.file.split('/').pop()}`, phase: 'Self-review' })
-  ))
-  if (reviewPass === MAX_REVIEW) log(`self-review hit pass cap (${MAX_REVIEW}) with ${blockingCount} blocking concern(s) still open`)
+  log(`self-review pass ${reviewPass}: reconciling ${blockers.length} blocking concern(s) across the artifact set`)
+  // ONE agent edits across ALL artifacts so two-sided contradictions get a single
+  // coherent answer, instead of N isolated edits that re-break each other.
+  await agent(`Reconcile these BLOCKING concerns across the OpenSpec change "${changeName}" artifacts (root ${root}).
+Artifact files: ${ff.artifactFiles.join(', ')}.
+Concerns:
+${blockers.map((b, i) => `  ${i + 1}. [${b.file.split('/').pop()}] ${b.note}`).join('\n')}
+You MAY edit ANY of these files. Resolve each contradiction by choosing ONE answer and making every artifact agree
+with it — do NOT add "this overrides the other file" prose, and do NOT reference sibling artifacts by line number.
+Make the minimal edits that resolve the concerns; do not expand scope. Then run \`openspec validate ${changeName}\`
+and fix any structural errors you introduced.`,
+    { label: 'reconcile', phase: 'Self-review' })
+  if (reviewPass === MAX_REVIEW) { residualConcerns = blockers; log(`self-review hit pass cap (${MAX_REVIEW}); ${blockers.length} concern(s) escalated to the human gate`) }
 }
 
 // ---- Phase 2d: Implement. Agent plans the waves; the script fans out (NOT openspec-apply, which is serial). ----
@@ -330,4 +341,5 @@ return {
   testStatus,
   verifyClean,
   verifyPasses: verifyPass,
+  residualConcerns,
 }
