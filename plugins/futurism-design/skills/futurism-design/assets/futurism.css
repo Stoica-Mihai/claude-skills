@@ -13,10 +13,21 @@
   /* Overlay dim — theme-INDEPENDENT (same in light + dark). Never use --ink for
      overlays: ink is the cream foreground in dark, so it would lighten not dim. */
   --scrim:rgba(0,0,0,.55);
+  /* State washes — theme-aware. A saturated accent mixed into a near-black base
+     stays near-black until a high %, so dark needs much higher mixes than light to
+     keep hover/selected/tint perceptible (the %s differ per theme block below). */
+  --hover-bg:color-mix(in srgb,var(--accent) 14%,var(--surf));
+  --sel-bg:color-mix(in srgb,var(--accent) 26%,var(--surf));
+  --tint:color-mix(in srgb,var(--accent) 12%,var(--bg));
+  --skel-stripe:color-mix(in srgb,var(--accent) 22%,transparent);
 }
 [data-theme="dark"]{
   --bg:#16140f; --surf:#211d16; --ink:#efe9dc; --muted:#a89f8e;
   --accent:#ff4d33; --line:#efe9dc; --shadow:#ff4d33; --field:#211d16; --on-accent:#16140f;
+  --hover-bg:color-mix(in srgb,var(--accent) 40%,var(--surf));
+  --sel-bg:color-mix(in srgb,var(--accent) 58%,var(--surf));
+  --tint:color-mix(in srgb,var(--accent) 36%,var(--bg));
+  --skel-stripe:color-mix(in srgb,var(--accent) 45%,transparent);
 }
 
 body{background:var(--bg);color:var(--ink);font-family:var(--font);margin:0;transition:background var(--med),color var(--med)}
@@ -159,7 +170,7 @@ input:focus,textarea:focus{outline:3px solid var(--accent);outline-offset:0}
 @keyframes fd-slidein{from{transform:translateX(16px)}to{transform:translateX(0)}}
 
 /* Alerts — lead with a currentColor stroke SVG (never emoji); flex aligns it. */
-.alert{display:flex;align-items:center;gap:9px;border:2px solid var(--accent);border-left-width:8px;padding:10px 12px;font-size:13px;background:color-mix(in srgb,var(--accent) 12%,var(--bg))}
+.alert{display:flex;align-items:center;gap:9px;border:2px solid var(--accent);border-left-width:8px;padding:10px 12px;font-size:13px;background:var(--tint)}
 .alert.info{border-color:var(--line);background:var(--surf)}
 .alert svg{width:18px;height:18px;flex:none}
 
@@ -176,15 +187,17 @@ table{width:100%;border-collapse:collapse;font-size:13px}
 th{text-align:left;border-bottom:3px solid var(--line);padding:7px 6px;text-transform:uppercase;letter-spacing:1px;font-size:11px}
 td{border-bottom:1px solid var(--muted);padding:7px 6px}
 tbody tr{transition:background var(--fast)}
-tbody tr:hover{background:color-mix(in srgb,var(--accent) 12%,var(--bg))}
+tbody tr:hover{background:var(--tint)}
 
 /* List rows — hover + selected highlight driven through --row-bg so a JS-set
-   inline background:var(--row-bg,transparent) can't clobber the highlight. On
-   carbon a color-mix under ~30% is nearly invisible, so selected sits at 30%. */
+   inline background:var(--row-bg,transparent) can't clobber the highlight. Washes
+   use the theme-aware --hover-bg/--sel-bg tokens (dark needs far higher mixes). */
 .list-row{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;border-bottom:2px solid var(--line);background:var(--row-bg,transparent);transition:background var(--fast)}
 .list-row:last-child{border-bottom:none}
-.list-row:hover{--row-bg:color-mix(in srgb,var(--accent) 22%,var(--surf))}
-.list-row.sel,.list-row.sel:hover{--row-bg:color-mix(in srgb,var(--accent) 30%,var(--surf))}
+.list-row:hover{--row-bg:var(--hover-bg)}
+/* Selected: theme-aware wash + an inset accent edge — the edge carries the cue even
+   where the wash is subtle (and survives forced-colors), so sel != hover != normal. */
+.list-row.sel,.list-row.sel:hover{--row-bg:var(--sel-bg);box-shadow:inset 4px 0 0 var(--accent)}
 
 /* Modal — native <dialog>: transparent shell, the .modal box carries the chrome.
    overflow:visible on <dialog> so .modal's offset shadow isn't clipped; tall
@@ -258,7 +271,7 @@ dialog .modal{max-height:calc(100dvh - 24px);overflow-y:auto}
 /* Skeleton — content-shaped placeholder. Reuses the fd-march barber-pole (a spinner
    would be rotary, off-brand) at a low accent-mix. Set width/height inline. */
 .skel{height:14px;border:2px solid var(--line);background-color:var(--field);
-  background-image:linear-gradient(45deg,color-mix(in srgb,var(--accent) 22%,transparent) 25%,transparent 25% 50%,color-mix(in srgb,var(--accent) 22%,transparent) 50% 75%,transparent 75%);
+  background-image:linear-gradient(45deg,var(--skel-stripe) 25%,transparent 25% 50%,var(--skel-stripe) 50% 75%,transparent 75%);
   background-size:22px 22px;animation:fd-march 1s linear infinite}
 
 /* Segmented control — welded buttons (the .combo idiom); active fills ink. For a

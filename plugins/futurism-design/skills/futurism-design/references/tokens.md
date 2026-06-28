@@ -66,9 +66,22 @@ fades or springy bounces. `prefers-reduced-motion: reduce` disables all of it.
   --font:'Helvetica Neue',Arial,sans-serif;
   --mono:'SFMono-Regular',ui-monospace,Menlo,Consolas,monospace;
   --scrim:rgba(0,0,0,.55);
+  --hover-bg:color-mix(in srgb,var(--accent) 14%,var(--surf));
+  --sel-bg:color-mix(in srgb,var(--accent) 26%,var(--surf));
+  --tint:color-mix(in srgb,var(--accent) 12%,var(--bg));
+  --skel-stripe:color-mix(in srgb,var(--accent) 22%,transparent);
 }
 [data-theme="dark"]{
   --bg:#16140f; --surf:#211d16; --ink:#efe9dc; --muted:#a89f8e;
   --accent:#ff4d33; --line:#efe9dc; --shadow:#ff4d33; --field:#211d16; --on-accent:#16140f;
+  /* State washes need much higher accent % on the near-black bases to stay visible. */
+  --hover-bg:color-mix(in srgb,var(--accent) 40%,var(--surf));
+  --sel-bg:color-mix(in srgb,var(--accent) 58%,var(--surf));
+  --tint:color-mix(in srgb,var(--accent) 36%,var(--bg));
+  --skel-stripe:color-mix(in srgb,var(--accent) 45%,transparent);
 }
 ```
+
+State washes (`--hover-bg`, `--sel-bg`, `--tint`, `--skel-stripe`) are **theme-aware**:
+a saturated accent mixed into a near-black base stays near-black until a high %, so
+the dark block uses much higher mixes than light to keep the cue perceptible.
