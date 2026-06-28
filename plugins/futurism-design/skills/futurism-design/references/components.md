@@ -215,13 +215,14 @@ automatically (an observer re-applies the right light/dark variant); the returne
 ## Off-canvas drawer
 
 ```html
+<button class="iconbtn" aria-controls="nav" aria-expanded="false" onclick="fdDrawer('nav','navScrim')">☰</button>
 <aside class="drawer" id="nav">…</aside>
 <div class="scrim-bg" id="navScrim" style="display:none" onclick="fdDrawer('nav','navScrim')"></div>
-<button class="iconbtn" onclick="fdDrawer('nav','navScrim')">☰</button>
 ```
 
 `fdDrawer` slides the panel in/out and shows/hides the scrim; Escape closes any open
-drawer. On desktop, make the panel static at your breakpoint (see the Responsive &
+drawer. It also keeps the trigger's `aria-expanded` in sync (when present) and
+restores focus to the opener on close — same as the accent popover. On desktop, make the panel static at your breakpoint (see the Responsive &
 touch section in SKILL.md). (Escape closes *all* open drawers/scrims — fine for the
 usual single drawer; pages with several simultaneous drawers need their own handling.)
 

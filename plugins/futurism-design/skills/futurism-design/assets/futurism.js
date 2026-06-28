@@ -102,8 +102,17 @@ function fdDrawer(panel,scrim){
   panel=typeof panel==='string'?document.getElementById(panel):panel;
   if(!panel)return;
   var open=panel.classList.toggle('drawer-open');
+  if(open)panel._fdReturn=document.activeElement;
+  fdDrawerSync(panel,open);
   scrim=typeof scrim==='string'?document.getElementById(scrim):scrim;
   if(scrim)scrim.style.display=open?'block':'none';
+}
+// Keep the opener's aria-expanded in sync, and restore focus to it on close —
+// matches the accent popover / select behaviour. Used by fdDrawer + Escape close.
+function fdDrawerSync(panel,open){
+  var r=panel._fdReturn;if(!r)return;
+  if(r.hasAttribute&&r.hasAttribute('aria-expanded'))r.setAttribute('aria-expanded',open?'true':'false');
+  if(!open&&r.focus)r.focus();
 }
 
 // Accent picker: swap --accent and (in dark) --shadow at runtime, persist.
@@ -200,6 +209,6 @@ document.addEventListener('keydown',function(e){
   if(e.key==='Escape'){
     document.querySelectorAll('.accpick.open').forEach(function(p){p.classList.remove('open');var t=p.querySelector('.acctrig');if(t){t.setAttribute('aria-expanded','false');t.focus()}});
     var drawers=document.querySelectorAll('.drawer.drawer-open');
-    if(drawers.length){drawers.forEach(function(d){d.classList.remove('drawer-open')});document.querySelectorAll('.scrim-bg').forEach(function(s){s.style.display='none'})}
+    if(drawers.length){drawers.forEach(function(d){d.classList.remove('drawer-open');fdDrawerSync(d,false)});document.querySelectorAll('.scrim-bg').forEach(function(s){s.style.display='none'})}
   }
 },false);
