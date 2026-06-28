@@ -128,7 +128,7 @@ option shows its text but `fdSel` stores `data-value`. Read it with `fdSelVal(se
 (or `sel.dataset.value`):
 
 ```html
-<div class="sel-opt" data-value="claude-opus-4-8" onclick="fdSel(this)">Opus 4.8</div>
+<div class="sel-opt" data-value="spec-gp" onclick="fdSel(this)">Grand Prix</div>
 ```
 
 ## Modal
@@ -159,8 +159,8 @@ Open/close with `dialog.showModal()` / `dialog.close()`. The `::backdrop` uses
 ## List rows
 
 ```html
-<div class="row sel"><span class="dot"></span><b>Active session</b></div>
-<div class="row"><span class="dot dead"></span><b>Idle session</b></div>
+<div class="list-row sel"><span class="dot"></span><b>Active session</b></div>
+<div class="list-row"><span class="dot dead"></span><b>Idle session</b></div>
 ```
 
 Hover + selected highlights route through a `--row-bg` variable so a JS-set inline

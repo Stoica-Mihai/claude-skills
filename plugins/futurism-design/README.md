@@ -13,7 +13,7 @@ generated UI on-brand instead of defaulting to generic styling.
 |---|---|
 | ![Futurism design system — light theme](skills/futurism-design/assets/preview/light.png) | ![Futurism design system — dark theme](skills/futurism-design/assets/preview/dark.png) |
 
-**See it interactive** (toggle theme, open the custom select, switch tabs):
+**See it interactive** (toggle theme, swap the accent, open the custom select, switch tabs, open the modal):
 
 - Live render: [open demo.html via htmlpreview](https://htmlpreview.github.io/?https://github.com/Stoica-Mihai/claude-skills/blob/main/plugins/futurism-design/skills/futurism-design/assets/demo.html)
 - Or locally: open `skills/futurism-design/assets/demo.html` in a browser. It loads the shipped `futurism.css` + `futurism.js`, so it doubles as an integration test.

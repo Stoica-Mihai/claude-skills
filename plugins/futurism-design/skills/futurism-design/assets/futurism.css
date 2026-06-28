@@ -149,10 +149,10 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 12%,var(--bg))}
 /* List rows — hover + selected highlight driven through --row-bg so a JS-set
    inline background:var(--row-bg,transparent) can't clobber the highlight. On
    carbon a color-mix under ~30% is nearly invisible, so selected sits at 30%. */
-.row{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;border-bottom:2px solid var(--line);background:var(--row-bg,transparent);transition:background var(--fast)}
-.row:last-child{border-bottom:none}
-.row:hover{--row-bg:color-mix(in srgb,var(--accent) 14%,var(--surf))}
-.row.sel,.row.sel:hover{--row-bg:color-mix(in srgb,var(--accent) 30%,var(--surf))}
+.list-row{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;border-bottom:2px solid var(--line);background:var(--row-bg,transparent);transition:background var(--fast)}
+.list-row:last-child{border-bottom:none}
+.list-row:hover{--row-bg:color-mix(in srgb,var(--accent) 14%,var(--surf))}
+.list-row.sel,.list-row.sel:hover{--row-bg:color-mix(in srgb,var(--accent) 30%,var(--surf))}
 
 /* Modal — native <dialog>: transparent shell, the .modal box carries the chrome.
    overflow:visible on <dialog> so .modal's offset shadow isn't clipped; tall

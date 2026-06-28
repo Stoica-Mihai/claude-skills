@@ -15,13 +15,18 @@
   .switch{display:inline-flex;border:2px solid var(--line);font-size:10px;font-weight:900;letter-spacing:1px;cursor:pointer}
   .switch span{padding:6px 12px}
   .switch .act{background:var(--accent);color:var(--on-accent)}
+  .head{display:flex;align-items:center;justify-content:flex-end;gap:14px}
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <div class="row" style="justify-content:flex-end">
-    <div class="switch" onclick="fdTheme();var d=document.documentElement.getAttribute('data-theme')==='dark';this.querySelector('.l').classList.toggle('act',!d);this.querySelector('.d').classList.toggle('act',d)">
+  <div class="head">
+    <div class="accpick" id="accpick">
+      <button class="acctrig" aria-label="Accent color"></button>
+      <div class="accpop"></div>
+    </div>
+    <div class="switch" id="themeSwitch" onclick="flipTheme()">
       <span class="l act">LIGHT</span><span class="d">DARK</span>
     </div>
   </div>
@@ -50,6 +55,23 @@
     <div class="row">
       <span class="badge red">NEW</span><span class="badge">DEFAULT</span><span class="badge out">OUTLINE</span>
     </div>
+    <div class="row">
+      <button class="btn btn-primary saving"><span>SAVING…</span></button>
+      <button class="btn ok"><span>SAVED ✓</span></button>
+      <button class="btn err"><span>FAILED</span></button>
+    </div>
+  </div>
+
+  <div class="sect">
+    <div class="kick">CONTROLS</div>
+    <div class="row">
+      <button class="iconbtn">✎</button>
+      <button class="iconbtn danger">✕</button>
+      <span class="keycap">⌘K</span>
+      <span class="keycap">ESC</span>
+      <span class="dot"></span><span style="font-size:12px;font-weight:700">live</span>
+      <span class="dot dead"></span><span style="font-size:12px;font-weight:700;color:var(--muted)">idle</span>
+    </div>
   </div>
 
   <div class="sect">
@@ -67,6 +89,18 @@
           </div>
         </div>
       </div>
+    </div>
+    <div class="form-row">
+      <label>Chassis <span style="color:var(--muted);font-weight:400">(label ≠ value)</span></label>
+      <div class="sel" data-field="chassis">
+        <div class="sel-val"><span class="sel-cur">Grand Prix</span><i class="caret">›</i></div>
+        <div class="sel-list">
+          <div class="sel-opt sel-on" data-value="spec-gp" onclick="fdSel(this);showVal()">Grand Prix</div>
+          <div class="sel-opt" data-value="spec-tr" onclick="fdSel(this);showVal()">Touring</div>
+          <div class="sel-opt" data-value="spec-mf" onclick="fdSel(this);showVal()">Manifesto</div>
+        </div>
+      </div>
+      <p style="font-size:11px;font-family:var(--mono);margin:6px 0 0">value → <b id="chassisval">spec-gp</b></p>
     </div>
     <div class="row">
       <div class="toggle on"><i></i></div>
@@ -116,6 +150,57 @@
     </table>
   </div>
 
+  <div class="sect">
+    <div class="kick">LIST</div>
+    <div style="border:2px solid var(--line)">
+      <div class="list-row sel"><span class="dot"></span><b style="font-style:italic">manifesto-gt</b></div>
+      <div class="list-row"><span class="dot"></span><b style="font-style:italic">tipo-1909</b></div>
+      <div class="list-row"><span class="dot dead"></span><b style="font-style:italic">velocita</b></div>
+    </div>
+  </div>
+
+  <div class="sect">
+    <div class="kick">MODAL</div>
+    <button class="btn btn-primary" onclick="document.getElementById('confirm').showModal()"><span>OPEN MODAL →</span></button>
+  </div>
+
 </div>
+
+<dialog id="confirm">
+  <div class="modal">
+    <div class="mhead"><h2>Delete session?</h2></div>
+    <div class="mbody"><p>This kills the running process. There is no undo.</p></div>
+    <div class="mfoot">
+      <span class="kick">irreversible</span>
+      <div class="grp">
+        <button class="btn btn-ghost" onclick="document.getElementById('confirm').close()"><span>CANCEL</span></button>
+        <button class="btn btn-primary" onclick="document.getElementById('confirm').close()"><span>DELETE →</span></button>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<script>
+  var ACC=[
+    {name:'Red',light:'#d22f1a',dark:'#ff4d33'},
+    {name:'Amber',light:'#c97a00',dark:'#ffb02e'},
+    {name:'Lime',light:'#5d8a00',dark:'#9ae600'},
+    {name:'Cyan',light:'#0a8f86',dark:'#2ee6d6'},
+    {name:'Blue',light:'#1f5fd6',dark:'#4d8bff'},
+    {name:'Violet',light:'#7a3fd6',dark:'#b06bff'},
+    {name:'Pink',light:'#d62f86',dark:'#ff5fae'}
+  ];
+  var accent;
+  function flipTheme(){
+    fdTheme();
+    var d=document.documentElement.getAttribute('data-theme')==='dark';
+    var sw=document.getElementById('themeSwitch');
+    sw.querySelector('.l').classList.toggle('act',!d);
+    sw.querySelector('.d').classList.toggle('act',d);
+    if(accent)accent.reapply();
+  }
+  function showVal(){document.getElementById('chassisval').textContent=fdSelVal(document.querySelector('.sel[data-field="chassis"]'))}
+  window.addEventListener('DOMContentLoaded',function(){accent=fdAccent('accpick',ACC)});
+</script>
 </body>
 </html>

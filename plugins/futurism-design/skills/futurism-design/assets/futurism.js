@@ -3,7 +3,7 @@
 
 // Custom select: click value to open, click option to pick, click-outside closes.
 // An option's value is its data-value when present (lets label differ from value,
-// e.g. label "Opus 4.8" -> value "claude-opus-4-8"), otherwise its label text.
+// e.g. label "Grand Prix" -> value "spec-gp"), otherwise its label text.
 function fdOptValue(o){return o.dataset.value!==undefined?o.dataset.value:o.textContent}
 function fdSel(opt){
   var sel=opt.closest('.sel');
