@@ -68,6 +68,10 @@ button{font-family:var(--font);color:inherit;background:none;border:0}
 .keycap{border:2px solid var(--line);background:var(--surf);color:var(--ink);font-family:var(--mono,ui-monospace,monospace);font-size:10px;font-weight:700;padding:3px 9px;cursor:pointer;
   transition:background var(--fast),color var(--fast)}
 .keycap:hover{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+/* Chord — keycaps welded into one block (shared 2px divider, no gap) so they
+   read as pressed together; no "+" symbol. The row gap keeps standalone keys apart. */
+.combo{display:inline-flex}
+.combo .keycap+.keycap{margin-left:-2px}
 
 /* Status dot — live indicator. Hard step-end blink (a square-wave status LED, like
    the terminal cursor), not a smooth pulse — a sine fade would read as fade-puff. */

@@ -91,12 +91,14 @@ explicitly — keep that when extending.
 
 ```html
 <span class="keycap">ESC</span>
-<!-- chords are separate caps, like a real keyboard -->
-<span class="keycap">⌘</span><span class="keycap">K</span>
+<!-- chord: caps welded into one block by .combo (shared divider, no + symbol) -->
+<span class="combo"><span class="keycap">⌘</span><span class="keycap">K</span></span>
 ```
 
-Plain monospace text reads as machined. Render a shortcut as one cap per key, not
-a single cramped `⌘K`.
+Plain monospace text reads as machined. For a shortcut, weld the caps with
+`.combo` — they butt into one block sharing a single 2px divider, so they read as
+pressed-together without a generic `+`. A standalone key stays apart via the row
+gap. Don't cram a chord into one cap (`⌘K`).
 
 ## Status dot
 
