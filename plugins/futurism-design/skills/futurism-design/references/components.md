@@ -140,8 +140,10 @@ gap. Don't cram a chord into one cap (`⌘K`).
 ```
 
 Open/close and click-outside are handled by `futurism.js`; `fdSel` sets the value.
-`fdInit` (auto-runs on load) wires the ARIA roles (`combobox`/`listbox`/`option`),
-so it's keyboard-operable: Enter/Space/↓ open, ↑↓ move, Enter picks, Esc closes.
+`fdInit` (auto-runs on load) wires the ARIA roles — the `.sel-val` becomes a
+`button` with `aria-haspopup="listbox"`/`aria-controls`, the list a `listbox`, each
+option an `option` — so it's keyboard-operable: Enter/Space/↓ open, ↑↓ move, Enter
+picks, Esc closes.
 
 When the displayed label differs from the stored value, add `data-value` — the
 option shows its text but `fdSel` stores `data-value`. Read it with `fdSelVal(sel)`
@@ -206,8 +208,9 @@ mix — below ~30% it's nearly invisible on the carbon theme.
 ```
 
 Swaps `--accent` at runtime and persists it. In dark the offset shadow follows the
-accent (`--shadow` = accent); in light it stays ink. Re-call the returned
-`.reapply()` after a theme flip so the right light/dark variant is used.
+accent (`--shadow` = accent); in light it stays ink. Theme flips are handled
+automatically (an observer re-applies the right light/dark variant); the returned
+`.reapply()` is kept for manual use but is no longer required.
 
 ## Off-canvas drawer
 
@@ -217,8 +220,10 @@ accent (`--shadow` = accent); in light it stays ink. Re-call the returned
 <button class="iconbtn" onclick="fdDrawer('nav','navScrim')">☰</button>
 ```
 
-`fdDrawer` slides the panel in/out and shows/hides the scrim. On desktop, make the
-panel static at your breakpoint (see the Responsive & touch section in SKILL.md).
+`fdDrawer` slides the panel in/out and shows/hides the scrim; Escape closes any open
+drawer. On desktop, make the panel static at your breakpoint (see the Responsive &
+touch section in SKILL.md). (Escape closes *all* open drawers/scrims — fine for the
+usual single drawer; pages with several simultaneous drawers need their own handling.)
 
 ## Toggle
 
@@ -370,13 +375,14 @@ control inside must carry its own `aria-label` — don't rely on the tip for the
 ## Toast
 
 ```html
-<button class="btn btn-primary" onclick="fdToast('Saved',{type:'info'})"><span>SAVE</span></button>
+<button class="btn btn-primary" onclick="fdToast('Saved')"><span>SAVE</span></button>
 <button class="btn btn-ghost" onclick="fdToast('Upload failed',{type:'err'})"><span>FAIL</span></button>
 ```
 
-`fdToast(msg, {type:'info'|'err', timeout})` darts a card in from the bottom-right
-and slides it out — never fades. Error/attention = accent border (default), neutral
-= `info`. Success rides on the label, not a green (law 4).
+`fdToast(msg, {type, timeout})` darts a card in from the bottom-right and slides it
+out — never fades. **Default is neutral** (line border + accent left-rule);
+`{type:'err'}` raises the full accent border for errors/attention. Success rides on
+the label, not a green (law 4). `timeout` ms before auto-dismiss (default 3200).
 
 ## Empty state
 

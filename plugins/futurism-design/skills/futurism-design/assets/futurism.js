@@ -80,19 +80,18 @@ function fdTheme(root){
   root.setAttribute('data-theme',root.getAttribute('data-theme')==='dark'?'light':'dark');
 }
 
-// Toast: non-blocking message. opts: {type:'info'|'err' (default err), timeout ms}.
-// Darts in from the right; auto-dismisses by sliding back out (no fade).
+// Toast: non-blocking message. opts: {type:'err' for attention; default neutral, timeout ms}.
+// Darts in from the right; auto-dismisses by sliding back out via the .out class (no fade).
 function fdToast(msg,opts){
   opts=opts||{};
   var wrap=document.querySelector('.toaster');
   if(!wrap){wrap=document.createElement('div');wrap.className='toaster';document.body.appendChild(wrap)}
   var t=document.createElement('div');
-  t.className='toast'+(opts.type==='info'?' info':'');
+  t.className='toast'+(opts.type==='err'?' err':'');
   t.textContent=msg;
   wrap.appendChild(t);
   setTimeout(function(){
-    t.style.transition='transform var(--med) var(--ease)';
-    t.style.transform='translateX(40px)';
+    t.classList.add('out');
     setTimeout(function(){if(t.parentNode)t.remove()},220);
   },opts.timeout||3200);
   return t;
@@ -145,8 +144,11 @@ function fdAccent(pick,accents,onChange){
   }
   apply(accents.find(function(a){return a.name===saved})||accents[0]);
   // Re-apply on theme flip so --accent/--shadow track the new theme without the
-  // caller having to call reapply() after every fdTheme().
-  new MutationObserver(function(){if(current)apply(current)}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+  // caller having to call reapply() after every fdTheme(). Disconnect a prior
+  // observer first so re-initialising the same picker doesn't stack them.
+  if(pick._fdObs)pick._fdObs.disconnect();
+  pick._fdObs=new MutationObserver(function(){if(current)apply(current)});
+  pick._fdObs.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
   return {reapply:function(){apply(accents.find(function(a){return a.name===(localStorage.getItem('fd-accent')||accents[0].name)})||accents[0])}};
 }
 
@@ -182,8 +184,9 @@ document.addEventListener('keydown',function(e){
   // Calls fdTab directly (no reliance on inline onclick indices).
   var tab=e.target.closest('.tab');
   if(tab&&(e.key==='Enter'||e.key===' '||e.key==='ArrowRight'||e.key==='ArrowLeft')){
+    var tl=tab.closest('.tabs');if(!tl)return;
     e.preventDefault();
-    var tabs=Array.prototype.slice.call(tab.closest('.tabs').querySelectorAll('.tab')),ti=tabs.indexOf(tab);
+    var tabs=Array.prototype.slice.call(tl.querySelectorAll('.tab')),ti=tabs.indexOf(tab);
     if(e.key==='Enter'||e.key===' '){fdTab(tab,ti)}
     else{var n=e.key==='ArrowRight'?(ti+1)%tabs.length:(ti-1+tabs.length)%tabs.length;fdTab(tabs[n],n);tabs[n].focus()}
     return;
@@ -196,6 +199,7 @@ document.addEventListener('keydown',function(e){
   // Escape closes the accent popover or an open drawer and restores focus.
   if(e.key==='Escape'){
     document.querySelectorAll('.accpick.open').forEach(function(p){p.classList.remove('open');var t=p.querySelector('.acctrig');if(t){t.setAttribute('aria-expanded','false');t.focus()}});
-    document.querySelectorAll('.drawer.drawer-open').forEach(function(d){d.classList.remove('drawer-open');var s=document.querySelector('.scrim-bg');if(s)s.style.display='none'});
+    var drawers=document.querySelectorAll('.drawer.drawer-open');
+    if(drawers.length){drawers.forEach(function(d){d.classList.remove('drawer-open')});document.querySelectorAll('.scrim-bg').forEach(function(s){s.style.display='none'})}
   }
 },false);

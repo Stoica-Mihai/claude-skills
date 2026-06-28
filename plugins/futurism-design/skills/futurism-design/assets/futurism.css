@@ -104,7 +104,8 @@ input:focus,textarea:focus{outline:3px solid var(--accent);outline-offset:0}
 .sel{position:relative;width:100%;font-size:13px;user-select:none}
 .sel-val{background:var(--field);border:2px solid var(--line);padding:9px 10px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-weight:700}
 .sel.open .sel-val{outline:3px solid var(--accent)}
-.sel-val .caret{display:inline-block;font-style:normal;transition:transform var(--fast) var(--ease)}
+.sel-cur{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sel-val .caret{display:inline-block;font-style:normal;flex:none;transition:transform var(--fast) var(--ease)}
 .sel.open .sel-val .caret{transform:rotate(90deg)}
 .sel-list{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--field);border:2px solid var(--line);box-shadow:var(--shadow-off) var(--shadow-off) 0 var(--shadow);z-index:5;max-height:200px;overflow-y:auto;
   transform-origin:top;transform:scaleY(0);pointer-events:none;transition:transform var(--fast) var(--ease)}
@@ -142,6 +143,7 @@ input:focus,textarea:focus{outline:3px solid var(--accent);outline-offset:0}
 .tab:focus-visible{outline:3px solid var(--accent);outline-offset:-3px}
 .panel{display:none;padding:10px 2px;font-size:13px;color:var(--muted);animation:fd-slidein var(--med) var(--ease)}
 .panel.on{display:block}
+.panel[hidden]{display:none}
 /* Pure directional dart — no opacity crossfade (that would be the fade-puff law 5 bans). */
 @keyframes fd-slidein{from{transform:translateX(16px)}to{transform:translateX(0)}}
 
@@ -223,9 +225,13 @@ dialog .modal{max-height:calc(100dvh - 24px);overflow-y:auto}
 /* Toast — non-blocking feedback. Darts in from the right (no fade); accent border
    by default (error/attention), line border for neutral info. */
 .toaster{position:fixed;right:16px;bottom:16px;z-index:70;display:flex;flex-direction:column;gap:10px;align-items:flex-end}
-.toast{background:var(--surf);border:2px solid var(--accent);border-left-width:8px;box-shadow:var(--shadow-off) var(--shadow-off) 0 var(--shadow);padding:11px 14px;font-size:13px;font-weight:700;min-width:200px;max-width:340px;animation:fd-toastin var(--med) var(--ease)}
-.toast.info{border-color:var(--line)}
-@keyframes fd-toastin{from{transform:translateX(40px)}to{transform:translateX(0)}}
+/* Neutral by default (line border + accent left-rule); .err raises full accent.
+   Slides in from the right and out via .out — never fades. */
+.toast{background:var(--surf);border:2px solid var(--line);border-left:8px solid var(--accent);box-shadow:var(--shadow-off) var(--shadow-off) 0 var(--shadow);padding:11px 14px;font-size:13px;font-weight:700;min-width:200px;max-width:340px;
+  transition:transform var(--med) var(--ease);animation:fd-toastin var(--med) var(--ease)}
+.toast.err{border-color:var(--accent)}
+.toast.out{transform:translateX(120%)}
+@keyframes fd-toastin{from{transform:translateX(120%)}to{transform:translateX(0)}}
 
 /* Tooltip — data-tip on the wrapper; ink box that darts toward the trigger.
    No opacity fade (visibility toggles; the transform carries the motion). */
@@ -271,6 +277,16 @@ dialog .modal{max-height:calc(100dvh - 24px);overflow-y:auto}
 .crumb a:hover::after{right:0}
 .crumb .sep{color:var(--muted)}
 .crumb .cur{color:var(--ink)}
+
+/* Forced colors (Windows High Contrast): the UA drops box-shadow and replaces
+   color-mix backgrounds + gradients with system colors, so selected/active states
+   and the barber-pole bars lose their cue. Re-assert them with borders + Highlight. */
+@media (forced-colors:active){
+  .list-row.sel,.tab.on,.seg button.on,.pager button.on{outline:2px solid Highlight;outline-offset:-2px}
+  .prog>i,.skel{background:Highlight}
+  .dot{background:Highlight}
+  .dot.dead{background:GrayText}
+}
 
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}

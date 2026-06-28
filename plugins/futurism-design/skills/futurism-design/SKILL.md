@@ -117,13 +117,25 @@ the user's accent.
 
 The custom controls are div-built, so `futurism.js` carries their semantics — keep
 it loaded. `fdInit()` runs on load and wires ARIA roles + keyboard on `.sel`
-(combobox/listbox, Enter/↑↓/Esc), `.tabs` (tablist, ←/→ roving), and `.toggle`
+(button + listbox popup, Enter/↑↓/Esc), `.tabs` (tablist, ←/→ roving), and `.toggle`
 (switch, Space/Enter); call `fdInit()` again after injecting components at runtime.
 Every focusable control shows the same 3px accent `:focus-visible` ring — don't
 remove it. Native elements stay native on purpose: checkbox/radio are styled
 `<input>`s, and the modal is a real `<dialog>` (Tab-trap + Esc); give the dialog
 an `autofocus` button. Overlays dim with `--scrim`, motion respects
-`prefers-reduced-motion` (the live `.dot` keeps a static ring there).
+`prefers-reduced-motion` (the live `.dot` keeps a static ring there), and a
+`forced-colors` block re-asserts selected/active state for Windows High Contrast.
+
+**Scope.** The interactive controls require `futurism.js` — with JS off, the custom
+select/tabs/toggle/drawer/toast are inert (use native elements if you need a no-JS
+fallback). The motion language is directional and LTR-oriented (skews, slide-ins,
+darting underlines); for RTL, flip those with `:dir(rtl)` overrides.
+
+**SPA / framework use.** The kit drives state through DOM classes (`.on`/`.open`)
+and imperative ARIA, with one set of document-level delegates. Treat those controls
+as uncontrolled — don't let React/Vue re-render over the toggled classes — or port
+the control to framework state. Call `fdInit()` from your mount hook for components
+added after load; the document delegates are attached once and keep working.
 
 ## Responsive & touch
 
@@ -148,6 +160,6 @@ layout as the default, then restore the desktop layout at `@media (min-width:768
 
 ## When extending the kit
 
-New components must obey the seven laws and use only tokens. Match the existing
+New components must obey the eight laws and use only tokens. Match the existing
 motion vocabulary (slide/dart/lurch/march at `--fast`/`--med`). Add the component
 to `references/components.md` so the kit stays the single source of truth.
