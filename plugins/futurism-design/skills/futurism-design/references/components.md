@@ -71,18 +71,32 @@ States stay inside the one-red palette: `.saving` marches diagonal stripes (the
 ## Icon button
 
 ```html
-<button class="iconbtn"><span>✎</span></button>
-<button class="iconbtn danger" aria-label="Delete">✕</button>
+<button class="iconbtn" aria-label="Edit">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+       stroke-linecap="square" stroke-linejoin="miter">
+    <path d="M4 20h4L20 8l-4-4L4 16v4z"/><path d="M14 6l4 4"/>
+  </svg>
+</button>
 ```
 
-Square, token-themed. Native `<button>` doesn't inherit text color, so `.iconbtn`
-sets `color` explicitly — keep that when extending.
+Square, token-themed. Use **inline stroke SVG in `currentColor`** for the glyph —
+never emoji. Emoji carry their own color (breaks the one-red law) and rounded,
+soft shapes (breaks the square/flat look); a `currentColor` SVG inherits ink and
+flips to `--bg` on hover for free. Keep `stroke-linecap:square` /
+`stroke-linejoin:miter` so the icon's corners match the 2px-border hardness.
+Native `<button>` doesn't inherit text color, so `.iconbtn` sets `color`
+explicitly — keep that when extending.
 
 ## Keycap
 
 ```html
-<span class="keycap">⌘K</span>
+<span class="keycap">ESC</span>
+<!-- chords are separate caps, like a real keyboard -->
+<span class="keycap">⌘</span><span class="keycap">K</span>
 ```
+
+Plain monospace text reads as machined. Render a shortcut as one cap per key, not
+a single cramped `⌘K`.
 
 ## Status dot
 

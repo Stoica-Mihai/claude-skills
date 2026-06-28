@@ -82,6 +82,16 @@ user explicitly overrides:
   `--muted` color, comfortable size. Do not make body text italic or heavy.
 - Kickers/labels: 11px, uppercase, wide letter-spacing, in accent or ink.
 
+## Iconography
+
+Icons are **inline stroke SVG in `currentColor`**, never emoji. Emoji bring their
+own color (breaks law 4's one-red) and soft rounded shapes (breaks the square,
+flat look), and they won't theme. A `currentColor` SVG inherits the token color
+and flips on hover for free. Keep `stroke-linecap:square` /
+`stroke-linejoin:miter` so the icon's corners match the 2px-border hardness.
+Monospace text glyphs (keycaps, arrows like `→`) are fine — they're machined, not
+pictorial.
+
 ## Theming
 
 Every component is built on CSS variables, so light/dark is a single attribute

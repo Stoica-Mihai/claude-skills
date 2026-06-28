@@ -65,9 +65,13 @@
   <div class="sect">
     <div class="kick">CONTROLS</div>
     <div class="row">
-      <button class="iconbtn">✎</button>
-      <button class="iconbtn danger">✕</button>
-      <span class="keycap">⌘K</span>
+      <button class="iconbtn" aria-label="Edit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path d="M4 20h4L20 8l-4-4L4 16v4z"/><path d="M14 6l4 4"/></svg>
+      </button>
+      <button class="iconbtn danger" aria-label="Delete">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path d="M4 6h16M9 6V4h6v2M6 6l1 14h10l1-14M10 10v6M14 10v6"/></svg>
+      </button>
+      <span class="keycap">⌘</span><span class="keycap">K</span>
       <span class="keycap">ESC</span>
       <span class="dot"></span><span style="font-size:12px;font-weight:700">live</span>
       <span class="dot dead"></span><span style="font-size:12px;font-weight:700;color:var(--muted)">idle</span>
