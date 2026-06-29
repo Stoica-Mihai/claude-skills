@@ -115,6 +115,44 @@ function fdDrawerSync(panel,open){
   if(!open&&r.focus)r.focus();
 }
 
+// Inline two-step destructive confirm on a .row-act container (no modal, no native
+// confirm()). opts: { icon (idle SVG/text), label:'Delete', cancel:'Cancel',
+// failLabel:'Failed', onConfirm: () => Promise }. First click arms (accent confirm +
+// ghost cancel); focus moves to the SAFE cancel and Esc cancels; on cancel focus
+// returns to the trigger. onConfirm rejecting flashes .failed then reverts to idle.
+// The slot is a container, not a button, so its child buttons never nest in a button.
+function fdConfirm(slot, opts){
+  slot = typeof slot === 'string' ? document.getElementById(slot) : slot;
+  if(!slot) return;
+  opts = opts || {};
+  var label = opts.label || 'Delete', cancel = opts.cancel || 'Cancel', failLabel = opts.failLabel || 'Failed';
+  function mk(cls, txt){ var b=document.createElement('button'); b.type='button'; b.className=cls; b.textContent=txt; return b }
+  function idle(){
+    slot.classList.remove('confirming','failed'); slot.textContent='';
+    var b=document.createElement('button'); b.type='button'; b.className='row-act-btn';
+    b.setAttribute('aria-label', label); b.innerHTML = opts.icon || '✕';
+    b.onclick=function(e){ e.stopPropagation(); e.preventDefault(); arm() };
+    slot.appendChild(b);
+  }
+  function arm(){
+    slot.classList.add('confirming'); slot.textContent='';
+    var yes=mk('confirm-yes', label), no=mk('confirm-no', cancel);
+    yes.setAttribute('aria-label', label); no.setAttribute('aria-label', cancel);
+    yes.onclick=function(e){ e.stopPropagation(); e.preventDefault(); run() };
+    no.onclick=function(e){ e.stopPropagation(); e.preventDefault(); idle(); var t=slot.querySelector('.row-act-btn'); if(t)t.focus() };
+    slot.appendChild(yes); slot.appendChild(no);
+    no.focus(); // land on the least-destructive option
+  }
+  function run(){
+    Promise.resolve(opts.onConfirm && opts.onConfirm()).catch(function(){
+      slot.classList.remove('confirming'); slot.classList.add('failed'); slot.textContent=failLabel;
+      setTimeout(idle, 1800);
+    });
+  }
+  slot.addEventListener('keydown', function(e){ if(e.key==='Escape' && slot.classList.contains('confirming')){ idle(); var t=slot.querySelector('.row-act-btn'); if(t)t.focus() } });
+  idle();
+}
+
 // Accent picker: swap --accent and (in dark) --shadow at runtime, persist.
 // Pass the picker root .accpick + an array of {name,light,dark}. In dark the
 // offset shadow follows the accent; in light it stays ink.

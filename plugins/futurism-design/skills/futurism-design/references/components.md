@@ -195,8 +195,45 @@ non-`<dialog>` cases use `.overlay.open` wrapping the same `.modal`.
 ```
 
 Hover + selected highlights route through a `--row-bg` variable so a JS-set inline
-`background:var(--row-bg,transparent)` can't clobber them. Selected sits at 30%
-mix — below ~30% it's nearly invisible on the carbon theme.
+`background:var(--row-bg,transparent)` can't clobber them. Selected uses the
+theme-aware `--sel-bg` token plus an inset accent edge (carbon needs a far higher
+mix, and the edge carries the cue even where the wash is subtle).
+
+## Row action + inline confirm
+
+A per-row destructive action without a modal or native `confirm()`. The action is a
+two-step inline confirm wired by `fdConfirm`.
+
+```html
+<div class="row-host">
+  <div class="list-row sel"><span class="dot"></span><b>manifesto-gt</b></div>
+  <span class="row-act" id="rowDel"></span>
+</div>
+<script>
+  fdConfirm('rowDel', {
+    label: 'Delete', cancel: 'Cancel',
+    icon: '<svg …trash…></svg>',
+    onConfirm: () => fetch('/x', {method:'DELETE'}).then(r => { if(!r.ok) throw 0; /* re-render */ }),
+  });
+</script>
+```
+
+`fdConfirm` builds the idle trash button, arms on click (accent **Delete** + ghost
+**Cancel**), moves focus to the safe Cancel, cancels on Esc (focus returns to the
+trigger), and flashes `.failed` then reverts if `onConfirm` rejects.
+
+Three gotchas it handles for you (and you must respect when extending):
+- **No button-in-button.** A control can't nest inside a row that is itself a
+  `<button>`; the `.row-act` slot is a sibling of `.list-row` inside `.row-host`
+  (`position:relative`), and the slot is a *container*, not a button, so its
+  Delete/Cancel buttons don't nest either.
+- **Inset over the divider.** The absolute action would cover the row's bottom
+  border; it's inset `top/bottom:2px` so the divider still reads.
+- **Always-visible-muted, not hover-revealed** — a per-row destructive action that
+  only appears on hover is undiscoverable; it sits muted at rest, accent on hover/focus.
+
+Touch note: the inline confirm is compact (dense rows). For touch-primary contexts
+prefer the `<dialog>` modal confirm, which has full-size targets.
 
 ## Accent picker
 

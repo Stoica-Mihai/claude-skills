@@ -199,6 +199,28 @@ tbody tr:hover{background:var(--tint)}
    where the wash is subtle (and survives forced-colors), so sel != hover != normal. */
 .list-row.sel,.list-row.sel:hover{--row-bg:var(--sel-bg);box-shadow:inset 4px 0 0 var(--accent)}
 
+/* Row action + inline two-step confirm — a per-row control (e.g. delete) without a
+   modal or native confirm(). Wrap the row + action as SIBLINGS in .row-host: an
+   interactive control can't legally nest inside a row that is itself a <button>.
+   The slot itself is a CONTAINER (not a button) so its child buttons never nest in a
+   button either. Always-visible-muted (discoverable), inset top/bottom so it doesn't
+   cover the row divider. Wire the two-step + focus/Esc/ARIA with fdConfirm(). */
+.row-host{position:relative}
+.row-host .list-row{padding-right:46px}
+.row-act{position:absolute;top:2px;right:0;bottom:2px;display:flex;align-items:center;border-left:2px solid var(--line)}
+.row-act>button{font:inherit;border:0;cursor:pointer;background:transparent;transition:background var(--fast),color var(--fast)}
+.row-act-btn{display:flex;align-items:center;justify-content:center;height:100%;padding:0 12px;color:var(--muted)}
+.row-act-btn:hover{background:var(--accent);color:var(--on-accent)}
+.row-act-btn svg{width:15px;height:15px;display:block}
+.row-act.confirming{border-left-color:var(--accent)}
+.confirm-yes,.confirm-no{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:0 7px;height:100%}
+.confirm-yes{background:var(--accent);color:var(--on-accent)}
+.confirm-no{color:var(--muted);border-left:2px solid var(--line)}
+.confirm-no:hover{color:var(--ink)}
+.row-act-btn:focus-visible,.confirm-yes:focus-visible,.confirm-no:focus-visible{outline:3px solid var(--accent);outline-offset:-3px}
+/* Transient failure flash (set by fdConfirm on a rejected action), then revert. */
+.row-act.failed{background:var(--accent);color:var(--on-accent);border-left-color:var(--accent);justify-content:center;padding:0 10px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+
 /* Modal — native <dialog>: transparent shell, the .modal box carries the chrome.
    overflow:visible on <dialog> so .modal's offset shadow isn't clipped; tall
    content scrolls inside .modal. .overlay is the non-<dialog> fallback. */

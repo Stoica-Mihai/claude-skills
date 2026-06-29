@@ -58,7 +58,7 @@ Both files are in [`skills/futurism-design/assets/`](skills/futurism-design/asse
 nav · buttons (primary/ink/ghost + loading/ok/err states) · icon button · keycap ·
 keyboard chord · badges (red/default/outline) · input · form row · checkbox · radio ·
 custom select (label≠value via `data-value`) · animated toggle · segmented control ·
-status dot · cards · list rows · tabs · alerts (warn/info) · striped progress ·
+status dot · cards · list rows + row action / inline confirm · tabs · alerts (warn/info) · striped progress ·
 skeleton · table · pagination · breadcrumb · tooltip · blockquote · darting links ·
 modal (`<dialog>`) · toast · off-canvas drawer · empty state · runtime accent picker.
 

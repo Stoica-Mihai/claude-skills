@@ -166,7 +166,10 @@
   <div class="sect">
     <div class="kick">LIST</div>
     <div style="border:2px solid var(--line)">
-      <div class="list-row sel"><span class="dot"></span><b style="font-style:italic">manifesto-gt</b></div>
+      <div class="row-host">
+        <div class="list-row sel"><span class="dot"></span><b style="font-style:italic">manifesto-gt</b></div>
+        <span class="row-act" id="rowDel"></span>
+      </div>
       <div class="list-row"><span class="dot"></span><b style="font-style:italic">tipo-1909</b></div>
       <div class="list-row"><span class="dot dead"></span><b style="font-style:italic">velocita</b></div>
     </div>
@@ -276,7 +279,14 @@
     // accent re-applies itself on theme change (fdAccent's observer) — no reapply() needed.
   }
   function showVal(){document.getElementById('chassisval').textContent=fdSelVal(document.querySelector('.sel[data-field="chassis"]'))}
-  window.addEventListener('DOMContentLoaded',function(){fdAccent('accpick',ACC)});
+  window.addEventListener('DOMContentLoaded',function(){
+    fdAccent('accpick',ACC);
+    fdConfirm('rowDel',{
+      label:'Delete', cancel:'Cancel',
+      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path d="M4 6h16M9 6V4h6v2M6 6l1 14h10l1-14M10 10v6M14 10v6"/></svg>',
+      onConfirm:function(){ fdToast('Deleted manifesto-gt'); return Promise.resolve(); }
+    });
+  });
 </script>
 </body>
 </html>
