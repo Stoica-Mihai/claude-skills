@@ -50,9 +50,8 @@ fades or springy bounces. `prefers-reduced-motion: reduce` disables all of it.
 
 | token | value |
 |---|---|
-| `--border` | `2px` (3px for primary dividers: nav, table head, tabs) |
+| `--border` | `2px` — standard control/surface border (primary dividers stay a literal 3px: nav, table head, tabs) |
 | `--shadow-off` | `6px` (grows to 9px on card hover) |
-| `--space` | `8px` base unit |
 | corner radius | `0` — always |
 
 ## CSS source blocks
@@ -62,7 +61,7 @@ fades or springy bounces. `prefers-reduced-motion: reduce` disables all of it.
   --bg:#efe9dc; --surf:#f7f3ea; --ink:#1a1714; --muted:#4a4339;
   --accent:#d22f1a; --line:#1a1714; --shadow:#1a1714; --field:#f7f3ea; --on-accent:#efe9dc;
   --ease:cubic-bezier(.2,.9,.1,1); --fast:.12s; --med:.2s;
-  --space:8px; --border:2px; --shadow-off:6px;
+  --border:2px; --shadow-off:6px;
   --font:'Helvetica Neue',Arial,sans-serif;
   --mono:'SFMono-Regular',ui-monospace,Menlo,Consolas,monospace;
   --scrim:rgba(0,0,0,.55);

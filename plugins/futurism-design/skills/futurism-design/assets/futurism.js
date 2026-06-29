@@ -144,9 +144,15 @@ function fdConfirm(slot, opts){
     no.focus(); // land on the least-destructive option
   }
   function run(){
-    Promise.resolve(opts.onConfirm && opts.onConfirm()).catch(function(){
+    Promise.resolve(opts.onConfirm && opts.onConfirm()).then(function(){
+      // Success: if the row still exists, revert to idle and return focus to the
+      // trigger; if onConfirm removed the row, hand focus off via onDone so it isn't
+      // orphaned on a detached node (focus-order break right after a destructive act).
+      if(slot.isConnected){ idle(); var t=slot.querySelector('.row-act-btn'); if(t)t.focus() }
+      else if(opts.onDone) opts.onDone();
+    }).catch(function(){
       slot.classList.remove('confirming'); slot.classList.add('failed'); slot.textContent=failLabel;
-      setTimeout(idle, 1800);
+      setTimeout(function(){ if(slot.isConnected) idle() }, 1800);
     });
   }
   slot.addEventListener('keydown', function(e){ if(e.key==='Escape' && slot.classList.contains('confirming')){ idle(); var t=slot.querySelector('.row-act-btn'); if(t)t.focus() } });

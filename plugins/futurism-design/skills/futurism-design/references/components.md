@@ -19,13 +19,24 @@ via tokens — no per-component dark variant needed.
 A 2-state labeled pill; `.act` marks the live segment.
 
 ```html
-<button class="switch" onclick="fdTheme()" aria-label="Toggle light/dark theme" aria-pressed="false">
+<button class="switch" onclick="flipTheme()" aria-label="Toggle light/dark theme" aria-pressed="false">
   <span class="l act" aria-hidden="true">LIGHT</span><span class="d" aria-hidden="true">DARK</span>
 </button>
+<script>
+function flipTheme(){
+  fdTheme();                                       // flip the data-theme attribute
+  var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  var sw = document.querySelector('.switch');
+  sw.querySelector('.l').classList.toggle('act', !dark);
+  sw.querySelector('.d').classList.toggle('act', dark);
+  sw.setAttribute('aria-pressed', dark ? 'true' : 'false');
+}
+</script>
 ```
 
-`fdTheme()` flips the theme; in the same handler move `.act` to the now-active
-label and update `aria-pressed` (see `demo.html`'s `flipTheme`).
+`fdTheme()` only flips the theme — the `flipTheme` wrapper moves `.act` to the live
+label and updates `aria-pressed`. (Bare `onclick="fdTheme()"` would flip the theme
+but leave the pill and pressed-state stale.)
 
 ## Nav
 
@@ -220,7 +231,10 @@ two-step inline confirm wired by `fdConfirm`.
 
 `fdConfirm` builds the idle trash button, arms on click (accent **Delete** + ghost
 **Cancel**), moves focus to the safe Cancel, cancels on Esc (focus returns to the
-trigger), and flashes `.failed` then reverts if `onConfirm` rejects.
+trigger), and flashes `.failed` then reverts if `onConfirm` rejects. On success it
+reverts to idle and refocuses the trigger if the row is still there; if `onConfirm`
+removed the row, pass `onDone` to hand focus to a stable target (next row / list)
+so focus isn't orphaned on the detached node.
 
 Three gotchas it handles for you (and you must respect when extending):
 - **No button-in-button.** A control can't nest inside a row that is itself a
