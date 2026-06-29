@@ -49,7 +49,11 @@ Return enabled=true with the exact command to run the full suite (runCmd) and a 
 phase('Explore')
 const EXPLORE = {
   type: 'object', additionalProperties: false,
-  required: ['changeName', 'summary', 'shouldSplit', 'splitReason', 'openQuestions'],
+  // Only the always-present fields are required. splitReason/openQuestions are
+  // legitimately empty in the common case, and models DROP empty-array/optional
+  // fields (especially under "there's nothing open" steering) — requiring them
+  // makes the validator reject valid output and the agent retries to the cap.
+  required: ['changeName', 'summary', 'shouldSplit'],
   properties: {
     changeName: { type: 'string' },
     summary: { type: 'string' },
@@ -66,8 +70,8 @@ Let it investigate the codebase (it reads code and surfaces findings; it will no
 From its investigation, distill and return:
 - A short kebab-case change name.
 - A 2-3 sentence summary of what the change entails and where it lands in the code.
-- Whether the request actually splits into multiple independent changes that each deserve their own change (shouldSplit). If so, explain in splitReason.
-- Any open questions a human should answer (do not block on them — list them).`,
+- Whether the request actually splits into multiple independent changes that each deserve their own change (shouldSplit). Include splitReason only if shouldSplit is true.
+- Any open questions a human should answer (do not block on them). If there are none, omit openQuestions or return an empty list — do not invent questions to fill it.`,
   { label: 'explore', phase: 'Explore', schema: EXPLORE }), 'explore')
 
 if (exploration.shouldSplit) {
@@ -142,7 +146,7 @@ phase('Self-review')
 // *something* a fresh reviewer could nitpick, which otherwise oscillates forever.
 const REVIEW = {
   type: 'object', additionalProperties: false,
-  required: ['file', 'concerns'],
+  required: ['file'],  // concerns omitted when sound — don't force the empty array
   properties: {
     file: { type: 'string' },
     concerns: {
@@ -182,9 +186,9 @@ exhaustive; do not invent blocking concerns. Return an empty concerns array if i
       { label: `review:${f.split('/').pop()}`, phase: 'Self-review', schema: REVIEW })
   ))).filter(Boolean)
 
-  const blockers = reviews.flatMap(r => r.concerns.filter(c => c.severity === 'blocking').map(c => ({ file: r.file, note: c.note })))
+  const blockers = reviews.flatMap(r => (r.concerns || []).filter(c => c.severity === 'blocking').map(c => ({ file: r.file, note: c.note })))
   // Overwrite (not accumulate) so this reflects the latest artifact state, not stale minors from earlier passes.
-  minorConcerns = reviews.flatMap(r => r.concerns.filter(c => c.severity === 'minor').map(c => ({ file: r.file.split('/').pop(), note: c.note })))
+  minorConcerns = reviews.flatMap(r => (r.concerns || []).filter(c => c.severity === 'minor').map(c => ({ file: r.file.split('/').pop(), note: c.note })))
 
   if (!blockers.length) { residualConcerns = []; log(`self-review clean after ${reviewPass} pass(es)${minorConcerns.length ? ` — ${minorConcerns.length} minor note(s) surfaced to the gate` : ''}`); break }
   // Not strictly fewer blockers than last round → oscillating. Escalate, don't loop.
@@ -256,7 +260,7 @@ Return the wave plan.`,
 
 const COMPLETED = {
   type: 'object', additionalProperties: false,
-  required: ['completed', 'errors'],
+  required: ['completed'],  // errors empty on a clean wave — keep optional
   properties: {
     completed: { type: 'array', items: { type: 'string' } },
     errors: { type: 'array', items: { type: 'string' } },
@@ -275,7 +279,7 @@ Context: ${g.context || '(none)'}
 Do NOT edit tasks.md (the orchestrator owns it). Comment only on a non-obvious WHY. Return the task numbers you completed.`,
       { label: `impl:${g.label}`, phase: 'Implement', schema: COMPLETED })
   ))).filter(Boolean)
-  res.forEach(r => { allCompleted.push(...r.completed); allErrors.push(...r.errors) })
+  res.forEach(r => { allCompleted.push(...(r.completed || [])); allErrors.push(...(r.errors || [])) })
 }
 
 // Mark tasks.md from completed list (single writer = one agent).
@@ -291,7 +295,7 @@ if (testCfg?.enabled) {
   phase('Test')
   const TRIAGE = {
     type: 'object', additionalProperties: false,
-    required: ['pass', 'failures', 'gaps'],
+    required: ['pass'],  // failures/gaps empty on a clean suite — keep them optional
     properties: {
       pass: { type: 'boolean' },
       failures: { type: 'array', items: { type: 'string' } },
@@ -311,13 +315,15 @@ Run: ${testCfg.runCmd}
 Coverage: ${testCfg.coverageCmd || '(none — skip coverage)'}
 Return pass=true only if the whole suite passes. List failing tests, and changed files lacking adequate coverage.`,
     { label: 'test:triage', phase: 'Test', schema: TRIAGE })
-  if (triage && !triage.pass && triage.failures.length) {
-    await parallel(triage.failures.map(f => () =>
+  const triageFailures = triage?.failures || []
+  const triageGaps = triage?.gaps || []
+  if (triage && !triage.pass && triageFailures.length) {
+    await parallel(triageFailures.map(f => () =>
       agent(`A test is failing for change "${changeName}" at root ${root}: ${f}. Find the cause and fix it. Do not weaken the test to make it pass.`,
         { label: 'test:fix', phase: 'Test' })))
   }
-  if (triage && triage.gaps.length) {
-    await parallel(triage.gaps.map(g => () =>
+  if (triage && triageGaps.length) {
+    await parallel(triageGaps.map(g => () =>
       agent(`Add tests covering ${g.file} for change "${changeName}" at root ${root}. Gap: ${g.reason}. Target near-100% on this file's changed code. Edit only the test file(s) for ${g.file}.`,
         { label: `test:cover:${g.file}`, phase: 'Test' })))
   }
@@ -328,7 +334,7 @@ Return pass=true only if the whole suite passes. List failing tests, and changed
 phase('Verify')
 const VERIFY = {
   type: 'object', additionalProperties: false,
-  required: ['clean', 'findings'],
+  required: ['clean'],  // findings omitted/empty when clean — don't force it
   properties: {
     clean: { type: 'boolean' },
     findings: {
@@ -354,12 +360,13 @@ while (verifyPass < MAX_VERIFY) {
     `Working directory: ${root}. Invoke the Skill tool with skill name "openspec-verify-change" passing the change name "${changeName}" (so it never has to ask which change).
 It returns a CRITICAL/WARNING/SUGGESTION report. Convert that report into structured findings grouped by the file each finding concerns (use the change artifact path when a finding is about an artifact rather than source). Include ONLY CRITICAL and WARNING items in findings — omit SUGGESTIONs (they are optional, not defects). Set clean=true if there are no CRITICAL or WARNING items (a SUGGESTION-only report is clean).`,
     { label: `verify:pass-${verifyPass}`, phase: 'Verify', schema: VERIFY }), 'verify')
-  if (v.clean || !v.findings.length) { verifyClean = true; log(`verify clean after ${verifyPass} pass(es)`); break }
-  const findingCount = v.findings.reduce((n, f) => n + f.items.length, 0)
+  const findings = v.findings || []
+  if (v.clean || !findings.length) { verifyClean = true; log(`verify clean after ${verifyPass} pass(es)`); break }
+  const findingCount = findings.reduce((n, f) => n + f.items.length, 0)
   if (findingCount >= prevFindings) { log(`verify not converging (${findingCount} findings, prev ${prevFindings}) — stopping at pass ${verifyPass}`); break }
   prevFindings = findingCount
-  log(`verify pass ${verifyPass}: ${findingCount} finding(s) across ${v.findings.length} file(s)`)
-  await parallel(v.findings.map(f => () =>
+  log(`verify pass ${verifyPass}: ${findingCount} finding(s) across ${findings.length} file(s)`)
+  await parallel(findings.map(f => () =>
     agent(`Fix these verification findings in ${f.file} (change "${changeName}", root ${root}):
 ${f.items.map((it, i) => `  ${i + 1}. ${it}`).join('\n')}
 Fix the cause, not the symptom. Edit only ${f.file} (and its direct test if a finding requires it).`,
