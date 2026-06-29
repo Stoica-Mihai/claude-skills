@@ -161,8 +161,12 @@ const REVIEW = {
 // Markdown self-review should converge in 1-2 rounds. Low cap + non-progress break
 // stop the ping-pong; residual blockers escalate to the human gate, not silence.
 const MAX_REVIEW = 5
-let reviewPass = 0, prevBlocking = Infinity, minorTotal = 0
+let reviewPass = 0, prevBlocking = Infinity
 let residualConcerns = []
+// Minor concerns don't gate the loop, but they are NOT discarded — severity is the
+// reviewer's subjective call, so an under-rated real issue would ship silently.
+// Carry the latest pass's minors to the human gate as a safety net.
+let minorConcerns = []
 while (reviewPass < MAX_REVIEW) {
   reviewPass++
   const reviews = (await parallel(ff.artifactFiles.map(f => () =>
@@ -179,9 +183,10 @@ exhaustive; do not invent blocking concerns. Return an empty concerns array if i
   ))).filter(Boolean)
 
   const blockers = reviews.flatMap(r => r.concerns.filter(c => c.severity === 'blocking').map(c => ({ file: r.file, note: c.note })))
-  minorTotal += reviews.reduce((n, r) => n + r.concerns.filter(c => c.severity === 'minor').length, 0)
+  // Overwrite (not accumulate) so this reflects the latest artifact state, not stale minors from earlier passes.
+  minorConcerns = reviews.flatMap(r => r.concerns.filter(c => c.severity === 'minor').map(c => ({ file: r.file.split('/').pop(), note: c.note })))
 
-  if (!blockers.length) { residualConcerns = []; log(`self-review clean after ${reviewPass} pass(es)${minorTotal ? ` (${minorTotal} minor note(s) left as-is)` : ''}`); break }
+  if (!blockers.length) { residualConcerns = []; log(`self-review clean after ${reviewPass} pass(es)${minorConcerns.length ? ` — ${minorConcerns.length} minor note(s) surfaced to the gate` : ''}`); break }
   // Not strictly fewer blockers than last round → oscillating. Escalate, don't loop.
   if (blockers.length >= prevBlocking) { residualConcerns = blockers; log(`self-review not converging (${blockers.length} blocking, prev ${prevBlocking}) — escalating residual to the human gate`); break }
   prevBlocking = blockers.length
@@ -373,4 +378,5 @@ return {
   verifyClean,
   verifyPasses: verifyPass,
   residualConcerns,
+  minorConcerns,
 }

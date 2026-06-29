@@ -49,13 +49,13 @@ Workflow({
 The workflow returns one of:
 
 - `{ stopped: "should-split", exploration }` — the request is really several independent changes. Stop and recommend `opsx-ext:task-queue`; do not implement.
-- `{ changeName, summary, openQuestions, artifactFiles, completed, errors, testStatus, verifyClean, verifyPasses, residualConcerns }` — the pipeline ran to verification.
+- `{ changeName, summary, openQuestions, artifactFiles, completed, errors, testStatus, verifyClean, verifyPasses, residualConcerns, minorConcerns }` — the pipeline ran to verification.
 
-If `errors` is non-empty or `verifyClean` is false, surface that — those are the seams the pipeline could not close on its own. `residualConcerns` is non-empty when self-review stopped with unresolved cross-artifact blockers (it escalates rather than looping forever) — present those to the user at the gate so they can decide, since the pipeline judged it couldn't reconcile them automatically.
+If `errors` is non-empty or `verifyClean` is false, surface that — those are the seams the pipeline could not close on its own. `residualConcerns` is non-empty when self-review stopped with unresolved cross-artifact blockers (it escalates rather than looping forever) — present those to the user at the gate so they can decide, since the pipeline judged it couldn't reconcile them automatically. `minorConcerns` are review notes the loop did NOT act on (severity is the reviewer's subjective call) — list them at the gate too: severity can be under-rated, so a real regression can hide here. Don't bury them.
 
 ### 3 — Human gate
 
-Present a one-paragraph summary: change name, file count, `verifyClean` state, any `openQuestions`, any `residualConcerns` (unresolved self-review blockers), and a smoke test the user can run. Then:
+Present a one-paragraph summary: change name, file count, `verifyClean` state, any `openQuestions`, any `residualConcerns` (unresolved self-review blockers), any `minorConcerns` (review notes the loop skipped — scan them for under-rated regressions), and a smoke test the user can run. Then:
 
 **Do not proceed until the user confirms.** If they report issues, fix them (re-running `openspec-verify-change` until clean), then return and wait again.
 
