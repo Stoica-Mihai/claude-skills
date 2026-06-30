@@ -100,6 +100,19 @@ nav.querySelectorAll('button').forEach(b => b.onclick = () => {
 Always wrap button labels in `<span>` — the outer `.btn` skews, the inner span
 counter-skews to keep text upright.
 
+**`.btn-square`** drops the skew for buttons that sit **flush against a square
+element** — an input+action group, one action in a square toolbar — where a skewed
+button's slanted edge would leave a wedge gap. Reserve the skewed `.btn` for
+standalone CTAs and rows of skewed siblings (confirm+cancel). For an icon action,
+`.iconbtn` is already square.
+
+```html
+<div style="display:flex;gap:10px;align-items:center">
+  <input type="number" value="4">
+  <button class="btn btn-primary btn-square"><span>SET</span></button>
+</div>
+```
+
 ### Button states
 
 ```html

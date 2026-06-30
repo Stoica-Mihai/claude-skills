@@ -65,6 +65,13 @@ button{font-family:var(--font);color:inherit;background:none;border:0}
 .btn-primary{background:var(--accent);color:var(--on-accent)}
 .btn-ink{background:var(--ink);color:var(--bg)}
 .btn-ghost{background:transparent;color:var(--ink);border:var(--border) solid var(--ink)}
+/* Square variant — drops the skew so the button sits FLUSH against square elements
+   (input+action groups, a single action in a square toolbar). Reserve the skewed
+   .btn for standalone/hero CTAs and rows of skewed siblings (confirm+cancel); a lone
+   skewed button beside a square field makes an awkward wedge. See SKILL law 6. */
+.btn-square,.btn-square>span{transform:none}
+.btn-square:hover{transform:translate(-3px,-3px)}
+.btn-square:active{transform:scale(.96)}
 /* State variants — stay inside the one-red palette (law 4): ink = done/committed,
    accent = error/attention. .saving marches diagonal stripes (the machine motion
    from .prog), never an opacity pulse, which would read as fade-puff (law 5). */

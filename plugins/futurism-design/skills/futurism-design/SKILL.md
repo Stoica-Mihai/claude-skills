@@ -73,6 +73,12 @@ user explicitly overrides:
    `prefers-reduced-motion` (the CSS already does).
 6. **Skewed CTAs.** Primary actions use `transform: skewX(-8deg)` with the label
    counter-skewed (`skewX(8deg)`) so it stays upright. This is the speed cue.
+   *Reserve the skew for standalone/hero CTAs and rows of skewed siblings* (a
+   confirm+cancel pair, a button group) — there the parallel slants read as
+   deliberate. A lone skewed button sitting **flush against a square element** (an
+   input+action group, one action in a square toolbar) makes an awkward wedge gap
+   against the straight edge: use a **square affordance** there — `.btn-square`
+   (un-skewed `.btn`), `.iconbtn`, or a welded group — so edges align.
 7. **Never trust native form popups.** `<select>`, date pickers, etc. render with
    OS chrome that ignores the system. Use the custom `.sel` component (and the
    same approach for any other native popup) so the whole control is on-brand.
