@@ -14,14 +14,21 @@ function fdOptValue(o){return o.dataset.value!==undefined?o.dataset.value:o.text
 function fdSelPosition(sel){
   var list=sel.querySelector('.sel-list'),v=sel.querySelector('.sel-val');
   if(!list||!v)return;
-  var r=v.getBoundingClientRect();
-  var h=Math.min(list.scrollHeight,240);
-  var below=window.innerHeight-r.bottom,up=below<h+8&&r.top>below;
+  var gap=4,m=6,r=v.getBoundingClientRect(),vh=window.innerHeight;
+  var spaceBelow=vh-r.bottom-gap-m,spaceAbove=r.top-gap-m;
+  var natural=Math.min(list.scrollHeight,240);
+  // open downward unless it won't fit and there's more room above
+  var up=spaceBelow<natural&&spaceAbove>spaceBelow;
+  // cap height to the chosen side so the list never runs off-screen (it scrolls inside)
+  var h=Math.min(natural,Math.max(up?spaceAbove:spaceBelow,0));
+  var top=up?r.top-gap-h:r.bottom+gap;
+  top=Math.max(m,Math.min(top,vh-h-m));
   list.style.position='fixed';
   list.style.right='auto';
   list.style.left=r.left+'px';
   list.style.width=r.width+'px';
-  list.style.top=(up?r.top-h-4:r.bottom+4)+'px';
+  list.style.maxHeight=h+'px';
+  list.style.top=top+'px';
   list.style.transformOrigin=up?'bottom':'top';
 }
 function fdSelReset(sel){
