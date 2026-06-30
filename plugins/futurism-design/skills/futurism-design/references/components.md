@@ -166,7 +166,14 @@ gap. Don't cram a chord into one cap (`⌘K`).
 ```html
 <label>Full name</label>
 <input value="Filippo M.">
+
+<label>Debounce (ms)</label>
+<input type="number" value="4">
 ```
+
+The native number-input spinner is OS chrome (rounded, OS-themed) and is suppressed,
+so the field stays a clean square (law 7). For an on-brand +/− control, use the
+**Stepper** instead.
 
 ## Custom select (never use native `<select>`)
 

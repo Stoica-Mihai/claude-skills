@@ -114,6 +114,10 @@ button{font-family:var(--font);color:inherit;background:none;border:0}
 /* Inputs */
 input,textarea{width:100%;background:var(--field);border:var(--border) solid var(--line);padding:9px 10px;font-family:var(--font);font-size:13px;color:var(--ink);transition:outline var(--fast)}
 input:focus,textarea:focus{outline:3px solid var(--accent);outline-offset:0}
+/* Kill the native number-spinner — it's OS chrome (rounded, OS-themed), off-system
+   (law 7). Keep the field a clean square; use .stepper for an on-brand +/− control. */
+input[type=number]{appearance:textfield;-moz-appearance:textfield}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 
 /* Custom select — native popups render OS-styled, so build this instead */
 .sel{position:relative;width:100%;font-size:13px;user-select:none}
