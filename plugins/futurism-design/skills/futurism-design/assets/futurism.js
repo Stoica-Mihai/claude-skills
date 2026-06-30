@@ -6,19 +6,27 @@
 // e.g. label "Grand Prix" -> value "spec-gp"), otherwise its label text.
 // Keyboard + ARIA are wired by fdInit (roles) and the keydown delegate below.
 function fdOptValue(o){return o.dataset.value!==undefined?o.dataset.value:o.textContent}
-// Anchor the (position:fixed) dropdown to its trigger so it floats in the top layer
-// instead of being clipped by an overflow:auto ancestor (e.g. a scrolling modal).
-// Flips above the trigger when there isn't room below.
+// Promote the dropdown from its CSS default (position:absolute, self-anchored) to
+// position:fixed anchored to the trigger, so it floats in the top layer and isn't
+// clipped by an overflow:auto ancestor (e.g. a scrolling modal). Flips above the
+// trigger when there isn't room below. Cleared by fdSelReset on close so the
+// no-JS absolute default is restored.
 function fdSelPosition(sel){
   var list=sel.querySelector('.sel-list'),v=sel.querySelector('.sel-val');
   if(!list||!v)return;
   var r=v.getBoundingClientRect();
   var h=Math.min(list.scrollHeight,240);
   var below=window.innerHeight-r.bottom,up=below<h+8&&r.top>below;
+  list.style.position='fixed';
+  list.style.right='auto';
   list.style.left=r.left+'px';
   list.style.width=r.width+'px';
   list.style.top=(up?r.top-h-4:r.bottom+4)+'px';
   list.style.transformOrigin=up?'bottom':'top';
+}
+function fdSelReset(sel){
+  var list=sel.querySelector('.sel-list');
+  if(list)list.style.cssText='';
 }
 // Open/close a select, keeping aria-expanded in sync; focus the active option on open.
 function fdSelOpen(sel,open){
@@ -36,6 +44,7 @@ function fdSelOpen(sel,open){
   }else{
     window.removeEventListener('scroll',sel._fdReposition,true);
     window.removeEventListener('resize',sel._fdReposition);
+    fdSelReset(sel);
   }
 }
 function fdSel(opt){

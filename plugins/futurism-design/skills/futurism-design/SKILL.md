@@ -82,19 +82,23 @@ user explicitly overrides:
 7. **Never trust native form popups.** `<select>`, date pickers, etc. render with
    OS chrome that ignores the system. Use the custom `.sel` component (and the
    same approach for any other native popup) so the whole control is on-brand.
-   Its dropdown is `position:fixed` and JS-anchored to the trigger, so it floats in
-   the top layer and **isn't clipped by a scrolling ancestor** (modal/`<dialog>`,
-   card with internal scroll) — a `.sel` works anywhere. Any custom popup you build
-   for a native-popup replacement needs the same top-layer escape, or it gets cut
-   off inside an `overflow:auto` container.
-   *Gotcha:* a `position:fixed` element is re-rooted by any ancestor with `transform`,
-   `filter`, `perspective`, `will-change`, `contain`, or `backdrop-filter` — that
-   ancestor becomes its containing block, which both **breaks the JS anchoring** and
-   **drops it out of the top layer** (a `.sel` inside such a modal renders *behind*
-   the backdrop in Chromium). So **don't put `transform`/`filter` on a scrolling or
-   modal ancestor of a `.sel`**. Animate a modal's entrance with **`opacity`** (and
-   slide an *inner* wrapper that isn't an ancestor of the select) — `opacity` makes a
-   stacking context but is not a fixed-containing-block, so the dropdown stays put.
+   Its dropdown uses **progressive enhancement**: the CSS default is
+   `position:absolute`, self-anchored under the trigger, so it **works with the
+   stylesheet alone** (no JS, or your own select JS) and is immune to ancestor
+   transforms. When `futurism.js` is loaded, `fdSelPosition()` promotes it to
+   `position:fixed` anchored to the trigger, so it **escapes a scrolling
+   `overflow:auto` ancestor** (modal/`<dialog>`, card with internal scroll) and
+   flips up near a bottom edge. So: vendor only the CSS → a working (absolute)
+   dropdown that's clipped only inside an overflow ancestor; add the JS → the
+   top-layer escape too. Any custom popup you build for a native-popup replacement
+   should follow the same pattern (a CSS default that stands alone).
+   *Gotcha (JS/fixed mode only):* a `position:fixed` element is re-rooted by any
+   ancestor with `transform`, `filter`, `perspective`, `will-change`, `contain`, or
+   `backdrop-filter` — that ancestor becomes its containing block, breaking the
+   anchoring and dropping it behind a modal backdrop in Chromium. Either keep those
+   off a scrolling/modal ancestor of a `.sel` (animate modal entrance with
+   **`opacity`**, not `transform`), or simply **don't load the anchoring JS for that
+   select** — the absolute default is transform-safe.
 8. **Theme native `<button>` explicitly.** Buttons don't inherit `color` — the UA
    gives them `ButtonText` (dark), which becomes dark-on-dark in the carbon theme,
    and an inline `background` beats class rules. So every button must set its
@@ -128,6 +132,15 @@ colors as the existing tokens (`--bg`, `--surf`, `--ink`, `--muted`, `--accent`,
 `--line`, `--shadow`, `--field`, `--on-accent`, `--scrim`) and it will theme for
 free. If a value can't be expressed in tokens, add a new token to both theme
 blocks rather than hard-coding a hex.
+
+**Text on an accent fill is `--on-accent`, never `--ink`.** Any text or icon sitting
+on a `var(--accent)` background uses `color:var(--on-accent)` — its paired foreground
+in each theme (cream-on-red in light, near-black-on-red in dark). `--ink` is the
+*opposite* in both themes, so an ink label on an accent fill is the wrong, low-contrast
+foreground. Every accent-filled control already does this (`.btn-primary`, `.badge.red`,
+`.sel-opt:hover`, the skewed header mark); match it. This also applies to a *partial*
+fill — if an accent bar grows under a centered label (a progress/pull indicator), the
+label must flip to `--on-accent` once the fill is behind it.
 
 **Overlays use `--scrim`, never `--ink`.** Backdrops must *dim*, so they need a
 theme-independent dark wash. `--ink` is the cream foreground in dark — an ink
@@ -194,3 +207,19 @@ layout as the default, then restore the desktop layout at `@media (min-width:768
 New components must obey the eight laws and use only tokens. Match the existing
 motion vocabulary (slide/dart/lurch/march at `--fast`/`--med`). Add the component
 to `references/components.md` so the kit stays the single source of truth.
+
+The kit already carries these conventions on its own components; a new affordance
+that doesn't generalize them silently breaks parity. So for any new control:
+
+- **Accent fill → `--on-accent` text** (never `--ink`). See Theming.
+- **Loading/progress → reuse `fd-march`** (the barber-pole), never a rotary spinner;
+  shape a `.skel`-style placeholder, don't invent a new loader.
+- **A status/selected/loading affordance needs a forced-colors fallback.** Color-mix
+  fills, gradients, and `box-shadow` are stripped under `@media (forced-colors:active)`
+  — re-assert the cue with a border/outline or `Highlight`, the way the kit does for
+  `.skel`/`.prog`/`.dot` and the selected states.
+- **A state that changes without focus moving** (a toast, a "refreshing" indicator)
+  needs `role="status"` + `aria-live` so it's announced — match `.toast`.
+- **Progressive enhancement:** a component's CSS should stand alone; if it needs JS to
+  be usable (positioning, etc.), give it a working CSS default and let the JS upgrade
+  it (see the `.sel` dropdown — absolute default, JS promotes to fixed).

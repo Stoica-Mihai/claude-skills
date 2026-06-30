@@ -213,15 +213,21 @@ target it with `for`; name it with `aria-labelledby` pointing at the label's `id
 ```
 
 Open/close and click-outside are handled by `futurism.js`; `fdSel` sets the value.
-The dropdown `.sel-list` is `position:fixed` — `fdSelOpen` anchors it to the trigger
-(left/top/width), flips it above when there's no room below, and repositions it on
-scroll/resize. Fixed positioning lets the list float in the **top layer**, so it is
-**not clipped by an `overflow:auto` ancestor** (a scrolling `.modal`/`<dialog>`, a
-card with internal scroll) — the list stays a DOM child of `.sel`, so its ARIA wiring
-and click-outside still work. Don't re-add `overflow`/`position` to `.sel`/`.sel-list`.
-Caveat: `transform`/`filter`/`will-change`/`backdrop-filter` on an ancestor re-roots
-the fixed list (breaks anchoring + drops it behind a modal backdrop) — keep those off
-a `.sel`'s scrolling/modal ancestors and animate modal entrances with `opacity`.
+The dropdown `.sel-list` is **progressive-enhancement positioned**: the CSS default is
+`position:absolute` (self-anchored under the trigger via `top:100%/left:0/right:0`), so
+it **works with the stylesheet alone** — no `futurism.js`, or your own select JS — and
+is immune to ancestor transforms. When `futurism.js` is loaded, `fdSelOpen` calls
+`fdSelPosition` to promote the list to `position:fixed` anchored to the trigger
+(left/top/width), flip it above when there's no room below, and reposition on
+scroll/resize — letting it float in the **top layer** and **escape an `overflow:auto`
+ancestor** (a scrolling `.modal`/`<dialog>`, a card with internal scroll); `fdSelReset`
+restores the absolute default on close. Either way the list stays a DOM child of `.sel`,
+so ARIA wiring and click-outside work. If you vendor only the CSS, the dropdown is
+clipped *only* when it sits inside an overflow ancestor — add the JS to escape it.
+Caveat (JS/fixed mode only): `transform`/`filter`/`will-change`/`backdrop-filter` on an
+ancestor re-roots the fixed list (breaks anchoring + drops it behind a modal backdrop) —
+keep those off a `.sel`'s scrolling/modal ancestors and animate modal entrances with
+`opacity`, or just don't load the anchoring JS for that select (absolute is transform-safe).
 `fdInit` (auto-runs on load) wires the ARIA roles — the `.sel-val` becomes a
 `button` with `aria-haspopup="listbox"`/`aria-controls`, the list a `listbox`, each
 option an `option` — so it's keyboard-operable: Enter/Space/↓ open, ↑↓ move, Enter

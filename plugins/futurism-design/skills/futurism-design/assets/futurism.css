@@ -133,10 +133,13 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 .sel-cur{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sel-val .caret{display:inline-block;font-style:normal;flex:none;transition:transform var(--fast) var(--ease)}
 .sel.open .sel-val .caret{transform:rotate(90deg)}
-/* position:fixed (not absolute) so the dropdown isn't clipped by / doesn't scroll
-   with an overflow:auto ancestor like a scrolling .modal — it floats in the top
-   layer. fdSelOpen anchors left/top/width to the trigger and flips up near a bottom edge. */
-.sel-list{position:fixed;background:var(--field);border:var(--border) solid var(--line);box-shadow:var(--shadow-off) var(--shadow-off) 0 var(--shadow);z-index:65;max-height:240px;overflow-y:auto;
+/* Default is position:absolute, self-anchored under the trigger — works with CSS
+   alone (no JS) and is immune to ancestor transforms. When futurism.js is present,
+   fdSelPosition() promotes it to position:fixed + anchors left/top/width to the
+   trigger (with upward flip + scroll reposition) so it floats in the top layer and
+   escapes a scrolling overflow:auto ancestor. Progressive enhancement: the dropdown
+   is never broken without JS; it only gains overflow-escape with it. */
+.sel-list{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--field);border:var(--border) solid var(--line);box-shadow:var(--shadow-off) var(--shadow-off) 0 var(--shadow);z-index:65;max-height:240px;overflow-y:auto;
   transform-origin:top;transform:scaleY(0);pointer-events:none;transition:transform var(--fast) var(--ease)}
 .sel.open .sel-list{transform:scaleY(1);pointer-events:auto}
 .sel-opt{padding:8px 10px;cursor:pointer;font-weight:700;transition:background var(--fast),color var(--fast)}
