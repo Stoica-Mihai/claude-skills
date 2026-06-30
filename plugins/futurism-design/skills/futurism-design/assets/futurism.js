@@ -6,13 +6,37 @@
 // e.g. label "Grand Prix" -> value "spec-gp"), otherwise its label text.
 // Keyboard + ARIA are wired by fdInit (roles) and the keydown delegate below.
 function fdOptValue(o){return o.dataset.value!==undefined?o.dataset.value:o.textContent}
+// Anchor the (position:fixed) dropdown to its trigger so it floats in the top layer
+// instead of being clipped by an overflow:auto ancestor (e.g. a scrolling modal).
+// Flips above the trigger when there isn't room below.
+function fdSelPosition(sel){
+  var list=sel.querySelector('.sel-list'),v=sel.querySelector('.sel-val');
+  if(!list||!v)return;
+  var r=v.getBoundingClientRect();
+  var h=Math.min(list.scrollHeight,240);
+  var below=window.innerHeight-r.bottom,up=below<h+8&&r.top>below;
+  list.style.left=r.left+'px';
+  list.style.width=r.width+'px';
+  list.style.top=(up?r.top-h-4:r.bottom+4)+'px';
+  list.style.transformOrigin=up?'bottom':'top';
+}
 // Open/close a select, keeping aria-expanded in sync; focus the active option on open.
 function fdSelOpen(sel,open){
   if(open)document.querySelectorAll('.sel.open').forEach(function(o){if(o!==sel)fdSelOpen(o,false)});
   sel.classList.toggle('open',open);
   var v=sel.querySelector('.sel-val');
   if(v)v.setAttribute('aria-expanded',open?'true':'false');
-  if(open){var cur=sel.querySelector('.sel-opt.sel-on')||sel.querySelector('.sel-opt');if(cur)cur.focus()}
+  if(!sel._fdReposition)sel._fdReposition=function(){fdSelPosition(sel)};
+  if(open){
+    fdSelPosition(sel);
+    // capture=true so a scroll of ANY ancestor (the modal's own scroll) repositions it
+    window.addEventListener('scroll',sel._fdReposition,true);
+    window.addEventListener('resize',sel._fdReposition);
+    var cur=sel.querySelector('.sel-opt.sel-on')||sel.querySelector('.sel-opt');if(cur)cur.focus();
+  }else{
+    window.removeEventListener('scroll',sel._fdReposition,true);
+    window.removeEventListener('resize',sel._fdReposition);
+  }
 }
 function fdSel(opt){
   var sel=opt.closest('.sel');
@@ -229,7 +253,7 @@ document.addEventListener('keydown',function(e){
     if(e.key==='ArrowDown'){e.preventDefault();if(!open)fdSelOpen(sel,true);else if(i<opts.length-1)opts[i+1].focus()}
     else if(e.key==='ArrowUp'){e.preventDefault();if(i>0)opts[i-1].focus()}
     else if(e.key==='Enter'||e.key===' '){e.preventDefault();if(!open)fdSelOpen(sel,true);else if(i>-1)fdSel(opts[i])}
-    else if(e.key==='Escape'){if(open){fdSelOpen(sel,false);var v=sel.querySelector('.sel-val');if(v)v.focus()}}
+    else if(e.key==='Escape'){if(open){e.preventDefault();fdSelOpen(sel,false);var v=sel.querySelector('.sel-val');if(v)v.focus()}}
     else if(e.key==='Tab'){if(open)fdSelOpen(sel,false)}
     return;
   }

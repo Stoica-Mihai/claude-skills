@@ -213,6 +213,12 @@ target it with `for`; name it with `aria-labelledby` pointing at the label's `id
 ```
 
 Open/close and click-outside are handled by `futurism.js`; `fdSel` sets the value.
+The dropdown `.sel-list` is `position:fixed` — `fdSelOpen` anchors it to the trigger
+(left/top/width), flips it above when there's no room below, and repositions it on
+scroll/resize. Fixed positioning lets the list float in the **top layer**, so it is
+**not clipped by an `overflow:auto` ancestor** (a scrolling `.modal`/`<dialog>`, a
+card with internal scroll) — the list stays a DOM child of `.sel`, so its ARIA wiring
+and click-outside still work. Don't re-add `overflow`/`position` to `.sel`/`.sel-list`.
 `fdInit` (auto-runs on load) wires the ARIA roles — the `.sel-val` becomes a
 `button` with `aria-haspopup="listbox"`/`aria-controls`, the list a `listbox`, each
 option an `option` — so it's keyboard-operable: Enter/Space/↓ open, ↑↓ move, Enter

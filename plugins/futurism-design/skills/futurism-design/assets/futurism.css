@@ -133,11 +133,15 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 .sel-cur{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sel-val .caret{display:inline-block;font-style:normal;flex:none;transition:transform var(--fast) var(--ease)}
 .sel.open .sel-val .caret{transform:rotate(90deg)}
-.sel-list{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--field);border:var(--border) solid var(--line);box-shadow:var(--shadow-off) var(--shadow-off) 0 var(--shadow);z-index:5;max-height:200px;overflow-y:auto;
+/* position:fixed (not absolute) so the dropdown isn't clipped by / doesn't scroll
+   with an overflow:auto ancestor like a scrolling .modal — it floats in the top
+   layer. fdSelOpen anchors left/top/width to the trigger and flips up near a bottom edge. */
+.sel-list{position:fixed;background:var(--field);border:var(--border) solid var(--line);box-shadow:var(--shadow-off) var(--shadow-off) 0 var(--shadow);z-index:65;max-height:240px;overflow-y:auto;
   transform-origin:top;transform:scaleY(0);pointer-events:none;transition:transform var(--fast) var(--ease)}
 .sel.open .sel-list{transform:scaleY(1);pointer-events:auto}
 .sel-opt{padding:8px 10px;cursor:pointer;font-weight:700;transition:background var(--fast),color var(--fast)}
 .sel-opt:hover{background:var(--accent);color:var(--on-accent)}
+.sel-opt:focus-visible{outline:3px solid var(--accent);outline-offset:-3px;background:var(--hover-bg)}
 .sel-opt.sel-on{border-left:6px solid var(--accent)}
 
 /* Toggle */
@@ -166,7 +170,7 @@ a.card,button.card{display:block;width:100%;text-align:left;font:inherit;color:v
 .card.link:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 
 /* Nav */
-.nav{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid var(--line);padding-bottom:10px}
+.nav{display:flex;justify-content:space-between;align-items:center;gap:12px 16px;flex-wrap:wrap;border-bottom:3px solid var(--line);padding-bottom:10px}
 .nav .logo{font-weight:900;font-style:italic;font-size:18px;letter-spacing:-1px}
 .nav .links{display:flex;gap:18px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
 .nav .links a{border:none;color:var(--ink);position:relative}
@@ -396,4 +400,17 @@ dialog .modal{max-height:calc(100dvh - 24px);overflow-y:auto}
   /* The live dot loses its blink here, so give it a static ring to stay
      distinguishable from a dead dot without relying on the animation. */
   .dot:not(.dead){box-shadow:0 0 0 2px var(--accent)}
+}
+
+/* Touch: the 28-32px desktop sizes for icon buttons, keycaps, accent swatches,
+   pager and select options are too small for a thumb. Grow them to ~40px+ on
+   narrow viewports (sizes-up only; the desktop layout is untouched). */
+@media (max-width:640px){
+  .btn{padding:13px 18px}
+  .iconbtn,.acctrig,.acc{width:40px;height:40px}
+  .pager button{min-width:40px;height:40px}
+  .keycap{padding:11px 13px}
+  .seg button{padding:11px 16px}
+  .sel-val{padding:12px 12px}
+  .sel-opt{padding:12px 12px}
 }

@@ -266,7 +266,19 @@
 <dialog id="confirmModal">
   <div class="modal">
     <div class="mhead"><h2>Delete session?</h2></div>
-    <div class="mbody"><p>This kills the running process. There is no undo.</p></div>
+    <div class="mbody">
+      <p>This kills the running process. There is no undo.</p>
+      <label id="lblReason" style="display:block;margin:10px 0 4px">Reason</label>
+      <div class="sel">
+        <div class="sel-val" aria-labelledby="lblReason"><span class="sel-cur">Stuck / hung</span><i class="caret">›</i></div>
+        <div class="sel-list">
+          <div class="sel-opt sel-on" onclick="fdSel(this)">Stuck / hung</div>
+          <div class="sel-opt" onclick="fdSel(this)">Wrong config</div>
+          <div class="sel-opt" onclick="fdSel(this)">Done with it</div>
+          <div class="sel-opt" onclick="fdSel(this)">Other</div>
+        </div>
+      </div>
+    </div>
     <div class="mfoot">
       <span class="kick">irreversible</span>
       <div class="grp">

@@ -82,6 +82,11 @@ user explicitly overrides:
 7. **Never trust native form popups.** `<select>`, date pickers, etc. render with
    OS chrome that ignores the system. Use the custom `.sel` component (and the
    same approach for any other native popup) so the whole control is on-brand.
+   Its dropdown is `position:fixed` and JS-anchored to the trigger, so it floats in
+   the top layer and **isn't clipped by a scrolling ancestor** (modal/`<dialog>`,
+   card with internal scroll) — a `.sel` works anywhere. Any custom popup you build
+   for a native-popup replacement needs the same top-layer escape, or it gets cut
+   off inside an `overflow:auto` container.
 8. **Theme native `<button>` explicitly.** Buttons don't inherit `color` — the UA
    gives them `ButtonText` (dark), which becomes dark-on-dark in the carbon theme,
    and an inline `background` beats class rules. So every button must set its
@@ -161,8 +166,10 @@ usable on a phone without breaking the aesthetic:
 - **Off-canvas drawer.** A fixed sidebar slides in over a `--scrim` backdrop on
   mobile and becomes static at your desktop breakpoint. Use `.drawer` /
   `.scrim-bg` + `fdDrawer()`.
-- **Touch targets ≥ ~40px.** Bump icon buttons, keycaps, and accent swatches up
-  at narrow widths — the 22–30px desktop sizes are too small for thumbs.
+- **Touch targets ≥ ~40px.** The kit already grows icon buttons, keycaps, accent
+  swatches, pager buttons, and select rows to ~40px+ under `@media (max-width:640px)`
+  — the 28–32px desktop sizes are too small for thumbs. Match that bump for any new
+  small control you add.
 - **No horizontal body scroll.** Contain wide content (tables, tab bars, command
   rows) with `overflow-x:auto` on *that* element; never let the page body scroll
   sideways. Add `min-width:0` to flex children that hold ellipsised text.
