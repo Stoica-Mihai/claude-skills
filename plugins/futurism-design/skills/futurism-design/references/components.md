@@ -233,20 +233,23 @@ the chrome. `<dialog>` is `overflow:visible` so the offset shadow isn't clipped;
 tall content scrolls inside `.modal`.
 
 ```html
-<dialog id="confirm">
+<dialog id="confirmModal">
   <div class="modal">
     <div class="mhead"><h2>Delete session?</h2></div>
     <div class="mbody"><p>This kills the running process. No undo.</p></div>
     <div class="mfoot">
       <span class="kick">irreversible</span>
       <div class="grp">
-        <button class="btn btn-ghost" onclick="confirm.close()"><span>CANCEL</span></button>
+        <button class="btn btn-ghost" autofocus onclick="document.getElementById('confirmModal').close()"><span>CANCEL</span></button>
         <button class="btn btn-primary"><span>DELETE →</span></button>
       </div>
     </div>
   </div>
 </dialog>
 ```
+
+(Don't id a dialog `confirm` and call `confirm.close()` — `window.confirm` shadows
+the named element, so it throws. Use `getElementById`.)
 
 Open/close with `dialog.showModal()` / `dialog.close()`. Native `<dialog>` traps
 Tab and closes on Esc; add `autofocus` to the least-destructive button (e.g.
@@ -256,14 +259,24 @@ non-`<dialog>` cases use `.overlay.open` wrapping the same `.modal`.
 ## List rows
 
 ```html
-<div class="list-row sel"><span class="dot"></span><b>Active session</b></div>
-<div class="list-row"><span class="dot dead"></span><b>Idle session</b></div>
+<!-- Status list: rows are display-only; mark the current one for AT. -->
+<ul style="list-style:none;margin:0;padding:0">
+  <li class="list-row sel" aria-current="true"><span class="dot"></span><b>Active session</b></li>
+  <li class="list-row"><span class="dot dead"></span><b>Idle session</b></li>
+</ul>
 ```
 
 Hover + selected highlights route through a `--row-bg` variable so a JS-set inline
 `background:var(--row-bg,transparent)` can't clobber them. Selected uses the
 theme-aware `--sel-bg` token plus an inset accent edge (carbon needs a far higher
 mix, and the edge carries the cue even where the wash is subtle).
+
+`.list-row` is **display by default** (no pointer cursor). The `.sel` class is
+**visual only** — convey state to AT too: `aria-current` for the active item in a
+status list, or `aria-selected` in a listbox. If rows are **clickable**, add `.link`
+(opt-in pointer) and make each a real `<a>`/`<button>`, or use listbox semantics
+(`role="listbox"` on the container, `role="option"` + roving `tabindex` on rows) —
+don't ship a bare `<div onclick>`.
 
 ## Row action + inline confirm
 

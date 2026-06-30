@@ -150,7 +150,7 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
    segment. Flip with fdTheme() and move .act to the active label in your handler. */
 .switch{display:inline-flex;border:var(--border) solid var(--line);font-size:10px;font-weight:900;letter-spacing:1px;cursor:pointer;background:none}
 .switch span{padding:6px 12px}
-.switch .act{background:var(--accent);color:var(--on-accent)}
+.switch .act{background:var(--ink);color:var(--bg)}
 .switch:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 
 /* Cards — the hover-lunge is opt-in via .card.link, so a static (non-clickable)
@@ -223,7 +223,11 @@ tbody tr:hover{background:var(--tint)}
 /* List rows — hover + selected highlight driven through --row-bg so a JS-set
    inline background:var(--row-bg,transparent) can't clobber the highlight. Washes
    use the theme-aware --hover-bg/--sel-bg tokens (dark needs far higher mixes). */
-.list-row{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;border-bottom:var(--border) solid var(--line);background:var(--row-bg,transparent);transition:background var(--fast)}
+.list-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:var(--border) solid var(--line);background:var(--row-bg,transparent);transition:background var(--fast)}
+/* Clickable rows opt in (like .card.link) — only then show the pointer. An interactive
+   row must be a real <a>/<button> or carry listbox semantics (role=option +
+   aria-selected); the .sel class is visual only, pair it with aria-selected/aria-current. */
+.list-row.link{cursor:pointer}
 .list-row:last-child{border-bottom:none}
 .list-row:hover{--row-bg:var(--hover-bg)}
 /* Selected: theme-aware wash + an inset accent edge — the edge carries the cue even

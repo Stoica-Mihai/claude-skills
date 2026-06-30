@@ -124,9 +124,10 @@ themes for exactly this reason.
 **Runtime accent.** Law #4 is one accent, but letting the *user* pick that one
 accent is on-system — see the `.accpick` component and `fdAccent()`. Two couplings
 to respect: in dark the offset shadow follows the accent (`--shadow` = accent),
-in light it stays ink; and a theme toggle styled with `.toggle` must force
-`background: var(--ink)` on its `.on` state so the switch itself doesn't absorb
-the user's accent.
+in light it stays ink; and a **theme control** (the `.switch` pill or a `.toggle`)
+must use **ink** for its active/`.on` state, not accent — otherwise the control that
+*picks* the accent visibly absorbs it. (`.switch .act` already fills ink, matching
+the `ink = selected` convention of `.seg`/`.tab`/`.pager`.)
 
 ## Accessibility
 
