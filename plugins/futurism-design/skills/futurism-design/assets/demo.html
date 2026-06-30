@@ -195,7 +195,7 @@
 
   <div class="sect">
     <div class="kick">MODAL</div>
-    <button class="btn btn-primary" onclick="document.getElementById('confirm').showModal()"><span>OPEN MODAL →</span></button>
+    <button class="btn btn-primary" onclick="document.getElementById('confirmModal').showModal()"><span>OPEN MODAL →</span></button>
   </div>
 
   <div class="sect">
@@ -263,15 +263,15 @@
 </aside>
 <div class="scrim-bg" id="demoScrim" style="display:none" onclick="fdDrawer('demoDrawer','demoScrim')"></div>
 
-<dialog id="confirm">
+<dialog id="confirmModal">
   <div class="modal">
     <div class="mhead"><h2>Delete session?</h2></div>
     <div class="mbody"><p>This kills the running process. There is no undo.</p></div>
     <div class="mfoot">
       <span class="kick">irreversible</span>
       <div class="grp">
-        <button class="btn btn-ghost" autofocus onclick="document.getElementById('confirm').close()"><span>CANCEL</span></button>
-        <button class="btn btn-primary" onclick="document.getElementById('confirm').close()"><span>DELETE →</span></button>
+        <button class="btn btn-ghost" autofocus onclick="document.getElementById('confirmModal').close()"><span>CANCEL</span></button>
+        <button class="btn btn-primary" onclick="document.getElementById('confirmModal').close()"><span>DELETE →</span></button>
       </div>
     </div>
   </div>
