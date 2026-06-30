@@ -48,6 +48,23 @@ but leave the pill and pressed-state stale.)
 </nav>
 ```
 
+## Vertical nav (sidebar)
+
+Items are real `<a>` (or `<button>`) so keyboard + focus work for free. The active
+item gets a left accent edge — mark it `aria-current="page"`, **not** `role="tab"`
+(these navigate/switch views; they aren't an ARIA tablist).
+
+```html
+<nav class="nav-v" aria-label="Sections">
+  <a href="#overview" aria-current="page"><svg>…</svg> Overview</a>
+  <a href="#dpi"><svg>…</svg> DPI</a>
+  <a href="#sensor"><svg>…</svg> Sensor</a>
+</nav>
+```
+
+For a view-switcher (no real URLs) use `<button>`s and move `aria-current="page"`
+to the chosen one in your handler.
+
 ## Type
 
 ```html
@@ -300,8 +317,28 @@ usual single drawer; pages with several simultaneous drawers need their own hand
 <div class="card">
   <span class="badge red">001</span>
   <h3>Dynamism</h3>
-  <p>Hover lunges up-left; the solid shadow stretches.</p>
+  <p>Static display card — does not move on hover.</p>
   <a href="#">Open<span class="arr"> →</span></a>
+</div>
+
+<!-- Whole card is a control → .link adds cursor + the hover-lunge -->
+<div class="card link" onclick="…">…</div>
+```
+
+The hover-lunge (translate + deeper offset shadow) is **opt-in via `.card.link`** —
+add it only when the entire card is clickable, so static cards don't move under the
+cursor. A card with just an inner link/button stays plain `.card`.
+
+## Stepper
+
+A −/value/+ numeric control. Real buttons (keyboard + `aria-label`); give the value
+`aria-live="polite"` so a screen reader hears it change.
+
+```html
+<div class="stepper">
+  <button aria-label="Decrease" onclick="step(-50)">−</button>
+  <span class="num" id="dpiNum" aria-live="polite">6400</span>
+  <button aria-label="Increase" onclick="step(50)">+</button>
 </div>
 ```
 

@@ -55,7 +55,7 @@ Both files are in [`skills/futurism-design/assets/`](skills/futurism-design/asse
 
 ## Components
 
-nav · buttons (primary/ink/ghost + loading/ok/err states) · icon button · keycap ·
+nav (horizontal + vertical sidebar) · buttons (primary/ink/ghost + loading/ok/err states) · stepper · icon button · keycap ·
 keyboard chord · badges (red/default/outline) · input · form row · checkbox · radio ·
 custom select (label≠value via `data-value`) · animated toggle · segmented control ·
 status dot · cards · list rows + row action / inline confirm · tabs · alerts (warn/info) · striped progress ·

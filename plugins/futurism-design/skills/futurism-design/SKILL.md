@@ -61,7 +61,12 @@ user explicitly overrides:
    implied by elevation.
 4. **One accent only.** Red (`--accent`) carries links, CTAs, rules, highlights.
    Adding a second hue dilutes the manifesto. If you need differentiation, use
-   ink vs. red vs. outline, not new colors.
+   ink vs. red vs. outline, not new colors. To show a **scale or ordinal range**
+   (DPI low→high, weak→strong), use a single-hue **intensity ramp**
+   (`linear-gradient(90deg, var(--muted), var(--accent))`) — never a rainbow
+   blue→red gradient or a set of multi-hue swatches. And don't hand-roll
+   multi-color "category" chips: a single-select set is `.seg`, a static tag is
+   `.badge.out`.
 5. **Motion is machine, not toy.** Fast (`--fast: .12s`), medium (`--med: .2s`),
    easing `cubic-bezier(.2,.9,.1,1)`, and always **directional** — things slide,
    dart, lurch, march. Never spring, bounce, or fade-puff. Respect
