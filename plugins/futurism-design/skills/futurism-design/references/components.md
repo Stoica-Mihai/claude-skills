@@ -107,11 +107,14 @@ standalone CTAs and rows of skewed siblings (confirm+cancel). For an icon action
 `.iconbtn` is already square.
 
 ```html
-<div style="display:flex;gap:10px;align-items:center">
-  <input type="number" value="4">
+<div style="display:flex;gap:10px;align-items:stretch">
+  <input id="debounce" type="number" value="4" aria-label="Debounce ms">
   <button class="btn btn-primary btn-square"><span>SET</span></button>
 </div>
 ```
+
+`align-items:stretch` makes the button match the field's height (the button has no
+border, so it's 2px shorter otherwise — they wouldn't sit flush top-to-bottom).
 
 ### Button states
 
@@ -169,19 +172,22 @@ gap. Don't cram a chord into one cap (`⌘K`).
 
 ```html
 <div class="form-row">
-  <label>Model</label>
-  <input value="opus">
+  <label for="model">Model</label>
+  <input id="model" value="opus">
 </div>
 ```
 
 ## Input
 
-```html
-<label>Full name</label>
-<input value="Filippo M.">
+Always associate the label — `for`/`id` (or wrap the input in the `<label>`) — or the
+field has no accessible name ("edit text, blank" to a screen reader).
 
-<label>Debounce (ms)</label>
-<input type="number" value="4">
+```html
+<label for="fullName">Full name</label>
+<input id="fullName" value="Filippo M.">
+
+<label for="debounce">Debounce (ms)</label>
+<input id="debounce" type="number" value="4">
 ```
 
 The native number-input spinner is OS chrome (rounded, OS-themed) and is suppressed,
@@ -190,10 +196,13 @@ so the field stays a clean square (law 7). For an on-brand +/− control, use th
 
 ## Custom select (never use native `<select>`)
 
+The `.sel-val` is a div (becomes `role="button"` via `fdInit`), so a `<label>` can't
+target it with `for`; name it with `aria-labelledby` pointing at the label's `id`.
+
 ```html
-<label>Discipline</label>
+<label id="lblDisc">Discipline</label>
 <div class="sel">
-  <div class="sel-val"><span class="sel-cur">Painting</span><i class="caret">›</i></div>
+  <div class="sel-val" aria-labelledby="lblDisc"><span class="sel-cur">Painting</span><i class="caret">›</i></div>
   <div class="sel-list">
     <div class="sel-opt sel-on" onclick="fdSel(this)">Painting</div>
     <div class="sel-opt" onclick="fdSel(this)">Sculpture</div>

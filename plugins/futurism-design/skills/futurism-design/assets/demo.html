@@ -84,10 +84,10 @@
   <div class="sect">
     <div class="kick">FORM</div>
     <div class="row" style="align-items:flex-start">
-      <div style="flex:1;min-width:160px"><label>Full name</label><input value="Filippo M."><label style="margin-top:10px">Debounce (ms)</label><div style="display:flex;gap:10px;align-items:center"><input type="number" value="4"><button class="btn btn-primary btn-square" onclick="fdToast('Debounce set')"><span>SET</span></button></div></div>
-      <div style="flex:1;min-width:160px"><label>Discipline</label>
+      <div style="flex:1;min-width:160px"><label for="fullName">Full name</label><input id="fullName" value="Filippo M."><label for="debounce" style="margin-top:10px">Debounce (ms)</label><div style="display:flex;gap:10px;align-items:stretch"><input id="debounce" type="number" value="4"><button class="btn btn-primary btn-square" onclick="fdToast('Debounce set')"><span>SET</span></button></div></div>
+      <div style="flex:1;min-width:160px"><label id="lblDisc">Discipline</label>
         <div class="sel">
-          <div class="sel-val"><span class="sel-cur">Painting</span><i class="caret">›</i></div>
+          <div class="sel-val" aria-labelledby="lblDisc"><span class="sel-cur">Painting</span><i class="caret">›</i></div>
           <div class="sel-list">
             <div class="sel-opt sel-on" onclick="fdSel(this)">Painting</div>
             <div class="sel-opt" onclick="fdSel(this)">Sculpture</div>
@@ -98,9 +98,9 @@
       </div>
     </div>
     <div class="form-row">
-      <label>Chassis <span style="color:var(--muted);font-weight:400">(label ≠ value)</span></label>
+      <label id="lblChassis">Chassis <span style="color:var(--muted);font-weight:400">(label ≠ value)</span></label>
       <div class="sel" data-field="chassis">
-        <div class="sel-val"><span class="sel-cur">Grand Prix</span><i class="caret">›</i></div>
+        <div class="sel-val" aria-labelledby="lblChassis"><span class="sel-cur">Grand Prix</span><i class="caret">›</i></div>
         <div class="sel-list">
           <div class="sel-opt sel-on" data-value="spec-gp" onclick="fdSel(this);showVal()">Grand Prix</div>
           <div class="sel-opt" data-value="spec-tr" onclick="fdSel(this);showVal()">Touring</div>
