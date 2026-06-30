@@ -219,6 +219,9 @@ scroll/resize. Fixed positioning lets the list float in the **top layer**, so it
 **not clipped by an `overflow:auto` ancestor** (a scrolling `.modal`/`<dialog>`, a
 card with internal scroll) — the list stays a DOM child of `.sel`, so its ARIA wiring
 and click-outside still work. Don't re-add `overflow`/`position` to `.sel`/`.sel-list`.
+Caveat: `transform`/`filter`/`will-change`/`backdrop-filter` on an ancestor re-roots
+the fixed list (breaks anchoring + drops it behind a modal backdrop) — keep those off
+a `.sel`'s scrolling/modal ancestors and animate modal entrances with `opacity`.
 `fdInit` (auto-runs on load) wires the ARIA roles — the `.sel-val` becomes a
 `button` with `aria-haspopup="listbox"`/`aria-controls`, the list a `listbox`, each
 option an `option` — so it's keyboard-operable: Enter/Space/↓ open, ↑↓ move, Enter

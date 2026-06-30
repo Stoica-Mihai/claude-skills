@@ -87,6 +87,14 @@ user explicitly overrides:
    card with internal scroll) — a `.sel` works anywhere. Any custom popup you build
    for a native-popup replacement needs the same top-layer escape, or it gets cut
    off inside an `overflow:auto` container.
+   *Gotcha:* a `position:fixed` element is re-rooted by any ancestor with `transform`,
+   `filter`, `perspective`, `will-change`, `contain`, or `backdrop-filter` — that
+   ancestor becomes its containing block, which both **breaks the JS anchoring** and
+   **drops it out of the top layer** (a `.sel` inside such a modal renders *behind*
+   the backdrop in Chromium). So **don't put `transform`/`filter` on a scrolling or
+   modal ancestor of a `.sel`**. Animate a modal's entrance with **`opacity`** (and
+   slide an *inner* wrapper that isn't an ancestor of the select) — `opacity` makes a
+   stacking context but is not a fixed-containing-block, so the dropdown stays put.
 8. **Theme native `<button>` explicitly.** Buttons don't inherit `color` — the UA
    gives them `ButtonText` (dark), which becomes dark-on-dark in the carbon theme,
    and an inline `background` beats class rules. So every button must set its
