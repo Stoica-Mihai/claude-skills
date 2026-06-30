@@ -63,7 +63,15 @@ item gets a left accent edge — mark it `aria-current="page"`, **not** `role="t
 ```
 
 For a view-switcher (no real URLs) use `<button>`s and move `aria-current="page"`
-to the chosen one in your handler.
+to the chosen one in your handler:
+
+```js
+nav.querySelectorAll('button').forEach(b => b.onclick = () => {
+  nav.querySelectorAll('button').forEach(x => x.removeAttribute('aria-current'));
+  b.setAttribute('aria-current', 'page');
+  // …show the matching view…
+});
+```
 
 ## Type
 
@@ -321,13 +329,18 @@ usual single drawer; pages with several simultaneous drawers need their own hand
   <a href="#">Open<span class="arr"> →</span></a>
 </div>
 
-<!-- Whole card is a control → .link adds cursor + the hover-lunge -->
-<div class="card link" onclick="…">…</div>
+<!-- Whole card is a control → .link adds cursor + the hover-lunge.
+     Use a REAL <a>/<button> so it's keyboard-operable + focus-ringed for free. -->
+<button class="card link" onclick="…">…</button>
+<a class="card link" href="…">…</a>
 ```
 
 The hover-lunge (translate + deeper offset shadow) is **opt-in via `.card.link`** —
 add it only when the entire card is clickable, so static cards don't move under the
-cursor. A card with just an inner link/button stays plain `.card`.
+cursor. A card with just an inner link/button stays plain `.card`. Put `.link` on a
+real `<a>`/`<button>` (not a bare `<div onclick>`, which is keyboard-unreachable) —
+`a.card`/`button.card` are normalized to lay out like a div card, and `.card.link`
+gets a `:focus-visible` ring.
 
 ## Stepper
 

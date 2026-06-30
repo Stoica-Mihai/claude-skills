@@ -147,7 +147,12 @@ input:focus,textarea:focus{outline:3px solid var(--accent);outline-offset:0}
 .card{background:var(--surf);border:var(--border) solid var(--line);padding:14px;position:relative;box-shadow:var(--shadow-off) var(--shadow-off) 0 var(--shadow);
   transition:transform var(--fast) var(--ease),box-shadow var(--fast) var(--ease)}
 .card.link{cursor:pointer}
+/* Put .link on a real <a>/<button> so the whole-card control is keyboard-operable
+   for free (don't use a bare <div onclick> — not focusable, not Enter/Space-able).
+   These normalize the element so it still lays out like a div card. */
+a.card,button.card{display:block;width:100%;text-align:left;font:inherit;color:var(--ink);text-decoration:none}
 .card.link:hover{transform:translate(-3px,-3px);box-shadow:9px 9px 0 var(--shadow)}
+.card.link:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 
 /* Nav */
 .nav{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid var(--line);padding-bottom:10px}
@@ -164,7 +169,7 @@ input:focus,textarea:focus{outline:3px solid var(--accent);outline-offset:0}
 .nav-v>a,.nav-v>button{display:flex;align-items:center;gap:12px;width:100%;padding:12px 18px;font-family:var(--font);font-weight:800;font-size:14px;
   border:0;border-left:4px solid transparent;background:none;color:var(--ink);text-align:left;text-decoration:none;cursor:pointer;
   transition:background var(--fast),border-color var(--fast)}
-.nav-v>a:hover,.nav-v>button:hover{background:var(--tint)}
+.nav-v>a:hover,.nav-v>button:hover{background:var(--hover-bg)}
 .nav-v>[aria-current="page"]{background:var(--sel-bg);border-left-color:var(--accent)}
 .nav-v svg{width:18px;height:18px;color:var(--muted);flex:none}
 .nav-v>[aria-current="page"] svg{color:var(--accent)}
