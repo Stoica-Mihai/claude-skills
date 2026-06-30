@@ -14,8 +14,11 @@
      overlays: ink is the cream foreground in dark, so it would lighten not dim. */
   --scrim:rgba(0,0,0,.55);
   /* State washes — theme-aware. A saturated accent mixed into a near-black base
-     stays near-black until a high %, so dark needs much higher mixes than light to
-     keep hover/selected/tint perceptible (the %s differ per theme block below). */
+     stays near-black until a moderate %, so dark needs higher mixes than light to
+     keep hover/selected perceptible — but NOT so high the wash reads as an accent
+     fill and crushes the row's own foregrounds (an accent kick or muted meta sitting
+     on it). Selection leans on the inset accent edge, so the wash stays a wash; keep
+     sel-bg above hover-bg so selected still outranks hover (%s per theme block). */
   --hover-bg:color-mix(in srgb,var(--accent) 14%,var(--surf));
   --sel-bg:color-mix(in srgb,var(--accent) 26%,var(--surf));
   --tint:color-mix(in srgb,var(--accent) 12%,var(--bg));
@@ -24,8 +27,8 @@
 [data-theme="dark"]{
   --bg:#16140f; --surf:#211d16; --ink:#efe9dc; --muted:#a89f8e;
   --accent:#ff4d33; --line:#efe9dc; --shadow:#ff4d33; --field:#211d16; --on-accent:#16140f;
-  --hover-bg:color-mix(in srgb,var(--accent) 40%,var(--surf));
-  --sel-bg:color-mix(in srgb,var(--accent) 58%,var(--surf));
+  --hover-bg:color-mix(in srgb,var(--accent) 20%,var(--surf));
+  --sel-bg:color-mix(in srgb,var(--accent) 26%,var(--surf));
   --tint:color-mix(in srgb,var(--accent) 36%,var(--bg));
   --skel-stripe:color-mix(in srgb,var(--accent) 45%,transparent);
 }
