@@ -202,6 +202,23 @@ function fdConfirm(slot, opts){
 // Accent picker: swap --accent and (in dark) --shadow at runtime, persist.
 // Pass the picker root .accpick + an array of {name,light,dark}. In dark the
 // offset shadow follows the accent; in light it stays ink.
+// Relative luminance (WCAG) of a #rgb/#rrggbb color, 0..1.
+function fdLuminance(hex){
+  hex=String(hex).replace('#','');
+  if(hex.length===3)hex=hex.replace(/./g,'$&$&');
+  var v=[0,2,4].map(function(i){
+    var c=parseInt(hex.substr(i,2),16)/255;
+    return c<=.03928?c/12.92:Math.pow((c+.055)/1.055,2.4);
+  });
+  return .2126*v[0]+.7152*v[1]+.0722*v[2];
+}
+// Pick the kit's cream or near-black foreground — whichever contrasts better on `col`
+// — so text/icons on an accent fill stay legible for ANY runtime-picked accent.
+function fdOnAccent(col){
+  var cream='#efe9dc',ink='#16140f',L=fdLuminance(col);
+  function ratio(a,b){return (Math.max(a,b)+.05)/(Math.min(a,b)+.05)}
+  return ratio(L,fdLuminance(cream))>=ratio(L,fdLuminance(ink))?cream:ink;
+}
 function fdAccent(pick,accents,onChange){
   pick=typeof pick==='string'?document.getElementById(pick):pick;
   if(!pick)return;
@@ -213,6 +230,9 @@ function fdAccent(pick,accents,onChange){
     var col=dark()?a.dark:a.light,r=document.documentElement.style;
     r.setProperty('--accent',col);
     r.setProperty('--shadow',dark()?col:'#1a1714');
+    // Keep the accent's paired foreground legible for any picked color; an accent
+    // may override with onLight/onDark.
+    r.setProperty('--on-accent',(dark()?a.onDark:a.onLight)||fdOnAccent(col));
     localStorage.setItem('fd-accent',a.name);
     if(trig)trig.style.background=col;
     render(a);

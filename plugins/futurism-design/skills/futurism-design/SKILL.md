@@ -148,9 +148,13 @@ backdrop would lighten the page. `--scrim` (`rgba(0,0,0,.55)`) is the same in bo
 themes for exactly this reason.
 
 **Runtime accent.** Law #4 is one accent, but letting the *user* pick that one
-accent is on-system — see the `.accpick` component and `fdAccent()`. Two couplings
+accent is on-system — see the `.accpick` component and `fdAccent()`. Three couplings
 to respect: in dark the offset shadow follows the accent (`--shadow` = accent),
-in light it stays ink; and a **theme control** (the `.switch` pill or a `.toggle`)
+in light it stays ink; `fdAccent()` also **re-derives `--on-accent`** from the picked
+color's luminance (choosing the kit's cream or near-black, whichever contrasts) so
+text/icons on an accent fill stay legible for *any* accent — for the shipped red this
+reproduces the static tokens, and an accent entry can override with `onLight`/`onDark`;
+and a **theme control** (the `.switch` pill or a `.toggle`)
 must use **ink** for its active/`.on` state, not accent — otherwise the control that
 *picks* the accent visibly absorbs it. (`.switch .act` already fills ink, matching
 the `ink = selected` convention of `.seg`/`.tab`/`.pager`.)
