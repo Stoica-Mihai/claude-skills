@@ -107,8 +107,9 @@ standalone CTAs and rows of skewed siblings (confirm+cancel). For an icon action
 `.iconbtn` is already square.
 
 ```html
+<label for="debounce">Debounce (ms)</label>
 <div style="display:flex;gap:10px;align-items:stretch">
-  <input id="debounce" type="number" value="4" aria-label="Debounce ms">
+  <input id="debounce" type="number" value="4">
   <button class="btn btn-primary btn-square"><span>SET</span></button>
 </div>
 ```

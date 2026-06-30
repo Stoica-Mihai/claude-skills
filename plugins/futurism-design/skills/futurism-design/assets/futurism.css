@@ -283,6 +283,9 @@ dialog .modal{max-height:calc(100dvh - 24px);overflow-y:auto}
 .acc{width:28px;height:28px;border:var(--border) solid var(--line);cursor:pointer;transition:transform var(--fast) var(--ease)}
 .acc:hover{transform:translateY(-2px)}
 .acc.on{outline:var(--border) solid var(--ink);outline-offset:1px}
+/* Selected swatch ties .acc:focus-visible on specificity and wins by order, hiding
+   the focus ring — restore a distinct 3px accent ring when the selected swatch is focused. */
+.acc.on:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 
 /* Off-canvas drawer — fixed panel that slides in; .drawer-open shows it.
    .scrim-bg is the tap-to-close dim (uses --scrim, never --ink). */
