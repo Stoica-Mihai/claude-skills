@@ -361,6 +361,29 @@ dialog .modal{max-height:calc(100dvh - 24px);overflow-y:auto}
   background-image:linear-gradient(45deg,var(--skel-stripe) 25%,transparent 25% 50%,var(--skel-stripe) 50% 75%,transparent 75%);
   background-size:22px 22px;animation:fd-march 1s linear infinite}
 
+/* Pull to refresh — square accent bar that fills as the user pulls, then marches
+   the kit barber-pole (fd-march, same recipe as .skel) while refreshing. Height and
+   --pull (0..1) are driven by fdPull() in futurism.js. Single instance per page
+   (like .toaster) — one .pull element, its state toggled by class. */
+.pull{position:relative;height:0;overflow:hidden;display:flex;align-items:center;justify-content:center;
+  background:var(--surf);border-bottom:var(--border) solid var(--line);transition:height var(--med) var(--ease)}
+.pull-fill{position:absolute;inset:0 auto 0 0;width:calc(var(--pull,0) * 100%);background:var(--accent);
+  /* Exception to law #5 (--ease): this fill 1:1-tracks a touchmove position every
+     frame, and the standard cubic-bezier visibly lags a fast drag. Linear keeps it
+     glued to the finger; --ease still governs every discrete state transition
+     (armed/refreshing, hover, open/close) elsewhere. Don't "fix" this back to --ease. */
+  transition:width 60ms linear}
+.pull.armed .pull-fill{width:100%}
+/* Barber-pole recipe pinned to .skel (fd-march, --skel-stripe, 22px tile, 1s). */
+.pull.refreshing .pull-fill{width:100%;background-color:var(--accent);
+  background-image:linear-gradient(45deg,var(--skel-stripe) 25%,transparent 25% 50%,var(--skel-stripe) 50% 75%,transparent 75%);
+  background-size:22px 22px;animation:fd-march 1s linear infinite}
+.pull-label{position:relative;z-index:1;font-family:var(--font);font-weight:800;font-style:italic;
+  font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink)}
+/* Filled states put the label on the accent fill — text-on-accent token (SKILL
+   theming: "partial fill" rule), not --ink. */
+.pull.armed .pull-label,.pull.refreshing .pull-label{color:var(--on-accent)}
+
 /* Segmented control — welded buttons (the .combo idiom); active fills ink. For a
    few visible options where tabs are too heavy and a select is overkill. */
 .seg{display:inline-flex}
@@ -408,6 +431,7 @@ dialog .modal{max-height:calc(100dvh - 24px);overflow-y:auto}
   .prog>i,.skel{background:Highlight}
   .dot{background:Highlight}
   .dot.dead{background:GrayText}
+  .pull-fill{background:Highlight}
 }
 
 /* Print: drop fixed overlays + solid shadows so pages print clean (screen-app kit,

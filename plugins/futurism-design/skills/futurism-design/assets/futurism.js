@@ -280,6 +280,68 @@ function fdAccent(pick,accents,onChange){
   return {reapply:function(){apply(accents.find(function(a){return a.name===(localStorage.getItem('fd-accent')||accents[0].name)})||accents[0])}};
 }
 
+// Pull-to-refresh on a .pull element (structure: .pull > .pull-fill + .pull-label).
+// The indicator sits at height:0, so the drag itself is tracked on opts.container
+// (default document.body) — wherever the user's finger actually is — not on the
+// indicator. opts: { container:document.body, threshold:80 (px pull to arm),
+// maxPull:100 (px pull to reach barHeight), barHeight:40 (px bar height revealed),
+// labelIdle/labelArmed/labelBusy, shouldStart(e) (return false to ignore a touch,
+// e.g. one starting inside a scrollable panel), onRefresh(done) }. onRefresh is
+// called on release once armed; it may return a Promise or call the passed done()
+// callback — the barber-pole runs until it resolves/done() fires.
+function fdPull(el, opts){
+  el = typeof el === 'string' ? document.getElementById(el) : el;
+  if(!el) return;
+  opts = opts || {};
+  var container = opts.container || document.body;
+  var threshold = opts.threshold || 80, maxPull = opts.maxPull || 100, barHeight = opts.barHeight || 40;
+  var labelIdle = opts.labelIdle || 'Pull to refresh', labelArmed = opts.labelArmed || 'Release to refresh', labelBusy = opts.labelBusy || 'Refreshing';
+  var label = el.querySelector('.pull-label');
+  var startY = 0, pulling = false, busy = false;
+  function reset(){
+    el.style.height = '0';
+    el.style.setProperty('--pull', '0');
+    el.classList.remove('armed', 'refreshing');
+    if(label) label.textContent = '';
+  }
+  function done(){
+    busy = false;
+    reset();
+  }
+  container.addEventListener('touchstart', function(e){
+    if(busy) return;
+    if(opts.shouldStart && !opts.shouldStart(e)) return;
+    startY = e.touches[0].clientY;
+    pulling = true;
+  }, { passive: true });
+  container.addEventListener('touchmove', function(e){
+    if(!pulling) return;
+    var dy = e.touches[0].clientY - startY;
+    if(dy < 0){ pulling = false; reset(); return; }
+    var clamped = Math.min(dy, maxPull);
+    el.style.height = (clamped / maxPull * barHeight) + 'px';
+    el.style.setProperty('--pull', String(Math.min(dy / threshold, 1)));
+    var armed = dy >= threshold;
+    el.classList.toggle('armed', armed);
+    if(label) label.textContent = armed ? labelArmed : labelIdle;
+  }, { passive: true });
+  container.addEventListener('touchend', function(){
+    if(!pulling) return;
+    pulling = false;
+    if(el.classList.contains('armed')){
+      busy = true;
+      el.classList.add('refreshing');
+      el.style.height = barHeight + 'px';
+      if(label) label.textContent = labelBusy;
+      var result = opts.onRefresh && opts.onRefresh(done);
+      if(result && typeof result.then === 'function') result.then(done, done);
+    } else {
+      reset();
+    }
+  });
+  return { reset: reset };
+}
+
 // A pressed .btn depresses (moves down on :active); capture the pointer so the click
 // still retargets to the button even though it slid out from under the cursor —
 // otherwise a press begun on the hovered top edge would release off the button.

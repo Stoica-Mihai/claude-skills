@@ -559,6 +559,41 @@ out — never fades. **Default is neutral** (line border + accent left-rule);
 `{type:'err'}` raises the full accent border for errors/attention. Success rides on
 the label, not a green (law 4). `timeout` ms before auto-dismiss (default 3200).
 
+## Pull to refresh
+
+A touch-driven refresh affordance: a square accent bar fills as the user pulls down
+from the top of the page, then marches the kit barber-pole (reusing `fd-march`, the
+same recipe as `.skel` — never a rotary spinner) while the refresh is in flight.
+
+```html
+<div class="pull" role="status" aria-live="polite">
+  <div class="pull-fill"></div><span class="pull-label"></span>
+</div>
+<script>
+  fdPull(document.querySelector('.pull'), {
+    onRefresh: () => fetch('/api/data').then(r => r.json()).then(renderData),
+  });
+</script>
+```
+
+Single instance per page (like `.toaster`) — one `.pull` element sits at the top of
+the scrolling area at `height:0` and only grows while dragged. `fdPull(el, opts)`
+tracks the gesture on `opts.container` (default `document.body`, since the
+zero-height indicator itself can never receive the touch that starts the drag), and
+toggles `.armed`/`.refreshing` on `el` as the pull crosses `opts.threshold` and then
+releases. `opts.onRefresh(done)` fires on release once armed — return a `Promise` or
+call `done()` when the refresh completes, and the barber-pole keeps marching until
+then. `opts.shouldStart(e)` can veto a touch that starts inside a scrollable child
+(a terminal, a panel, an open dialog) so the gesture doesn't fight nested scrolling.
+
+`role="status"`/`aria-live="polite"` are on the container per the kit's "state that
+changes without focus moving" rule (match `.toast`). Once the accent fill is behind
+the label, the label flips to `--on-accent` — the exact case the kit's "partial
+fill" theming rule exists for (see SKILL.md Theming). The live-drag fill uses
+`transition:width 60ms linear`, a narrow, documented exception to law #5's `--ease`
+requirement (see SKILL.md law 5) — a value tracked 1:1 to a finger every frame isn't
+a discrete state transition, and the standard easing visibly lags a fast drag.
+
 ## Empty state
 
 ```html

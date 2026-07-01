@@ -71,6 +71,11 @@ user explicitly overrides:
    easing `cubic-bezier(.2,.9,.1,1)`, and always **directional** — things slide,
    dart, lurch, march. Never spring, bounce, or fade-puff. Respect
    `prefers-reduced-motion` (the CSS already does).
+   *Narrow carve-out:* `--ease` is for **discrete state transitions** (open/close,
+   hover, armed/refreshing). A value **live-tracked to a pointer every frame** — not
+   a state transition — is exempt: `.pull-fill`'s width uses `transition:width 60ms
+   linear` because a cubic-bezier visibly lags a 1:1 finger-tracked drag. Don't
+   generalize this to anything that isn't following a pointer in real time.
 6. **Skewed CTAs.** Primary actions use `transform: skewX(-8deg)` with the label
    counter-skewed (`skewX(8deg)`) so it stays upright. This is the speed cue.
    *Reserve the skew for standalone/hero CTAs and rows of skewed siblings* (a
