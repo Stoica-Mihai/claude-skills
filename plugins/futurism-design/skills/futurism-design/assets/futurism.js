@@ -118,13 +118,28 @@ function fdInit(root){
     if(st._fdStep)return;st._fdStep=true;
     var input=st.querySelector('input.num'),dn=st.querySelector('.step-dn'),up=st.querySelector('.step-up');
     if(!input)return;
+    // The +/- buttons change input.value while focus stays on the button, so a
+    // screen reader won't pick up the change from the input alone (that only
+    // fires for the FOCUSED element's own edits) — a visually-hidden aria-live
+    // region, kept in sync on every bump, carries the announcement instead.
+    var live=document.createElement('span');
+    live.setAttribute('role','status');live.setAttribute('aria-live','polite');
+    live.style.cssText='position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap';
+    st.appendChild(live);
     function clamp(){var v=parseFloat(input.value);if(isNaN(v))return;
       var lo=input.min!==''?parseFloat(input.min):-Infinity,hi=input.max!==''?parseFloat(input.max):Infinity;
       var c=Math.max(lo,Math.min(hi,v));if(c!==v)input.value=c;}
-    function bump(dir){input[dir>0?'stepUp':'stepDown']();clamp();input.dispatchEvent(new Event('change',{bubbles:true}));}
+    function bump(dir){input[dir>0?'stepUp':'stepDown']();clamp();input.dispatchEvent(new Event('change',{bubbles:true}));live.textContent=input.value}
     if(dn)dn.addEventListener('click',function(){bump(-1)});
     if(up)up.addEventListener('click',function(){bump(1)});
     input.addEventListener('change',clamp);
+  });
+  // A closed drawer's own links/buttons are still natively tabbable (off-screen
+  // via translateX isn't enough to pull them out of tab order) until fdDrawer()
+  // first toggles it — set the initial closed state here so page load itself
+  // doesn't leave them reachable before any interaction happens.
+  root.querySelectorAll('.drawer').forEach(function(d){
+    if(!d.classList.contains('drawer-open'))fdDrawerFocusables(d).forEach(function(el){el.tabIndex=-1});
   });
 }
 if(document.readyState!=='loading')fdInit();else document.addEventListener('DOMContentLoaded',function(){fdInit()});
@@ -152,15 +167,38 @@ function fdToast(msg,opts){
   return t;
 }
 
+function fdDrawerFocusables(panel){
+  return Array.prototype.slice.call(panel.querySelectorAll('a[href],button,input,select,textarea'));
+}
+// Trap Tab inside the open drawer so it can't escape to background content —
+// without this, Tab from the last item just continues into whatever follows
+// the drawer in DOM order.
+function fdDrawerTrap(e){
+  if(e.key!=='Tab')return;
+  var panel=document.querySelector('.drawer.drawer-open');
+  if(!panel)return;
+  var f=fdDrawerFocusables(panel);if(!f.length)return;
+  var first=f[0],last=f[f.length-1];
+  if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
+  else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
+}
+document.addEventListener('keydown',fdDrawerTrap);
 // Off-canvas drawer: toggle .drawer-open on the panel + show/hide its scrim.
+// While open: locks body scroll and traps Tab (above). While closed: the
+// panel's own links/buttons are pulled out of tab order — off-screen via
+// translateX doesn't do that on its own, they're still natively focusable.
 function fdDrawer(panel,scrim){
   panel=typeof panel==='string'?document.getElementById(panel):panel;
   if(!panel)return;
   var open=panel.classList.toggle('drawer-open');
   if(open)panel._fdReturn=document.activeElement;
   fdDrawerSync(panel,open);
+  var focusables=fdDrawerFocusables(panel);
+  focusables.forEach(function(el){el.tabIndex=open?0:-1});
+  document.body.style.overflow=open?'hidden':'';
   scrim=typeof scrim==='string'?document.getElementById(scrim):scrim;
   if(scrim)scrim.style.display=open?'block':'none';
+  if(open&&focusables.length)focusables[0].focus();
 }
 // Keep the opener's aria-expanded in sync, and restore focus to it on close —
 // matches the accent popover / select behaviour. Used by fdDrawer + Escape close.
@@ -264,11 +302,21 @@ function fdAccent(pick,accents,onChange){
       s.onclick=function(){apply(a);pick.classList.remove('open');if(trig)trig.setAttribute('aria-expanded','false')};
       pop.appendChild(s);
     });
+    syncSwatchFocus();
+  }
+  // Swatches default to real <button>s (natively tabbable), so without this
+  // they'd stay in Tab order even while the popover is closed/invisible
+  // (transform:scaleY(0) blocks pointer/visual access but not keyboard focus).
+  // Pull them out of the tab order when closed, same as .sel-opt's tabindex=-1.
+  function syncSwatchFocus(){
+    if(!pop)return;
+    var open=pick.classList.contains('open');
+    Array.prototype.slice.call(pop.querySelectorAll('.acc')).forEach(function(s){s.tabIndex=open?0:-1});
   }
   if(trig){
     trig.setAttribute('aria-haspopup','true');trig.setAttribute('aria-expanded','false');
     if(!trig.getAttribute('aria-label'))trig.setAttribute('aria-label','Accent color');
-    trig.onclick=function(){var o=pick.classList.toggle('open');trig.setAttribute('aria-expanded',o?'true':'false')};
+    trig.onclick=function(){var o=pick.classList.toggle('open');trig.setAttribute('aria-expanded',o?'true':'false');syncSwatchFocus()};
   }
   apply(accents.find(function(a){return a.name===saved})||accents[0]);
   // Re-apply on theme flip so --accent/--shadow track the new theme without the
@@ -277,6 +325,11 @@ function fdAccent(pick,accents,onChange){
   if(pick._fdObs)pick._fdObs.disconnect();
   pick._fdObs=new MutationObserver(function(){if(current)apply(current)});
   pick._fdObs.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+  // Keep swatch tabindex in sync however the popover closes (outside click,
+  // Escape) — those paths only toggle the .open class, not this module's code.
+  if(pick._fdOpenObs)pick._fdOpenObs.disconnect();
+  pick._fdOpenObs=new MutationObserver(syncSwatchFocus);
+  pick._fdOpenObs.observe(pick,{attributes:true,attributeFilter:['class']});
   return {reapply:function(){apply(accents.find(function(a){return a.name===(localStorage.getItem('fd-accent')||accents[0].name)})||accents[0])}};
 }
 
@@ -297,7 +350,7 @@ function fdPull(el, opts){
   var threshold = opts.threshold || 80, maxPull = opts.maxPull || 100, barHeight = opts.barHeight || 40;
   var labelIdle = opts.labelIdle || 'Pull to refresh', labelArmed = opts.labelArmed || 'Release to refresh', labelBusy = opts.labelBusy || 'Refreshing';
   var label = el.querySelector('.pull-label');
-  var startY = 0, pulling = false, busy = false;
+  var startY = 0, pulling = false, busy = false, wasArmed = false;
   function reset(){
     el.style.height = '0';
     el.style.setProperty('--pull', '0');
@@ -313,6 +366,8 @@ function fdPull(el, opts){
     if(opts.shouldStart && !opts.shouldStart(e)) return;
     startY = e.touches[0].clientY;
     pulling = true;
+    wasArmed = false;
+    if(label) label.textContent = labelIdle;
   }, { passive: true });
   container.addEventListener('touchmove', function(e){
     if(!pulling) return;
@@ -323,7 +378,11 @@ function fdPull(el, opts){
     el.style.setProperty('--pull', String(Math.min(dy / threshold, 1)));
     var armed = dy >= threshold;
     el.classList.toggle('armed', armed);
-    if(label) label.textContent = armed ? labelArmed : labelIdle;
+    // Only write the aria-live text on the armed/idle EDGE, not every touchmove —
+    // this container is role="status"/aria-live="polite", so rewriting it on
+    // every frame of a drag queues a rapid-fire announcement pileup instead of
+    // one sensible cue at the threshold crossing.
+    if(armed !== wasArmed){ if(label) label.textContent = armed ? labelArmed : labelIdle; wasArmed = armed; }
   }, { passive: true });
   container.addEventListener('touchend', function(){
     if(!pulling) return;
@@ -398,6 +457,14 @@ document.addEventListener('keydown',function(e){
   if(e.key==='Escape'){
     document.querySelectorAll('.accpick.open').forEach(function(p){p.classList.remove('open');var t=p.querySelector('.acctrig');if(t){t.setAttribute('aria-expanded','false');t.focus()}});
     var drawers=document.querySelectorAll('.drawer.drawer-open');
-    if(drawers.length){drawers.forEach(function(d){d.classList.remove('drawer-open');fdDrawerSync(d,false)});document.querySelectorAll('.scrim-bg').forEach(function(s){s.style.display='none'})}
+    if(drawers.length){
+      drawers.forEach(function(d){
+        d.classList.remove('drawer-open');
+        fdDrawerSync(d,false);
+        fdDrawerFocusables(d).forEach(function(el){el.tabIndex=-1});
+      });
+      document.body.style.overflow='';
+      document.querySelectorAll('.scrim-bg').forEach(function(s){s.style.display='none'});
+    }
   }
 },false);
