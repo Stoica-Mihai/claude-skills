@@ -317,7 +317,8 @@ two-step inline confirm wired by `fdConfirm`.
 trigger), and flashes `.failed` then reverts if `onConfirm` rejects. On success it
 reverts to idle and refocuses the trigger if the row is still there; if `onConfirm`
 removed the row, pass `onDone` to hand focus to a stable target (next row / list)
-so focus isn't orphaned on the detached node.
+so focus isn't orphaned on the detached node. `opts.failLabel` (default `'Failed'`)
+sets the text shown during that `.failed` flash.
 
 Three gotchas it handles for you (and you must respect when extending):
 - **No button-in-button.** A control can't nest inside a row that is itself a
@@ -448,7 +449,11 @@ spinbutton — the user can **type** a value, use ↑/↓ to step, and it clamps
 `stepUp`/`stepDown` the input and re-clamps on change, so it needs no inline handlers.
 The `+`/`−` buttons carry `tabindex="-1"` (the input is the single tab stop and its
 native arrow keys do the stepping); give the input an `aria-label`. The OS spinner is
-already suppressed by the kit's `input[type=number]` rule.
+already suppressed by the kit's `input[type=number]` rule. `fdInit` also injects a
+visually-hidden `role="status"`/`aria-live="polite"` span into the stepper and updates
+it on every `+`/`-` click — a screen reader only picks up an input's own value edits
+when it's the *focused* element, and focus stays on the button during a bump, so
+this carries the announcement instead.
 
 ```html
 <div class="stepper">
