@@ -73,14 +73,18 @@ fades or springy bounces. `prefers-reduced-motion: reduce` disables all of it.
 [data-theme="dark"]{
   --bg:#16140f; --surf:#211d16; --ink:#efe9dc; --muted:#a89f8e;
   --accent:#ff4d33; --line:#efe9dc; --shadow:#ff4d33; --field:#211d16; --on-accent:#16140f;
-  /* State washes need much higher accent % on the near-black bases to stay visible. */
-  --hover-bg:color-mix(in srgb,var(--accent) 40%,var(--surf));
-  --sel-bg:color-mix(in srgb,var(--accent) 58%,var(--surf));
+  --hover-bg:color-mix(in srgb,var(--accent) 20%,var(--surf));
+  --sel-bg:color-mix(in srgb,var(--accent) 26%,var(--surf));
   --tint:color-mix(in srgb,var(--accent) 36%,var(--bg));
   --skel-stripe:color-mix(in srgb,var(--accent) 45%,transparent);
 }
 ```
 
-State washes (`--hover-bg`, `--sel-bg`, `--tint`, `--skel-stripe`) are **theme-aware**:
-a saturated accent mixed into a near-black base stays near-black until a high %, so
-the dark block uses much higher mixes than light to keep the cue perceptible.
+State washes (`--hover-bg`, `--sel-bg`, `--tint`, `--skel-stripe`) are **theme-aware**,
+but not uniformly so — `--tint`/`--skel-stripe` do need much higher mixes in dark to
+stay visible against the near-black base. `--hover-bg`/`--sel-bg` are only modestly
+higher in dark (and `--sel-bg` is identical in both themes): selection there leans on
+the inset accent edge to carry the cue, not the wash alone, so the wash's own gap
+matters less. Match the actual `:root`/`[data-theme="dark"]` values in `futurism.css`
+if you're re-deriving these — don't assume a uniform "dark needs much higher %" rule
+across all four.
