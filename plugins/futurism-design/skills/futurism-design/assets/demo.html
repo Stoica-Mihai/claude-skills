@@ -190,7 +190,15 @@
       </li>
       <li class="list-row"><span class="dot"></span><b style="font-style:italic">tipo-1909</b></li>
       <li class="list-row"><span class="dot dead"></span><b style="font-style:italic">velocita</b></li>
+      <li class="row-host">
+        <div class="list-row" style="flex-direction:column;align-items:flex-start;padding:10px 14px">
+          <b style="font-style:italic">velocita-gt</b>
+          <span class="kick" style="margin-left:0">started 2h ago</span>
+        </div>
+        <span class="row-act centered" id="rowDel2" style="--row-act-h:28px"></span>
+      </li>
     </ul>
+    <p style="font-size:11px;color:var(--muted);margin:6px 0 0">Last row: <b>.row-act.centered</b> on a two-line row — see components.md.</p>
   </div>
 
   <div class="sect">
@@ -237,6 +245,14 @@
     <div class="kick">PULL TO REFRESH <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(touch gesture — shown mid-pull; see fdPull() in components.md)</span></div>
     <div class="pull armed" role="status" aria-live="polite" style="height:40px;--pull:1">
       <div class="pull-fill"></div><span class="pull-label">Release to refresh</span>
+    </div>
+  </div>
+
+  <div class="sect">
+    <div class="kick">RESPONSIVE UTILITIES <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(resize the window past 768px)</span></div>
+    <div class="row">
+      <span class="badge only-mobile">SHOWN ONLY BELOW 768px</span>
+      <span class="badge out only-desktop">SHOWN ONLY AT 768px+</span>
     </div>
   </div>
 
@@ -322,6 +338,11 @@
       label:'Delete', cancel:'Cancel',
       icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path d="M4 6h16M9 6V4h6v2M6 6l1 14h10l1-14M10 10v6M14 10v6"/></svg>',
       onConfirm:function(){ fdToast('Deleted manifesto-gt'); return Promise.resolve(); }
+    });
+    fdConfirm('rowDel2',{
+      label:'Delete', cancel:'Cancel',
+      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path d="M4 6h16M9 6V4h6v2M6 6l1 14h10l1-14M10 10v6M14 10v6"/></svg>',
+      onConfirm:function(){ fdToast('Deleted velocita-gt'); return Promise.resolve(); }
     });
     // vertical nav: move aria-current on click (demo links have no real targets)
     document.querySelectorAll('.nav-v a').forEach(function(a){

@@ -209,10 +209,15 @@ usable on a phone without breaking the aesthetic:
   one, not just a shrink) — `.only-desktop` is hidden by default and shown
   (`display:block`) at the `min-width:768px` breakpoint; `.only-mobile` is the
   inverse. The base utility only sets `display:none`/`block`; if the shown state
-  needs `flex`/`inline-flex`/`inline-block` instead, add a compound-selector override
-  in your project CSS (e.g. `.keyhint.only-desktop{display:flex}`) — a compound
-  selector outranks the utility's single-class rule regardless of source order, so it
-  reliably wins in both the default and the `min-width:768px` state.
+  needs `flex`/`inline-flex`/`inline-block` instead, mirror the kit's own two-rule
+  shape with a compound selector rather than overriding just one side — e.g.
+  `.keyhint.only-desktop{display:none}` plus
+  `@media (min-width:768px){.keyhint.only-desktop{display:flex}}`. A compound
+  selector outranks the utility's single-class rule on any specificity tie, but
+  only within the media condition it's written under — a single *unscoped* override
+  would win at the hidden breakpoint too and defeat the hide, so give your override
+  the same two-rule shape as the utility itself, just with your display value
+  swapped in.
 - **Popover, not inline rows, on mobile.** A wide control (e.g. the 7-swatch
   accent row) collapses to a single trigger + popover — that's what `.accpick` is.
 
