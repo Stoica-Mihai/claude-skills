@@ -325,12 +325,14 @@ Three gotchas it handles for you (and you must respect when extending):
   `<button>`; the `.row-act` slot is a sibling of `.list-row` inside `.row-host`
   (`position:relative`), and the slot is a *container*, not a button, so its
   Delete/Cancel buttons don't nest either.
-- **Inset over the divider.** The absolute action would cover the row's own
-  `border-bottom`; it's inset `bottom:2px` so that divider still reads. The top
-  is flush (`top:0`), not inset — `.list-row` has no `border-top`, so a row's
-  "top" line is actually the *previous* row's `border-bottom`, already outside
-  this row's own box. Insetting the top too would protect a border that isn't
-  there and leave a visible gap instead of meeting it flush.
+- **Divider always full height, fill inset instead.** `.row-act` itself spans
+  `top:0;bottom:0` so its `border-left` divider reads as one continuous line no
+  matter what. It's the *fill* — the idle button, confirm-yes/no, the failed
+  flash, all direct children — that's 2px shorter (`height:calc(100% - 2px)`,
+  flush to the top), so hover/confirm/failed states stop right where the row's
+  own `border-bottom` begins instead of painting over it. `.centered` doesn't
+  need this trim since its own height already excludes the row's border
+  entirely (a floating strip touching neither edge).
 - **Always-visible-muted, not hover-revealed** — a per-row destructive action that
   only appears on hover is undiscoverable; it sits muted at rest, accent on hover/focus.
 
@@ -339,8 +341,9 @@ prefer the `<dialog>` modal confirm, which has full-size targets.
 
 ### Row action on a taller/multi-line row
 
-The default `.row-act` (full-height, `top/bottom:2px`) scales fine to an ordinary
-two-line row — the hover/press fill just gets taller, which is consistent with
+The default `.row-act` (full-height, fill inset 2px from the bottom per the gotcha
+above) scales fine to an ordinary two-line row — the hover/press fill just gets
+taller, which is consistent with
 the kit's existing solid full-block state changes (`.tab.on`, `.pager
 button:hover`, `.iconbtn:hover` all fill their whole control, not a shrunken
 chip). Prefer the default here; it also gives a bigger, easier-to-hit target than

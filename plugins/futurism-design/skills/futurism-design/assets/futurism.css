@@ -276,13 +276,12 @@ tbody tr:hover{background:var(--tint)}
    the same "no border on the last row" rule scoped to .row-host being last instead
    — otherwise its own border-bottom stacks on the list's outer border below it. */
 .row-host:last-child .list-row{border-bottom:none}
-/* bottom:2px insets over .list-row's OWN border-bottom so the divider still reads
-   instead of getting painted over. top:0 (not 2px) is deliberate and asymmetric:
-   .list-row has no border-top, so a row's "top" line is actually the PREVIOUS
-   row's border-bottom, sitting outside this element's own box — insetting top
-   here would protect a border that isn't there and leave a visible gap instead
-   of meeting it flush. */
-.row-act{position:absolute;top:0;right:0;bottom:2px;display:flex;align-items:center;border-left:var(--border) solid var(--line)}
+/* Full height always (top:0;bottom:0) — the border-left divider reads as one
+   continuous line no matter what, rather than insetting to dodge the row's own
+   border-bottom. The FILL (children, below) is what actually risks painting
+   over that border on hover/confirm/failed, so the inset moves there instead —
+   the divider itself never needs to duck it. */
+.row-act{position:absolute;top:0;right:0;bottom:0;display:flex;align-items:flex-start;border-left:var(--border) solid var(--line)}
 /* Opt-in modifier for an unusually tall/content-dense row where a full-height
    fill would read as a banner rather than a button — the default .row-act above
    already scales fine for an ordinary two-line row, prefer it there. Centers a
@@ -293,18 +292,29 @@ tbody tr:hover{background:var(--tint)}
 /* No background here — the global button{background:none} handles default
    transparency; setting it here would out-specify .confirm-yes and kill its fill. */
 .row-act>button{font:inherit;border:0;cursor:pointer;transition:background var(--fast),color var(--fast)}
-.row-act-btn{display:flex;align-items:center;justify-content:center;height:100%;padding:0 12px;color:var(--muted)}
+/* Default mode: every fill child (idle button, confirm-yes/no, the failed flash)
+   sits 2px shorter than the now-full-height .row-act, flush to the top via
+   align-items:flex-start above, so the fill stops right where the row's own
+   border-bottom begins instead of covering it. .centered's own height already
+   excludes that border entirely (a floating strip touching neither edge), so
+   its children fill it exactly with no trim needed. */
+.row-act:not(.centered)>*{height:calc(100% - 2px)}
+.row-act.centered>*{height:100%}
+.row-act-btn{display:flex;align-items:center;justify-content:center;padding:0 12px;color:var(--muted)}
 .row-act-btn:hover{background:var(--accent);color:var(--on-accent)}
 .row-act-btn svg{width:15px;height:15px;display:block}
 .row-act.confirming{border-left-color:var(--accent)}
-.confirm-yes,.confirm-no{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:0 7px;height:100%}
+.confirm-yes,.confirm-no{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:0 7px}
 .confirm-yes{background:var(--accent);color:var(--on-accent)}
 .confirm-yes:hover{background:color-mix(in srgb,var(--accent) 82%,#000)}
 .confirm-no{color:var(--muted);border-left:var(--border) solid var(--line)}
 .confirm-no:hover{color:var(--ink)}
 .row-act-btn:focus-visible,.confirm-yes:focus-visible,.confirm-no:focus-visible{outline:3px solid var(--accent);outline-offset:-3px}
-/* Transient failure flash (set by fdConfirm on a rejected action), then revert. */
-.row-act.failed{background:var(--accent);color:var(--on-accent);border-left-color:var(--accent);justify-content:center;padding:0 10px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.row-act.failed{border-left-color:var(--accent)}
+/* Transient failure flash (set by fdConfirm on a rejected action), then revert.
+   A child (not the slot's own background) so it gets the same 2px fill trim as
+   every other .row-act child, keeping the border-left the only full-height part. */
+.row-act-fail{display:flex;align-items:center;justify-content:center;background:var(--accent);color:var(--on-accent);padding:0 10px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
 
 /* Modal — native <dialog>: transparent shell, the .modal box carries the chrome.
    overflow:visible on <dialog> so .modal's offset shadow isn't clipped; tall

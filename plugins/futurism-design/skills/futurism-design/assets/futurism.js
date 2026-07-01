@@ -244,7 +244,9 @@ function fdConfirm(slot, opts){
       if(slot.isConnected){ idle(); var t=slot.querySelector('.row-act-btn'); if(t)t.focus() }
       else if(opts.onDone) opts.onDone();
     }).catch(function(){
-      slot.classList.remove('confirming'); slot.classList.add('failed'); slot.textContent=failLabel;
+      slot.classList.remove('confirming'); slot.classList.add('failed'); slot.textContent='';
+      var f=document.createElement('span'); f.className='row-act-fail'; f.textContent=failLabel;
+      slot.appendChild(f);
       setTimeout(function(){ if(slot.isConnected) idle() }, 1800);
     });
   }
