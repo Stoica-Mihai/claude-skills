@@ -334,26 +334,39 @@ prefer the `<dialog>` modal confirm, which has full-size targets.
 
 ### Row action on a taller/multi-line row
 
-The default `.row-act` insets `top/bottom:2px`, which only reads right against a
-single-line `.list-row`. Stretched to a taller two-line row, the action grows
-chunky. Add `.centered` to center a fixed-height strip instead — it's opt-in, so
-plain single-line usage is unaffected:
+The default `.row-act` (full-height, `top/bottom:2px`) scales fine to an ordinary
+two-line row — the hover/press fill just gets taller, which is consistent with
+the kit's existing solid full-block state changes (`.tab.on`, `.pager
+button:hover`, `.iconbtn:hover` all fill their whole control, not a shrunken
+chip). Prefer the default here; it also gives a bigger, easier-to-hit target than
+a short strip:
 
 ```html
 <div class="row-host">
-  <div class="list-row sel" style="flex-direction:column;align-items:flex-start;padding:10px 14px">
+  <div class="list-row" style="flex-direction:column;align-items:flex-start;padding:10px 14px">
     <b>manifesto-gt</b>
     <span class="kick" style="margin-left:0">started 2h ago</span>
   </div>
-  <span class="row-act centered" id="rowDel" style="--row-act-h:28px"></span>
+  <span class="row-act" id="rowDel"></span>
 </div>
 <script>fdConfirm('rowDel', { label: 'Delete', cancel: 'Cancel', onConfirm: () => fetch('/x', {method:'DELETE'}) });</script>
 ```
 
+For an unusually tall or content-dense row (a card with a paragraph, not just a
+second label line), a full-height accent fill can start to read as a banner
+rather than a button. Add `.centered` there to shrink the strip to a fixed height
+instead, centered in the row:
+
+```html
+<span class="row-act centered" id="rowDel" style="--row-act-h:28px"></span>
+```
+
 `.centered` sets `top:50%;bottom:auto;transform:translateY(-50%)` and drives its
-height from `--row-act-h` (falls back to `32px`) — set that custom property per use
-case rather than hard-coding a height in the kit. Everything else (`fdConfirm`, the
-three gotchas above) is unchanged.
+height from `--row-act-h` (falls back to `32px`) so you size it per use case
+rather than the kit hard-coding a height. Reach for it deliberately for
+genuinely oversized rows, not as the default treatment for any multi-line row —
+it trades a smaller hit target for a visually lighter action. Everything else
+(`fdConfirm`, the three gotchas above) is unchanged either way.
 
 ## Accent picker
 
