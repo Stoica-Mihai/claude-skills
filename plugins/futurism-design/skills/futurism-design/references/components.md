@@ -324,8 +324,12 @@ Three gotchas it handles for you (and you must respect when extending):
   `<button>`; the `.row-act` slot is a sibling of `.list-row` inside `.row-host`
   (`position:relative`), and the slot is a *container*, not a button, so its
   Delete/Cancel buttons don't nest either.
-- **Inset over the divider.** The absolute action would cover the row's bottom
-  border; it's inset `top/bottom:2px` so the divider still reads.
+- **Inset over the divider.** The absolute action would cover the row's own
+  `border-bottom`; it's inset `bottom:2px` so that divider still reads. The top
+  is flush (`top:0`), not inset — `.list-row` has no `border-top`, so a row's
+  "top" line is actually the *previous* row's `border-bottom`, already outside
+  this row's own box. Insetting the top too would protect a border that isn't
+  there and leave a visible gap instead of meeting it flush.
 - **Always-visible-muted, not hover-revealed** — a per-row destructive action that
   only appears on hover is undiscoverable; it sits muted at rest, accent on hover/focus.
 

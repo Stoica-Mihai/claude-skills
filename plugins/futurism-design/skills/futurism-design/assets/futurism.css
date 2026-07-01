@@ -262,11 +262,17 @@ tbody tr:hover{background:var(--tint)}
    modal or native confirm(). Wrap the row + action as SIBLINGS in .row-host: an
    interactive control can't legally nest inside a row that is itself a <button>.
    The slot itself is a CONTAINER (not a button) so its child buttons never nest in a
-   button either. Always-visible-muted (discoverable), inset top/bottom so it doesn't
-   cover the row divider. Wire the two-step + focus/Esc/ARIA with fdConfirm(). */
+   button either. Always-visible-muted (discoverable). Wire the two-step +
+   focus/Esc/ARIA with fdConfirm(). */
 .row-host{position:relative}
 .row-host .list-row{padding-right:46px}
-.row-act{position:absolute;top:2px;right:0;bottom:2px;display:flex;align-items:center;border-left:var(--border) solid var(--line)}
+/* bottom:2px insets over .list-row's OWN border-bottom so the divider still reads
+   instead of getting painted over. top:0 (not 2px) is deliberate and asymmetric:
+   .list-row has no border-top, so a row's "top" line is actually the PREVIOUS
+   row's border-bottom, sitting outside this element's own box — insetting top
+   here would protect a border that isn't there and leave a visible gap instead
+   of meeting it flush. */
+.row-act{position:absolute;top:0;right:0;bottom:2px;display:flex;align-items:center;border-left:var(--border) solid var(--line)}
 /* Opt-in modifier for an unusually tall/content-dense row where a full-height
    fill would read as a banner rather than a button — the default .row-act above
    already scales fine for an ordinary two-line row, prefer it there. Centers a
