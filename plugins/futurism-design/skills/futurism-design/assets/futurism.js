@@ -280,6 +280,14 @@ function fdAccent(pick,accents,onChange){
   return {reapply:function(){apply(accents.find(function(a){return a.name===(localStorage.getItem('fd-accent')||accents[0].name)})||accents[0])}};
 }
 
+// A pressed .btn depresses (moves down on :active); capture the pointer so the click
+// still retargets to the button even though it slid out from under the cursor —
+// otherwise a press begun on the hovered top edge would release off the button.
+document.addEventListener('pointerdown',function(e){
+  var b=e.target&&e.target.closest&&e.target.closest('.btn');
+  if(b&&e.pointerId!=null&&b.setPointerCapture){try{b.setPointerCapture(e.pointerId)}catch(_){}}
+});
+
 document.addEventListener('click',function(e){
   // open/close selects (via fdSelOpen so aria-expanded stays synced)
   var val=e.target.closest('.sel-val');
