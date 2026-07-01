@@ -332,6 +332,29 @@ Three gotchas it handles for you (and you must respect when extending):
 Touch note: the inline confirm is compact (dense rows). For touch-primary contexts
 prefer the `<dialog>` modal confirm, which has full-size targets.
 
+### Row action on a taller/multi-line row
+
+The default `.row-act` insets `top/bottom:2px`, which only reads right against a
+single-line `.list-row`. Stretched to a taller two-line row, the action grows
+chunky. Add `.centered` to center a fixed-height strip instead — it's opt-in, so
+plain single-line usage is unaffected:
+
+```html
+<div class="row-host">
+  <div class="list-row sel" style="flex-direction:column;align-items:flex-start;padding:10px 14px">
+    <b>manifesto-gt</b>
+    <span class="kick" style="margin-left:0">started 2h ago</span>
+  </div>
+  <span class="row-act centered" id="rowDel" style="--row-act-h:28px"></span>
+</div>
+<script>fdConfirm('rowDel', { label: 'Delete', cancel: 'Cancel', onConfirm: () => fetch('/x', {method:'DELETE'}) });</script>
+```
+
+`.centered` sets `top:50%;bottom:auto;transform:translateY(-50%)` and drives its
+height from `--row-act-h` (falls back to `32px`) — set that custom property per use
+case rather than hard-coding a height in the kit. Everything else (`fdConfirm`, the
+three gotchas above) is unchanged.
+
 ## Accent picker
 
 ```html
