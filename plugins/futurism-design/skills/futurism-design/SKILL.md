@@ -204,7 +204,15 @@ usable on a phone without breaking the aesthetic:
   rows) with `overflow-x:auto` on *that* element; never let the page body scroll
   sideways. Add `min-width:0` to flex children that hold ellipsised text.
 - **Collapse header chrome.** Hide the wordmark/subtitle and toggle labels at
-  narrow widths, keeping just the logo mark + essential controls.
+  narrow widths, keeping just the logo mark + essential controls. Use `.only-desktop`
+  / `.only-mobile` for chrome that swaps entirely (a desktop hint vs. a mobile-worded
+  one, not just a shrink) — `.only-desktop` is hidden by default and shown
+  (`display:block`) at the `min-width:768px` breakpoint; `.only-mobile` is the
+  inverse. The base utility only sets `display:none`/`block`; if the shown state
+  needs `flex`/`inline-flex`/`inline-block` instead, add a compound-selector override
+  in your project CSS (e.g. `.keyhint.only-desktop{display:flex}`) — a compound
+  selector outranks the utility's single-class rule regardless of source order, so it
+  reliably wins in both the default and the `min-width:768px` state.
 - **Popover, not inline rows, on mobile.** A wide control (e.g. the 7-swatch
   accent row) collapses to a single trigger + popover — that's what `.accpick` is.
 

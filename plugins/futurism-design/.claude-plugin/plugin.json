@@ -1,7 +1,7 @@
 {
   "name": "futurism-design",
   "description": "Futurism web design system — bold italic display, single red accent, square corners, solid offset shadows, fast directional motion, paired light/dark themes. A drop-in stylesheet + full component kit with an explicit skill that keeps generated UI on-brand.",
-  "version": "0.6.17",
+  "version": "0.6.18",
   "author": {
     "name": "MCS"
   },

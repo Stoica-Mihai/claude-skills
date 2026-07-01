@@ -460,3 +460,15 @@ dialog .modal{max-height:calc(100dvh - 24px);overflow-y:auto}
   .sel-val{padding:12px 12px}
   .sel-opt{padding:12px 12px}
 }
+
+/* Responsive show/hide — mobile-first: default (compact) layout hides desktop-only
+   chrome and shows mobile-only chrome; the min-width:768px breakpoint flips both.
+   Common case only (display:none/block) — an element that needs flex/inline-flex/
+   inline-block when shown should add its own compound-selector display override
+   (see SKILL.md's "Collapse header chrome" note under Responsive & touch). */
+.only-desktop{display:none}
+.only-mobile{display:block}
+@media (min-width:768px){
+  .only-desktop{display:block}
+  .only-mobile{display:none}
+}
