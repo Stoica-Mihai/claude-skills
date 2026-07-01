@@ -372,8 +372,10 @@ dialog .modal{max-height:calc(100dvh - 24px);overflow-y:auto}
 .stepper button{font-family:var(--font);border:0;background:none;color:var(--ink);font-weight:900;font-size:22px;line-height:1;padding:0 16px;cursor:pointer;transition:background var(--fast),color var(--fast)}
 .stepper button:hover{background:var(--accent);color:var(--on-accent)}
 .stepper button:focus-visible{outline:3px solid var(--accent);outline-offset:-3px;z-index:1}
-.stepper .num{min-width:64px;text-align:center;font-weight:900;font-style:italic;letter-spacing:-1px;font-size:24px;padding:8px 12px;
-  border-left:var(--border) solid var(--line);border-right:var(--border) solid var(--line)}
+/* .num is a native <input type=number> (see .stepper JS): reset the base input's
+   full border/background to just the welded side dividers on the stepper surface. */
+.stepper .num{width:96px;text-align:center;font-family:var(--font);font-weight:900;font-style:italic;letter-spacing:-1px;font-size:24px;padding:8px 12px;color:var(--ink);background:transparent;
+  border:0;border-left:var(--border) solid var(--line);border-right:var(--border) solid var(--line)}
 
 /* Pagination — welded square cells; current fills ink, disabled goes muted. */
 .pager{display:inline-flex}

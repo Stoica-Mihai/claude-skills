@@ -133,9 +133,9 @@
       </nav>
       <div style="flex:1;min-width:200px;display:flex;align-items:center">
         <div class="stepper">
-          <button aria-label="Decrease" onclick="fdStep(-50)">−</button>
-          <span class="num" id="dpiNum" aria-live="polite">6400</span>
-          <button aria-label="Increase" onclick="fdStep(50)">+</button>
+          <button type="button" class="step-dn" aria-label="Decrease DPI" tabindex="-1">−</button>
+          <input class="num" id="dpiNum" type="number" min="50" max="26000" step="50" value="6400" aria-label="DPI">
+          <button type="button" class="step-up" aria-label="Increase DPI" tabindex="-1">+</button>
         </div>
       </div>
     </div>
@@ -309,7 +309,6 @@
     // accent re-applies itself on theme change (fdAccent's observer) — no reapply() needed.
   }
   function showVal(){document.getElementById('chassisval').textContent=fdSelVal(document.querySelector('.sel[data-field="chassis"]'))}
-  function fdStep(d){var n=document.getElementById('dpiNum');n.textContent=Math.max(50,Math.min(26000,parseInt(n.textContent,10)+d))}
   window.addEventListener('DOMContentLoaded',function(){
     fdAccent('accpick',ACC);
     fdConfirm('rowDel',{

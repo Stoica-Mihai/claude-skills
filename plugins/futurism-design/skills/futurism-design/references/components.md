@@ -402,16 +402,24 @@ gets a `:focus-visible` ring.
 
 ## Stepper
 
-A −/value/+ numeric control. Real buttons (keyboard + `aria-label`); give the value
-`aria-live="polite"` so a screen reader hears it change.
+A −/value/+ numeric control. The value is a native `<input type="number">` (an implicit
+spinbutton — the user can **type** a value, use ↑/↓ to step, and it clamps to
+`min`/`max`/`step`), welded between the −/+ buttons. `fdInit` wires the buttons to
+`stepUp`/`stepDown` the input and re-clamps on change, so it needs no inline handlers.
+The `+`/`−` buttons carry `tabindex="-1"` (the input is the single tab stop and its
+native arrow keys do the stepping); give the input an `aria-label`. The OS spinner is
+already suppressed by the kit's `input[type=number]` rule.
 
 ```html
 <div class="stepper">
-  <button aria-label="Decrease" onclick="step(-50)">−</button>
-  <span class="num" id="dpiNum" aria-live="polite">6400</span>
-  <button aria-label="Increase" onclick="step(50)">+</button>
+  <button type="button" class="step-dn" aria-label="Decrease DPI" tabindex="-1">−</button>
+  <input class="num" type="number" min="50" max="26000" step="50" value="6400" aria-label="DPI">
+  <button type="button" class="step-up" aria-label="Increase DPI" tabindex="-1">+</button>
 </div>
 ```
+
+Use a stepper when the user needs both quick ±nudges **and** direct entry (any range).
+For a pure ±1 toggle with a tiny range, `.seg` or a plain number field also work.
 
 ## Tabs
 

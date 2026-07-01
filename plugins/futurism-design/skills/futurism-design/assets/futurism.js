@@ -111,6 +111,21 @@ function fdInit(root){
     if(t.tagName!=='BUTTON'){t.setAttribute('role','switch');if(!t.hasAttribute('tabindex'))t.tabIndex=0}
     t.setAttribute('aria-checked',t.classList.contains('on')?'true':'false');
   });
+  // Stepper: a native <input type=number> (spinbutton — types, arrows, clamps to
+  // min/max/step) welded between −/+ buttons. The buttons step the input; the input
+  // itself carries keyboard + a11y. Guard so re-init doesn't stack listeners.
+  root.querySelectorAll('.stepper').forEach(function(st){
+    if(st._fdStep)return;st._fdStep=true;
+    var input=st.querySelector('input.num'),dn=st.querySelector('.step-dn'),up=st.querySelector('.step-up');
+    if(!input)return;
+    function clamp(){var v=parseFloat(input.value);if(isNaN(v))return;
+      var lo=input.min!==''?parseFloat(input.min):-Infinity,hi=input.max!==''?parseFloat(input.max):Infinity;
+      var c=Math.max(lo,Math.min(hi,v));if(c!==v)input.value=c;}
+    function bump(dir){input[dir>0?'stepUp':'stepDown']();clamp();input.dispatchEvent(new Event('change',{bubbles:true}));}
+    if(dn)dn.addEventListener('click',function(){bump(-1)});
+    if(up)up.addEventListener('click',function(){bump(1)});
+    input.addEventListener('change',clamp);
+  });
 }
 if(document.readyState!=='loading')fdInit();else document.addEventListener('DOMContentLoaded',function(){fdInit()});
 
